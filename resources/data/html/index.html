@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>easyepg lite • powered by Gracenote</title>
+    <link rel="stylesheet" href="/app/data/css/main.css" />
+    <link rel="icon" href="/app/data/img/favicon.png">
+</head>
+<body>
+    <div id="page-blocker"></div>
+    <nav class="nav-top">
+        easy<span id="h"><b>epg</b></span> lite
+    </nav>
+    <section id="search-results" class="search-results">
+        <button id="close-results-window" class="exit-btn" type="button">x</button>
+        <p id="search-results-text">Search results</p>
+        <input id="lineup-channel-search" type="search" placeholder="Jump to channel...">
+        <table id="search-table">
+            <tbody></tbody>
+        </table>
+    </section>
+    <section id="channel-results" class="search-results">
+        <p class="channels-in-setup">Your channel list</p>
+        <p id="no-channels-in-setup">Please add your channels to the list.</p>
+        <input id="channel-search" class="channels-in-setup" type="search" placeholder="Jump to channel...">
+        <table id="channel-table">
+            <tbody></tbody>
+        </table>
+    </section>
+    <section id="missing-mappings" class="search-results">
+        <!-- <button id="close-missings-window" class="exit-btn" type="button">x</button> -->
+        <p id="missings-text">Missing EPG ID Mappings</p>
+        <table id="missings-table">
+            <tbody></tbody>
+        </table>
+    </section>
+    <section id="ch-info-window" class="nav-bar">
+        <button id="close-ch-info" class="exit-btn" type="button">x</button>
+        
+        <p>Channel information</p>
+
+        <img id="ch-logo" src="https://ondemo.tmsimg.com/assets/s89052_ll_h15_aa.png?w=360&h=270">
+
+        <label for="tv-name">Channel name</label>
+        <div>
+            <input disabled id="chname-input" type="text" value="">
+        </div>
+
+        <label for="tv-callsign">Call Sign</label>
+        <div>
+            <input disabled id="tv-callsign" type="text" value="">
+        </div>
+
+        <label for="tv-id">Channel ID</label>
+        <div>
+            <input disabled id="tv-id" type="text" value="">
+        </div>
+        
+        <label for="tvg-id-input">Custom TV Guide ID</label>
+        <div>
+            <input id="tvg-id-input" type="text" placeholder="(default)">
+            <input disabled id="tvg-id-result" type="text">
+            <button disabled id="tvg-id-save" type="button">Save</button>
+        </div>
+        
+        <label for="tvg-id-input">Replace channel by ID</label>
+        <div>
+            <input id="replace-ch" type="number" placeholder="Enter new ID...">
+            <input disabled id="replace-ch-result" type="text">
+            <button disabled id="replace-now" type="button">Replace</button>
+        </div>
+        
+        <div>
+            <button id="ch-remove" class="remove-btn" type="button">Remove channel</button>
+        </div>
+    </section>
+    <section id="search-window" class="nav-bar search-window">
+        <button id="close-search-window" class="exit-btn" type="button">x</button>
+        <div class="section">
+            <p>Search by channel</p>
+            <label for="ch_filter">Search type</label>
+            <div>
+                <select id="ch_filter">
+                    <option id="chname">Name</option>
+                    <option id="callsign">Call Sign</option>
+                    <option id="chid">ID</option>
+                </select>
+                <input type="search" id="search" placeholder="Search...">
+            </div>
+        </div>
+        <div class="section">
+            <p class="add-space">Search by lineup</p>
+            <label for="region_selection">Region/Area</label>
+            <div>
+                <select id="region_selection">
+                    <option id="r_none">Region</option>
+                    <option id="asia">Asia-Pacific</option>
+                    <option id="car">Caribbean</option>
+                    <option id="eur">Europe</option>
+                    <option id="sam">Latin America</option>
+                    <option id="nam">North America</option>
+                </select>
+                <select disabled id="country_selection">
+                    <option class="r_none" id="c_none">Country</option>
+                    <option hidden class="asia" id="aus">Australia</option>
+                    <option hidden class="car" id="aia">Anguilla</option>
+                    <option hidden class="car" id="atg">Antigua/Barbuda</option>
+                    <option hidden class="car" id="abw">Aruba</option>
+                    <option hidden class="car" id="bhs">Bahamas</option>
+                    <option hidden class="car" id="brb">Barbados</option>
+                    <option hidden class="car" id="bmu">Bermuda</option>
+                    <option hidden class="car" id="bes">Bonaire, Saba, St. Eustatius</option>
+                    <option hidden class="car" id="vgb">British Virgin Islands</option>
+                    <option hidden class="car" id="cym">Cayman Islands</option>
+                    <option hidden class="car" id="cuw">Curacao</option>
+                    <option hidden class="car" id="dma">Dominica</option>
+                    <option hidden class="car" id="dom">Dominican Republic</option>
+                    <option hidden class="car" id="grd">Grenada</option>
+                    <option hidden class="car" id="jam">Jamaica</option>
+                    <option hidden class="car" id="pri">Puerto Rico</option>
+                    <option hidden class="car" id="maf">Saint Martin</option>
+                    <option hidden class="car" id="vct">Saint Vincent/Grenadines</option>
+                    <option hidden class="car" id="kna">St. Kitts</option>
+                    <option hidden class="car" id="lca">St. Lucia</option>
+                    <option hidden class="car" id="tto">Trinidad and Tobago</option>
+                    <option hidden class="car" id="tca">Turks and Caicos</option>
+                    <option hidden class="eur" id="aut">Austria</option>
+                    <option hidden class="eur" id="bel">Belgium</option>
+                    <option hidden class="eur" id="che">Switzerland</option>
+                    <option hidden class="eur" id="deu">Germany</option>
+                    <option hidden class="eur" id="dnk">Denmark</option>
+                    <option hidden class="eur" id="esp">Spain</option>
+                    <option hidden class="eur" id="fin">Finland</option>
+                    <option hidden class="eur" id="fra">France</option>
+                    <option hidden class="eur" id="gbr">United Kingdom</option>
+                    <option hidden class="eur" id="irl">Ireland</option>
+                    <option hidden class="eur" id="ita">Italy</option>
+                    <option hidden class="eur" id="nld">The Netherlands</option>
+                    <option hidden class="eur" id="nor">Norway</option>
+                    <option hidden class="eur" id="pol">Poland</option>
+                    <option hidden class="eur" id="swe">Sweden</option>
+                    <option hidden class="nam" id="can">Canada</option>
+                    <option hidden class="nam" id="usa">United States</option>
+                    <option hidden class="sam" id="arg">Argentina</option>
+                    <option hidden class="sam" id="blz">Belize</option>
+                    <option hidden class="sam" id="bra">Brazil</option>
+                    <option hidden class="sam" id="chl">Chile</option>
+                    <option hidden class="sam" id="cri">Costa Rica</option>
+                    <option hidden class="sam" id="ecu">Ecuador</option>
+                    <option hidden class="sam" id="gtm">Guatemala</option>
+                    <option hidden class="sam" id="guy">Guyana</option>
+                    <option hidden class="sam" id="hnd">Honduras</option>
+                    <option hidden class="sam" id="mex">Mexico</option>
+                    <option hidden class="sam" id="pan">Panama</option>
+                    <option hidden class="sam" id="per">Peru</option>
+                    <option hidden class="sam" id="ury">Uruguay</option>
+                    <option hidden class="sam" id="ven">Venezuela</option>
+                </select>
+                <input id="postal_code" disabled type="text" placeholder="Postal code">
+            </div>
+            <label for="provider_type">Provider type/Lineup</label>
+            <div>
+                <select id="provider_type" disabled>
+                    <option id="ALL">All services</option>
+                    <option id="SATELLITE">Satellite</option>
+                    <option id="CABLE">Cable</option>
+                    <option id="OTA">OTA</option>
+                    <option id="IPTV">IPTV</option>
+                    <option id="VMVPD">vMVPD</option>
+                    <option id="VIRTUAL">Virtual</option>
+                </select>
+                <select id="lineups" disabled>
+                    <option id="l_none">Please select...</option>
+                </select>
+            </div>
+        </div>
+    </section>
+    <section id="grabber-window" class="nav-bar">
+        <button id="close-grabber" class="exit-btn" type="button">x</button>
+        
+        <p>Grabber</p>
+        
+        <label for="grabber_dl">Status: <b id="dl_status">Idle</b></label>
+        <div>
+            <progress id="grabber_dl" value="100" max="100"></progress>
+        </div>
+
+        <label for="file_type">Retrieve the file (last created: <b id="dl_created">Never</b>)</label>
+        <div>
+            <select id="file_type">
+                <option id="XML">XML file</option>
+                <option id="GZ">Compressed GZ archive</option>
+            </select>
+            <button class="multiple-btn" disabled id="file_copy" type="button">Copy link</button>
+            <button disabled id="file_dl" type="button">Download</button>
+        </div>
+
+    </section>
+    <section id="settings-window" class="nav-bar">
+        <button id="close-settings" class="exit-btn" type="button">x</button>
+        
+        <p>Grabber Settings</p>
+
+        <label for="days">Number of days to grab (<b id="days_number">7</b>)</label>
+        <div>
+            <input id="days" type="range" min="0" max="14" step="1.0" value="7">
+        </div>
+
+        <label for="rating_mapper">Rating Mapper for broadcast descriptions</label>
+        <div>
+            <select id="rating_mapper">
+                <option id="rm_none">Show default description</option>
+                <option id="rm_add-info">Add additional info (year, age + TMS rating)</option>
+                <option id="rm_add-cast">Add cast to description</option>
+                <option id="rm_add-info-cast">Add additional info + cast to desc.</option>
+            </select>
+        </div>
+
+        <label for="image_type">Image Size/Aspect TV</label>
+        <div>
+            <select id="image_size">
+                <option id="is_Sm">Small</option>
+                <option id="is_Md">Medium</option>
+                <option id="is_Lg">Large</option>
+                <option id="is_Ms">Original</option>
+            </select>
+            <select id="image_type">
+                <option id="it_2x3">2x3</option>
+                <option id="it_3x4">3x4</option>
+                <option id="it_4x3">4x3</option>
+                <option id="it_16x9">16x9</option>
+            </select>
+        </div>
+
+        <label for="age_type">Age Rating Type</label>
+        <div>
+            <select id="age_type">
+                <option id="at_fsk">German: FSK</option>
+                <option id="at_usa">USA Parental Rating</option>
+            </select>
+        </div>
+
+        <label for="scheduler">Scheduler (update rate/time/auto-start)</label>
+        <div>
+            <select id="scheduler_rate">
+                <option id="rate_0">Never</option>
+                <!-- <option id="rate_12">Semi-daily</option> -->
+                <option id="rate_24">Daily</option>
+                <option id="rate_48">Every 48h</option>
+                <option id="rate_72">Every 72h</option>
+                <option id="rate_168">Weekly</option>
+            </select>
+            <input id="update_time" type="time" min="00:00" max="24:00" value="04:00">
+            <select id="auto_grab">
+                <option id="ag_no">Disabled</option>
+                <option id="ag_yes">Always (after starting the app)</option>
+                <option id="ag_out">After starting the app (if file is outdated)</option>
+            </select>
+        </div>
+
+        <div>
+            <button id="settings-save" type="button" class="add-btn">Save</button>
+        </div>
+
+    </section>
+    <section id="about-window" class="nav-bar">
+        <button id="close-about-info" class="exit-btn" type="button">x</button>
+        
+        <p>About this app</p>
+
+        This application creates XMLTV EPG files using Gracenote's API resources. A simple web interface allows you to select all channels needed for your individual TV setup.<br>
+        <br>
+        <b>Web app</b><br>
+        Version 1.0.0<br>
+        © 2022 Jan-Luca Neumann<br>
+        <br>
+        <b>TMS API</b><br>
+        Version 1.1<br>
+        © 2000-present. Gracenote, Inc. All rights reserved.<br>
+
+    </section>
+    <section id="key-window" class="nav-bar">
+        <p>TMS API key required!</p>
+
+        This application creates XMLTV EPG files using Gracenote's TMS API.<br><br>
+        Please enter the 24-character key obtained during TMS application registration.<br><br>
+
+        <div>
+            <input id="key-input" maxlength="24" type="search" placeholder="Gracenote API key">
+        </div>
+
+    </section>
+    <section id="mapping-window" class="nav-bar">
+        <button id="close-mappings" class="exit-btn" type="button">x</button>
+        
+        <p>M3U Channel ID Mappings</p>
+
+        <label for="m3u-url">Playlist URL</label>
+        <div>
+            <input id="m3u-url" placeholder="Enter the link to your M3U playlist...">
+            <button disabled id="m3u-url-apply">Apply</button>
+        </div>
+
+        <label for="m3u-upload">Playlist Upload</label>
+        <div>
+            <input type="file" accept=".m3u" id="m3u-upload" placeholder="Click here to select your file...">
+            <button disabled id="m3u-upload-apply">Upload M3U</button>
+        </div>
+
+    </section>
+    <nav class="nav-bottom">
+        <div id="btn-main-group">
+            <button title="Grabber" id="open-grabber">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-cloud-download" viewBox="0 0 16 16">
+                    <path d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z"/>
+                    <path d="M7.646 15.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 14.293V5.5a.5.5 0 0 0-1 0v8.793l-2.146-2.147a.5.5 0 0 0-.708.708l3 3z"/>
+                </svg>
+            </button>
+            <button title="Add new channels" id="open-search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+            </button>
+            <button title="Open Settings" id="open-settings">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16">
+                    <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+                    <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+                </svg>
+            </button>
+            <button title="M3U Playlist ID Mapping" id="open-mappings">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-chevron-bar-contract" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M3.646 14.854a.5.5 0 0 0 .708 0L8 11.207l3.646 3.647a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 0 0 0 .708zm0-13.708a.5.5 0 0 1 .708 0L8 4.793l3.646-3.647a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 0-.708zM1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8z"/>
+                </svg>
+            </button>
+            <button title="About" id="open-about">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                </svg>
+            </button>
+        </div>
+        <div id="btn-ch-select-group">
+            <button id="ch-select-all">Select All</button>
+            <button id="ch-unselect-all">Unselect All</button>
+            <button id="ch-remove-all" class="remove-btn">Remove</button>
+            <button disabled id="ch-map" class="map-btn">Map Channel</button>
+        </div>
+        <div id="btn-lp-select-group">
+            <button id="ch-lp-select-all">Select All</button>
+            <button id="ch-lp-unselect-all">Unselect All</button>
+            <button id="ch-lp-add-all" class="add-btn">Add</button>
+        </div>
+        <div id="about-btn-group">
+            <button onclick="location.href = 'https://github.com/sunsettrack4';">GitHub</button>
+            <button onclick="location.href = 'https://paypal.me/sunsettrack4';">Donate</button>
+            <button onclick="location.href = 'https://www.gracenote.com/on-entertainment-tv-listings/';">About TV listings</button>
+        </div>
+        <div id="grabber-btn-group">
+            <button id="start_dl" class="add-btn">Start</button>
+            <button id="stop_dl" class="remove-btn">Cancel</button>
+        </div>
+    </nav>
+</body>
+<script src="/app/data/js/main.js"></script>
+</html>

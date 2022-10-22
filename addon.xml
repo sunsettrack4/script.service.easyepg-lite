@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="script.service.easyepg-lite" name="easyepg lite" version="1.0.0" provider-name="Jan-Luca Neumann">
+  <requires>
+      <import addon="xbmc.python" version="3.0.0"/>
+            <import addon="script.module.requests"/>
+            <import addon="script.module.bottle"/>
+            <import addon="script.module.xmltodict"/>
+  </requires>
+  <extension point="xbmc.service" library="addon.py" start="startup" />
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">easyepg lite</summary>
+    <description lang="en_GB">Service addon providing EPG data by Gracenote</description>
+    <description lang="de_DE">Service-Addon zur Bereitstellung der EPG-Daten von Gracenote</description>
+    <platform>all</platform>
+    <license>GPL-3.0-or-later</license>
+    <website>https://gracenote.com</website>
+    <email>sunsettrack4@gmail.com</email>
+    <source>http://github.com/sunsettrack4/script.service.easyepg-lite</source>
+    <news>v1.0.0 (22/10/2022)
+      * Initial release
+    </news>
+    <assets>
+      <icon>icon.png</icon>
+      <fanart>fanart.jpg</fanart>
+    </assets>
+  </extension>
+</addon>

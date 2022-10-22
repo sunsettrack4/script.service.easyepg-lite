@@ -1,0 +1,585 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito&display=swap')
+
+@keyframes blockPage
+    0%
+        opacity: 0
+    100%
+        opacity: 0.4
+
+@keyframes transitionIn
+    0%
+        opacity: 0
+    60%
+        opacity: 1
+    100%
+        opacity: 1
+
+@keyframes transitionOut
+    0%
+        opacity: 1
+    60%
+        opacity: 0
+    100%
+        opacity: 0
+
+@keyframes transitionInOut
+    0%
+        opacity: 0
+        top: -100px
+    15%
+        opacity: 1
+        top: 0
+    85%
+        opacity: 1
+        top: 0
+    100%
+        opacity: 0
+        top: -100px
+
+@keyframes navTransitionIn
+    0%
+        opacity: 0
+        bottom: -500px
+    30%
+        opacity: 0
+        bottom: -500px
+    100%
+        opacity: 1
+        bottom: 3.2em
+
+@keyframes navTransitionOut
+    0%
+        opacity: 1
+        bottom: 3.2em
+    50%
+        opacity: 0.5
+        bottom: -500px
+    100%
+        opacity: 0
+        bottom: -1000px
+
+#page-blocker
+    z-index: 70
+    position: fixed
+    padding: 0
+    margin: 0
+    top: 0
+    left: 0
+    width: 100%
+    height: 100%
+    background-color: black
+    opacity: 0.4
+
+.add-blocker
+    animation: blockPage 300ms
+
+body
+    background-image: linear-gradient(270deg, #57b3ff 25%, blue 75%)
+    margin: 0
+    font-family: 'Nunito', sans-serif
+    margin-top: 3.5em
+
+select
+    border: none
+    outline-width: 0
+    background-color: white
+
+.header
+    animation: transitionIn 700ms
+    color: white
+    text-align: center
+    margin-top: 1.4rem
+    margin-bottom: 0
+
+.nav-top
+    position: fixed
+    z-index: 95
+    top: 0
+    width: 100%
+    background-image: linear-gradient(270deg, blue 45%, royalblue 55%)
+    box-shadow: 0px 2px 5px yellowgreen, 0px -10px 5px rgba(50, 50, 50, 0.45)
+    color: white
+    text-align: center
+    padding-top: 0.3rem
+    padding-bottom: 0.3rem
+    font-size: 1.4rem
+
+.noti
+    z-index: 100
+    display: none
+    padding-top: 0.6rem
+    padding-bottom: 0.6rem
+    font-size: 1rem
+    background-image: none
+    box-shadow: 0px 2px 8px rgba(50, 50, 50, 0.45), 0px -10px 5px rgba(50, 50, 50, 0.45)
+
+.noti-info
+    background-image: linear-gradient(270deg, blue 45%, royalblue 55%)
+
+.noti-success
+    background-color: yellowgreen
+    
+.noti-error
+    background-color: red
+
+.noti-show
+    animation: transitionInOut 3000ms
+
+.nav-bottom
+    #btn-ch-select-group, #btn-lp-select-group, #about-btn-group, #btn-main-group, #grabber-btn-group
+        display: none
+    
+    position: fixed
+    z-index: 95
+    bottom: 0
+    width: 100%
+    height: 2em
+    background-image: linear-gradient(270deg, blue 45%, royalblue 55%)
+    box-shadow: 0px -3px 10px 0px yellowgreen
+    color: white
+    text-align: center
+    padding-top: 0.3rem
+    padding-bottom: 0.3rem
+
+    #btn-ch-select-group, #btn-lp-select-group, #about-btn-group, #grabber-btn-group
+        button
+            cursor: pointer
+            border: solid
+            border-color: rgb(6, 146, 239)
+            border-radius: 5px
+            border-width: 2px
+            padding: 5px
+            margin-left: 3px
+            margin-right: 3px
+            background: rgb(6, 146, 239)
+            color: white
+
+        .remove-btn
+            border-color: red
+            background-color: red
+
+        .map-btn
+            border-color: yellow
+            background-color: yellow
+            color: black
+
+        .add-btn
+            border-color: yellowgreen
+            background-color: yellowgreen
+
+        button:disabled
+            cursor: not-allowed
+            opacity: 0.6
+            background-color: white
+            border-color: white
+            color: black
+
+    #btn-main-group
+        button
+            background: none
+            color: white
+            border: none
+            cursor: pointer
+            margin-top: 2px
+            margin-left: 0.7rem
+            margin-right: 0.7rem
+        
+
+.search-bar, .search-results
+    animation: transitionIn 700ms
+    position: relative 
+    padding: 0.6rem
+    padding-bottom: 1rem
+    top: 0.2rem
+    margin: 5px
+    margin-right: 15px
+    border-radius: 5px
+
+    p
+        text-align: center
+        font-weight: bold
+        margin: 0
+        margin-bottom: 5px
+
+    input
+        border: none
+        border-radius: 5px
+        padding-top: 5px
+        padding-bottom: 5px
+        margin-bottom: 5px
+        outline-width: 0
+        position: relative
+        height: 100%
+        width: 100%
+        top: 0
+        left: 0
+    
+    svg 
+        position: relative
+        height: 100%
+        top: 0
+        left: 3px
+
+    img
+        max-width: 64px
+        max-height: 48px
+
+    table
+        width: 100%    
+        border-collapse: collapse
+        y-overflow: scroll
+        max-height: 350px
+        border-radius: 5px
+
+        tbody
+            display: block
+            overflow-y: auto
+            overflow-x: hidden
+            max-height: 350px
+            height: 100%
+
+        tbody tr:first-child td:first-child
+            border-top-left-radius: 5px
+
+        tbody tr:first-child td:last-child
+            border-top-right-radius: 5px
+
+        tbody tr:last-child td:first-child
+            border-bottom-left-radius: 5px
+
+        tbody tr:last-child td:last-child
+            border-bottom-right-radius: 5px
+
+        tbody tr td:nth-child(1)
+            width: 64px
+            height: 48px
+
+        tbody tr
+            width: 100%
+
+        tbody td
+            padding: 0.3rem
+            width: 100%
+            cursor: pointer
+
+        tr:nth-child(1n)
+            background-color: rgb(5, 131, 215)
+
+        tr:nth-child(2n)
+            background-color: royalblue
+
+        tr.ch_selected
+            background-color: yellowgreen
+            .id-show
+                background-color: white
+                color: yellowgreen
+
+        tr.mp_selected
+            background-color: yellowgreen
+            .id-show
+                background-color: white
+                color: yellowgreen
+
+        p
+            font-size: xx-small
+            font-weight: normal
+            margin: 0
+            margin-top: 2px
+            text-align: left
+
+        .id-show
+            background-color: yellowgreen
+            color: white
+            border-radius: 5px
+            padding-left: 5px
+
+        .add-ch
+            svg
+                position: relative
+            height: 30px
+            color: white
+            background: none
+            padding-right: 1em
+            cursor: pointer
+
+        .added-ch
+            svg
+                position: relative
+            height: 30px
+            color: yellowgreen
+            background: none
+            padding-right: 1em
+            cursor: not-allowed
+
+        .info-ch
+            svg
+                position: relative
+            height: 30px
+            color: white
+            background: none
+            padding-right: 1em
+            cursor: pointer
+    
+        .info-ch-disabled
+            cursor: not-allowed
+            color: darkgrey
+
+        .add-ch-disabled
+            cursor: not-allowed
+            color: darkgrey
+
+    #missings-table
+        height: 10em
+
+        tbody tr td
+            width: 100rem
+            height: 20px
+
+    .reduce-height
+        max-height: 18em
+
+section
+    background-color: rgb(6, 146, 239)
+    color: white
+    display: flex
+    justify-content: center
+
+    @media only screen and (min-width: 520px)
+        width: 500px
+        left: 50%
+        transform: translate(-50%)
+
+    @media only screen and (max-width: 520px)
+        left: 5px
+        right: 5px
+        max-width: 500px
+        span
+            display: none
+
+    button
+        display: flex
+        justify-content: center
+        align-content: center
+        height: auto
+        min-width: 33%
+        margin: 0.1rem
+        padding: 0
+        border-radius: 5px
+        border: none  
+
+        span
+            margin-top: auto
+            margin-bottom: auto
+            margin-left: 0.3rem
+            padding-top: 2px
+
+        svg
+            height: 100%
+
+    #grabber
+        color: white
+        background-color: darkorange
+
+    #fetch
+        color: white
+        background-color: green
+    
+    #settings
+        color: white
+        background-color: blue
+
+.hide-window
+    animation: transitionOut 250ms
+
+.search-bar
+    height: 1.5rem
+
+.lineup-top
+    margin-bottom: 0
+    border-bottom-left-radius: 0
+    border-bottom-right-radius: 0
+    
+    select
+        width: 50%
+
+.lineup-bottom
+    border-top-left-radius: 0
+    border-top-right-radius: 0
+    margin-top: 0
+
+    input
+        width: 40%
+    select
+        width: 50%
+
+#provider-type
+    width: 30%
+
+.search-results
+    display: none
+    max-height: 30rem
+    margin-bottom: 10px
+
+.callsign
+    color: grey
+
+.select-on-ui
+    color: white
+    background-color: yellowgreen
+    outline: 0
+    border-radius: 5px
+
+.search-lp
+    display: none
+
+#header-btn
+    text-align: center
+
+.header-btn
+    outline: 0
+    border: none
+    border-radius: 5px
+    opacity: 0.8
+    cursor: pointer
+
+#missing-mappings
+    margin-bottom: 4rem
+
+#h
+    color: yellowgreen
+
+#k
+    color: darkgrey
+    font-size: x-small
+    margin-top: 0
+    margin-bottom: 0
+
+.nav-bar
+    position: fixed
+    display: none
+    z-index: 80
+    align-content: left
+    background-color: rgb(6, 146, 239)
+    color: white
+    animation: navTransitionIn 700ms
+    box-shadow: 0px 10px 5px rgba(50, 50, 50, 0.45), 0px -10px 5px rgba(50, 50, 50, 0.45)
+    padding: 0.8rem
+    bottom: 3.2em
+    margin: 5px
+    border-radius: 5px
+    font-size: smaller
+
+    img
+        max-height: 100px
+        max-width: 100px
+        display: block
+        margin-left: auto
+        margin-right: auto
+        align-content: center
+        margin-top: 0.3rem
+        margin-bottom: 0.3rem
+
+    input, select
+        width: 100%
+        border: none
+        outline-width: 0
+        height: 2em
+        border-radius: 5px
+        padding: 0
+        padding-left: 0.5rem
+        padding-right: 0.5rem
+        margin-right: 3px
+
+    #days
+        padding-left: 0
+        padding-right: 0
+
+    div
+        display: flex
+        margin-bottom: 0.5rem
+
+        progress
+            width: 100%
+
+        button
+            margin: 0
+            height: 2em
+            background-color: yellowgreen
+            color: white
+            padding-top: 0.4rem
+            padding-bottom: 0.4rem
+
+        button:disabled
+            background-color: white
+            opacity: 0.3
+            color: black
+            cursor: not-allowed
+
+        .remove-btn
+            background-color: red
+            margin-top: 1em
+            margin-left: auto
+            margin-right: auto
+
+        .add-btn
+            background-color: yellowgreen
+            margin-top: 1em
+            margin-left: auto
+            margin-right: auto
+
+        .multiple-btn
+            margin-right: 2px
+    
+    p
+        text-align: center
+        font-weight: bold
+        font-size: larger
+        margin-top: 5px
+
+    button
+        cursor: pointer
+
+    .section
+        display: inline
+
+        p
+            margin-top: 0
+            margin-bottom: 0
+
+        .add-space
+            margin-top: 20px
+        
+        button
+            margin-left: 2px
+            margin-right: 2px
+        
+        input
+            border-radius: 5px
+            width: 100%
+            margin-left: 2px
+            margin-right: 2px
+
+        select
+            border-radius: 5px
+            width: 100%
+            margin-left: 2px
+            margin-right: 2px
+
+    .hide
+        display: none
+
+.exit-btn
+    display: inline
+    min-width: 20px
+    height: 20px
+    position: absolute
+    margin: 0.4em
+    top: 3px
+    right: 3px
+    background-color: white
+    color: green
+    opacity: 0.5
+    cursor: pointer
+
+.nav-bar-move
+    animation: navTransitionOut 700ms
