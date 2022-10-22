@@ -3,7 +3,7 @@ from os import mkdir
 from threading import Thread
 import xbmc, xbmcvfs, xbmcaddon
 
-__addon__       = xbmcaddon.Addon(id='script.service.easyepg')
+__addon__       = xbmcaddon.Addon(id='script.service.easyepg-lite')
 __addondir__    = xbmcvfs.translatePath(__addon__.getAddonInfo('profile'))
 __addonpath__   = xbmcvfs.translatePath(__addon__.getAddonInfo('path'))
 
