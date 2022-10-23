@@ -22,6 +22,10 @@
     <assets>
       <icon>icon.png</icon>
       <fanart>fanart.jpg</fanart>
+      <screenshot>screenshot-1.jpg</screenshot>
+      <screenshot>screenshot-2.jpg</screenshot>
+      <screenshot>screenshot-3.jpg</screenshot>
+      <screenshot>screenshot-4.jpg</screenshot>
     </assets>
   </extension>
 </addon>
