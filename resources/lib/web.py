@@ -18,7 +18,7 @@ class WebServer():
 
     def start(self):
         init_config(self.g, self.f)
-        run(host='0.0.0.0', port=4000, debug=False)
+        run(host='0.0.0.0', port=4000, debug=False, quiet=True)
 
     def stop_kodi(self):
         # IT'S NOT THE BEST SOLUTION... BUT IT WORKS.
