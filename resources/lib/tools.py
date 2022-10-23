@@ -17,7 +17,7 @@ class API():
         url = f"http://data.tmsapi.com/v1.1/stations/{channel_id}/airings?startDateTime={time_start}&endDateTime={time_end}&imageSize={settings['is']}&imageAspectTV={settings['it']}&api_key={settings['api_key']}"
         
         try:
-            return requests.get(url, headers=general_header).json()
+            return json.loads(requests.get(url, headers=general_header).content)
         except:
             return {}
             
@@ -25,8 +25,7 @@ class API():
         url = f"http://data.tmsapi.com/v1.1/stations/10359?lineupId=USA-TX42500-X&api_key={str(new_key) if new_key is not None else str(self.key)}"
 
         try:
-            s = requests.get(url, headers=general_header)
-            s.json()
+            s = json.loads(requests.get(url, headers=general_header).content)
             if new_key is not None:
                 self.key = new_key
             return True
@@ -50,7 +49,7 @@ class API():
         try:
             s = requests.get(url, headers=general_header)
             a = []
-            r = s.json()
+            r = json.loads(s.content)
             for i in r["hits"]:
                 if i["station"].get("stationId"):
                     if self.channels.get(i["station"]["stationId"]):
@@ -83,7 +82,7 @@ class API():
 
         try:
             s = requests.get(url, headers=general_header)
-            r = s.json()
+            r = json.loads(s.content)
             if type(r) != list and r.get("errorCode"):
                 return json.dumps({"success": False, "message": f"Channel not found (Code: {r['errorCode']})."})
             else:
@@ -107,7 +106,7 @@ class API():
         
         try:
             s = requests.get(url, headers=general_header)
-            r = s.json()
+            r = json.loads(s.content)
             if type(r) != list and r.get("errorCode"):
                 return json.dumps({"success": False, "message": f"Lineups not found (Code: {r['errorCode']})."})
             else:
@@ -125,7 +124,7 @@ class API():
         try:
             s = requests.get(url, headers=general_header)
 
-            r = s.json()
+            r = json.loads(s.content)
             if type(r) != list and r.get("errorCode"):
                 return json.dumps({"success": False, "message": f"Lineup channels not found (Code: {r['errorCode']})."})
             else:
