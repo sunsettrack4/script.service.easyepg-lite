@@ -1,12 +1,8 @@
-from cmath import exp
 from resources.lib import tools
 from bottle import  request, route, run, static_file
 from threading import Event
-import json, logging, os, requests, signal
+import json, os, requests, signal, traceback
 
-
-logging.basicConfig(level=logging.ERROR)
-logger = logging.getLogger(__name__)
 
 stopFlag = Event()
 
@@ -36,6 +32,12 @@ def init_config(v, w):
     g = v
     f = w
     t = tools.API(g.user_db.main["settings"]["api_key"], g.user_db.main["channels"], f)
+
+def print_error(exception):
+    try:
+        print(exception)
+    except:
+        pass
 
 # WEB PAGES
 @route("/")
@@ -74,6 +76,7 @@ def save_settings():
         g.user_db.save_settings()
         return json.dumps({"success": True})
     except Exception as e:
+        print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": f"Operation failed: {e}"})
 
 @route("/api/search", method="POST")
@@ -121,7 +124,8 @@ def add_channel():
                 if len(i["result"]) > 0 and i["result"][0].get("stationId") == id:
                     g.user_db.main["channels"][id] = i["result"][0]
                     g.user_db.save_settings()
-        except:
+        except Exception as e:
+            print_error(traceback.format_exc())
             return json.dumps({"success": False, "message": "Not all channels could not be added."})
     return json.dumps({"success": True})
 
@@ -137,6 +141,7 @@ def remove_channels():
         g.user_db.save_settings()
         return json.dumps({"success": True})
     except Exception as e:
+        print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": f"Operation failed: {e}"})
 
 @route("/api/check-tvgid", method="POST")
@@ -148,6 +153,7 @@ def check_tvg_id():
         else:
             return json.dumps({"success": True})
     except Exception as e:
+        print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": f"Operation failed: {e}"})
 
 @route("/api/add-tvgid", method="POST")
@@ -163,6 +169,7 @@ def add_tvg_id():
         g.user_db.save_settings()
         return json.dumps({"success": True})
     except Exception as e:
+        print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": f"Operation failed ({e})."})
 
 @route("/api/channel_info", method="POST")
@@ -224,6 +231,7 @@ def upload_m3u_file():
         g.user_db.save_settings()
         return json.dumps({"success": True, "result": r})
     except Exception as e:
+        print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": str(e)})
 
 @route("/api/playlist-m3u", method="GET")
@@ -232,6 +240,7 @@ def get_m3u_file():
         m3u = tools.read_file(f['storage'])
         return json.dumps({"success": True, "result": convert_m3u(str(convert_codec(m3u)))})
     except Exception as e:
+        print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": str(e)})
 
 @route("/api/playlist-link", method="POST")
@@ -244,6 +253,7 @@ def upload_m3u_link():
         g.user_db.save_settings()
         return json.dumps({"success": True, "result": r})
     except Exception as e:
+        print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": str(e)})
 
 @route("/api/playlist-link", method="GET")
@@ -251,6 +261,7 @@ def load_via_m3u_link():
     try:
         return json.dumps({"success": True, "result": convert_m3u(str(load_m3u(g.user_db.main["settings"]["file_url"])))})
     except Exception as e:
+        print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": str(e)})
 
 def convert_codec(text):

@@ -57,7 +57,7 @@ class Grabber():
 
         self.file_available = False
         self.file_created = "Never"
-        
+
         if not os.path.isdir(f"{file_paths['storage']}xml"):
             os.mkdir(f"{file_paths['storage']}xml")
         if os.path.exists(f"{file_paths['storage']}xml/epg.xml"):
@@ -407,12 +407,17 @@ class Grabber():
                 log.write(f"--- ERROR LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
                 traceback.print_exc(file=log)
                 log.write(f"--- ERROR LOG END ---\n\n")
+            
+            try:
+                print(traceback.format_exc())
+            except:
+                pass
 
             self.grabbing = False
             self.started = False
             self.cancellation = False
             self.progress = 100
-            self.status = "An error occurred. Please check the 'grabber_error_log.txt' file."
+            self.status = "An error occurred. Please check the log file."
             sleep(5)
             self.status = "Idle"
     
