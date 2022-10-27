@@ -272,6 +272,7 @@ def convert_m3u(file):
         else:
             pre_process = file.split("#EXTM3U")[1].split("\\n")
         for item in pre_process:
+            item = item.replace("tvg-ID", "tvg-id")
             if "#EXTINF" in item and 'tvg-id="' in item and "," in item:
                 tvg_id = item.split('tvg-id="')[1].split('"')[0]
                 if tvg_id != "":
