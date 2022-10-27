@@ -50,8 +50,14 @@ class Grabber():
         self.status = "Idle"
         self.progress = 100
 
+        if os.path.exists(f"{self.file_paths['storage']}grabber_error_log_old.txt"):
+            os.remove(f"{self.file_paths['storage']}grabber_error_log_old.txt")
+        if os.path.exists(f"{self.file_paths['storage']}grabber_error_log.txt"):
+            os.rename(f"{self.file_paths['storage']}grabber_error_log.txt", f"{self.file_paths['storage']}grabber_error_log_old.txt")
+
         self.file_available = False
         self.file_created = "Never"
+        
         if not os.path.isdir(f"{file_paths['storage']}xml"):
             os.mkdir(f"{file_paths['storage']}xml")
         if os.path.exists(f"{file_paths['storage']}xml/epg.xml"):
