@@ -52,9 +52,11 @@ class Grabber():
 
         self.file_available = False
         self.file_created = "Never"
-        if os.path.exists(f"{file_paths['storage']}epg.xml"):
+        if not os.path.isdir(f"{file_paths['storage']}xml"):
+            os.mkdir(f"{file_paths['storage']}xml")
+        if os.path.exists(f"{file_paths['storage']}xml/epg.xml"):
             self.file_available = True
-            self.file_created = datetime.fromtimestamp(os.path.getmtime(f"{self.file_paths['storage']}epg.xml")).strftime('%Y-%m-%d %H:%M:%S')
+            self.file_created = datetime.fromtimestamp(os.path.getmtime(f"{self.file_paths['storage']}xml/epg.xml")).strftime('%Y-%m-%d %H:%M:%S')
         
         self.started = False
         self.cancellation = False
@@ -66,7 +68,7 @@ class Grabber():
         if self.user_db.main["settings"]["ag"] == "yes":
             start_up = True
         if self.user_db.main["settings"]["ag"] == "out" and self.file_available and \
-            int(self.user_db.main["settings"]["rate"]) * 3600 + os.path.getmtime(f"{self.file_paths['storage']}epg.xml") <= datetime.strptime(f'{start_dt} {self.user_db.main["settings"]["ut"]}', "%Y%m%d %H:%M").timestamp():
+            int(self.user_db.main["settings"]["rate"]) * 3600 + os.path.getmtime(f"{self.file_paths['storage']}xml/epg.xml") <= datetime.strptime(f'{start_dt} {self.user_db.main["settings"]["ut"]}', "%Y%m%d %H:%M").timestamp():
                 start_up = True
         if self.user_db.main["settings"]["ag"] == "out" and not self.file_available:
             start_up = True
@@ -375,16 +377,16 @@ class Grabber():
                 
                 file.write('</tv>\n')
             
-            if os.path.exists(f"{self.file_paths['storage']}epg.xml"):
-                os.remove(f"{self.file_paths['storage']}epg.xml")
-            os.rename(f"{self.file_paths['storage']}test.xml", f"{self.file_paths['storage']}epg.xml")
+            if os.path.exists(f"{self.file_paths['storage']}xml/epg.xml"):
+                os.remove(f"{self.file_paths['storage']}xml/epg.xml")
+            os.rename(f"{self.file_paths['storage']}xml/test.xml", f"{self.file_paths['storage']}xml/epg.xml")
 
             self.status = "Creating compressed file..."
-            with open(f"{self.file_paths['storage']}epg.xml", 'rb') as f_in, gzip.open(f"{self.file_paths['storage']}epg.xml.gz", 'wb') as f_out:
+            with open(f"{self.file_paths['storage']}xml/epg.xml", 'rb') as f_in, gzip.open(f"{self.file_paths['storage']}xml/epg.xml.gz", 'wb') as f_out:
                 f_out.writelines(f_in)
 
             self.file_available = True
-            self.file_created = datetime.fromtimestamp(os.path.getmtime(f"{self.file_paths['storage']}epg.xml")).strftime('%Y-%m-%d %H:%M:%S')
+            self.file_created = datetime.fromtimestamp(os.path.getmtime(f"{self.file_paths['storage']}xml/epg.xml")).strftime('%Y-%m-%d %H:%M:%S')
 
             self.status = "File created successfully!"
             self.progress = 100
