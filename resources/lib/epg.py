@@ -194,7 +194,7 @@ class Grabber():
                             title = p["title"]
                             subtitle = p.get("episodeTitle", p.get("eventTitle"))
                             desc = p.get("longDescription", p.get("shortDescription"))
-                            date = datetime.strptime(p["origAirDate"], "%Y-%m-%d").strftime("%Y") if p.get("origAirDate", False) else None
+                            date = datetime.strptime(p["origAirDate"], "%Y-%m-%d").strftime("%Y") if p.get("origAirDate") is not None else None
                             star = p.get("qualityRating", {"value": None})["value"]
                             director = p.get("directors", [])
                             actor = p.get("topCast", [])
