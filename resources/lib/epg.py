@@ -146,7 +146,7 @@ class Grabber():
             self.worker = 0
             self.basic_value = 1 / len(self.user_db.main["channels"])
 
-            with open(f"{self.file_paths['storage']}test.xml", "a+", encoding="UTF-8") as file:
+            with open(f"{self.file_paths['storage']}xml/test.xml", "a+", encoding="UTF-8") as file:
 
                 # GENERAL INFO
                 file.write('<?xml version="1.0" encoding="UTF-8"?>\n')

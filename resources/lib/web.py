@@ -193,7 +193,7 @@ def stop_grabber():
 @route("/download/<file_name>", method="GET")
 def download_file(file_name):
     if file_name == "epg.xml" or file_name == "epg.xml.gz":
-        return static_file(file_name, root=f"{f['storage']}", download=file_name)
+        return static_file(file_name, root=f"{f['storage']}xml/", download=file_name)
     else:
         return ""
 
@@ -239,6 +239,8 @@ def get_m3u_file():
     try:
         m3u = tools.read_file(f['storage'])
         return json.dumps({"success": True, "result": convert_m3u(str(convert_codec(m3u)))})
+    except FileNotFoundError:
+        return json.dumps({"success": False, "message": "No file found."})
     except Exception as e:
         print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": str(e)})
