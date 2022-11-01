@@ -70,7 +70,7 @@ class Grabber():
 
         # AUTO START UP
         start_up = False
-        start_dt = f'{datetime.now().year}{datetime.now().month}{datetime.now().day}'
+        start_dt = f'{datetime.now().strftime("%Y%m%d")}'
         if self.user_db.main["settings"]["ag"] == "yes":
             start_up = True
         if self.user_db.main["settings"]["ag"] == "out" and self.file_available and \
@@ -99,7 +99,7 @@ class Grabber():
                 if int(self.user_db.main["settings"]["rate"]) != 0 and \
                     (int(self.user_db.main["settings"]["rate"]) * 3600 + datetime.strptime(f'{start_dt} {self.user_db.main["settings"]["ut"]}', "%Y%m%d %H:%M").timestamp()) < datetime.now().timestamp():
                         self.grabbing = True
-                        start_dt = f'{datetime.now().year}{datetime.now().month}{datetime.now().day}'
+                        start_dt = f'{datetime.now().strftime("%Y%m%d")}'
                 sleep(1)
 
     def load_airings(self, channel):
@@ -133,6 +133,9 @@ class Grabber():
 
             # DOWNLOAD FILES
             self.status = "Downloading EPG data..."
+
+            if len(self.user_db.main["channels"]) == 0:
+                raise Exception("Please add your channels first before starting the grabber process.")
             
             executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.user_db.main["settings"]["dl_threads"])
             {executor.submit(self.load_airings, channel).add_done_callback(self.cache_airings) for channel in self.user_db.main["channels"]}
@@ -393,6 +396,11 @@ class Grabber():
 
             self.file_available = True
             self.file_created = datetime.fromtimestamp(os.path.getmtime(f"{self.file_paths['storage']}xml/epg.xml")).strftime('%Y-%m-%d %H:%M:%S')
+
+            try:
+                print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: File created successfully!")
+            except:
+                pass
 
             self.status = "File created successfully!"
             self.progress = 100
