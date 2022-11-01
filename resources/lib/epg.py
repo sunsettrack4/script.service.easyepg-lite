@@ -36,7 +36,7 @@ class UserData():
             self.main["settings"] = {"api_key": None, "days": "7", "rm": "none", "is": "Md", "it": "16x9", "at": "fsk", "rate": "0", "ut": "04:00", "ag": "no", "file": False, "dl_threads": 1, "pn_max": 50000}
         
         # Check settings / insert default values (if needed)
-        if self.main["settings"].get("ut") is not None and self.main["settings"]["ut"] == "":
+        if self.main["settings"].get("ut", "") == "":
             self.main["settings"]["ut"] = "04:00"
             self.save_settings()
         
