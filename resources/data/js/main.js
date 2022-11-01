@@ -510,6 +510,9 @@ settingsSave.addEventListener("click", function() {
 });
 
 function saveSettings () {
+    if( updateTime.value == "" || updateTime.value == "--:--" ) {
+        updateTime.value = "04:00";
+    };
     fetch("api/save_settings", {
         method: "POST",
         body: JSON.stringify({"days": daySlider.value, "rm": ratingMapper.options[ratingMapper.selectedIndex].getAttribute("id").replace("rm_", ""), "it": imageType.options[imageType.selectedIndex].getAttribute("id").replace("it_", ""), "is": imageSize.options[imageSize.selectedIndex].getAttribute("id").replace("is_", ""), "at": ageType.options[ageType.selectedIndex].getAttribute("id").replace("at_", ""), "rate": schedulerRate.options[schedulerRate.selectedIndex].getAttribute("id").replace("rate_", ""), "ut": updateTime.value, "ag": autoGrab.options[autoGrab.selectedIndex].getAttribute("id").replace("ag_", "")})
