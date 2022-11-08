@@ -24,7 +24,7 @@ class UserData():
             self.main = dict()
 
         try:
-            with open(f"{self.file_paths['included']}app/data/json/genres.json", "r") as f:
+            with open(f"{self.file_paths['included']}resources/data/json/genres.json", "r") as f:
                 self.genres = json.load(f)
         except:
             self.genres = dict()
