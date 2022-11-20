@@ -127,6 +127,7 @@ class Grabber():
         try:
             self.progress = 0
             self.worker = 0
+            missing_genres = []
 
             # PREPARING FILES/DIRECTORIES
             if not os.path.exists(f"{self.file_paths['storage']}cache/epg_cache"):
@@ -355,6 +356,8 @@ class Grabber():
                                         mapped_genres.append(genre)
                                         program["category"].append({"@lang": "en", "#text": genre})
                                     elif not genre:
+                                        if g not in missing_genres:
+                                            missing_genres.append(g)
                                         program["category"].append({"@lang": "en", "#text": g})
                             del genres, mapped_genres
 
@@ -407,9 +410,18 @@ class Grabber():
 
             try:
                 print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: File created successfully!")
+                if len(missing_genres) > 0:
+                    try:
+                        print("\n--- MISSING EIT MAPPINGS ---\n")
+                        for i in missing_genres:
+                            print(i)
+                        print("----------------------------\n\n")
+                    except:
+                        pass
             except:
                 pass
-
+            
+            del missing_genres
             self.status = "File created successfully!"
             self.progress = 100
             self.grabbing = False
