@@ -412,10 +412,14 @@ class Grabber():
                 print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: File created successfully!")
                 if len(missing_genres) > 0:
                     try:
-                        print("\n--- MISSING EIT MAPPINGS ---\n")
-                        for i in missing_genres:
-                            print(i)
-                        print("----------------------------\n\n")
+                        with open(f"{self.file_paths['storage']}missing_genres.txt", "w") as log:
+                            print("\n--- MISSING EIT MAPPINGS ---\n")
+                            log.write("--- MISSING EIT MAPPINGS ---\n")
+                            for i in missing_genres:
+                                print(i)
+                                log.write(f"* {i}\n")
+                            print("----------------------------\n\n")
+                            log.write("----------------------------\n")
                     except:
                         pass
             except:
