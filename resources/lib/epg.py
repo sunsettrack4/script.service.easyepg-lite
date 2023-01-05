@@ -193,7 +193,7 @@ class Grabber():
                         inner_value = len(data)
                         inner_worker = 0
 
-                        if data.get("errorCode"):
+                        if type(data) != list and data.get("errorCode"):
                             raise Exception(f'* FAILED TO GRAB DATA FOR CHANNEL {channel}: {data.get("errorMessage", "An unknown error occured.")}')
                             continue
 
