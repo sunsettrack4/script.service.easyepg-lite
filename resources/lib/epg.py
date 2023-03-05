@@ -195,7 +195,6 @@ class Grabber():
 
                         if type(data) != list and data.get("errorCode"):
                             raise Exception(f'* FAILED TO GRAB DATA FOR CHANNEL {channel}: {data.get("errorMessage", "An unknown error occured.")}')
-                            continue
 
                         for i in data:
                             if self.cancellation or self.exit:
@@ -219,6 +218,8 @@ class Grabber():
                             categories = p.get("genres", [])
                             rating = None
                             rating_type = None
+                            entity_type = p.get("entityType", "None")
+                            qualifiers = i.get("qualifiers", [])
 
                             # DEFINE AGE RATING
                             for r in p.get("ratings", []):
@@ -236,12 +237,17 @@ class Grabber():
 
                             # TITLE
                             if title is not None and title != "":
-                                program["title"] = {"@lang": lang, "#text": title}
+                                title_string = title
+                                if subtitle is not None and entity_type == "Sports":
+                                    title_string = f"{title_string} {subtitle}"
+                                if "Live" in qualifiers:
+                                    title_string = f"[LIVE] {title_string}"
+                                program["title"] = {"@lang": lang, "#text": title_string}
                             else:
                                 program["title"] = {"@lang": lang, "#text": "No programme title available"}
 
                             # SUBTITLE
-                            if subtitle is not None and subtitle != "":
+                            if subtitle is not None and subtitle != "" and entity_type != "Sports":
                                 program["sub-title"] = {"@lang": lang, "#text": subtitle}
 
                             # DESC
