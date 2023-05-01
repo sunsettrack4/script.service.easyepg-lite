@@ -1,5 +1,6 @@
 from resources.lib import tools
 from bottle import  request, route, run, static_file
+from datetime import datetime
 from threading import Event
 import json, os, requests, signal, traceback
 
@@ -94,6 +95,54 @@ def get_lineups():
 def get_lineup_channels():
     return t.get_lineup_channels(json.loads(request.body.read()).get("id"))
 
+@route("/api/xmltv_lineups/add", method="POST")
+def add_xmltv_lineup():
+    values = json.loads(request.body.read())
+    result = g.pr.ch_loader("xmltv", {"url": values.get("link")})
+    if result[0] and len(result[1].keys()):
+        l = str(int(datetime.now().timestamp()))
+        g.user_db.main["xmltv"][f"xml{l}"] = {"name": values.get("name", f"XML FILE {l}"), "link": values["link"]}
+        g.user_db.save_settings()
+        return json.dumps({"success": True, "message": f"XMLTV added: {len(result[1].keys())} channel(s) found!"})
+    return json.dumps({"success": False, "message": "The resource could not be verified."})
+
+@route("/api/xmltv_lineups/get", method="GET")
+def get_xmltv_lineups():
+    return json.dumps({"success": True, "result": g.user_db.main["xmltv"]})
+
+@route("/api/xmltv_lineups/remove", method="POST")
+def remove_xmltv_lineup():    
+    provider = json.loads(request.body.read()).get("id", "")
+    try:
+        l = len([i for i in g.user_db.main["channels"].keys() if g.user_db.main["channels"][i].get("provider_id", "") == provider])
+        if l > 0:
+            return json.dumps({"success": False, "message": "Please remove the affected channels first."})
+        else:
+            del g.user_db.main["xmltv"][provider]
+            g.user_db.save_settings()
+            return json.dumps({"success": True})
+    except:
+        return json.dumps({"success": False, "message": "The XMLTV does not exist."})
+
+@route("/api/xmltv_lineup_channels", method="POST")
+def get_xmltv_lineup_channels():
+    provider = json.loads(request.body.read()).get("id", "")
+    try:
+        if "xml" in provider:
+            result = g.pr.ch_loader("xmltv", {"url": g.user_db.main["xmltv"][provider]["link"]})
+            if result[0]:
+                for i in result[1].keys():
+                    if g.user_db.main["channels"].get(f"{provider}_{i}"):
+                        result[1][i]["chExists"] = True
+                    else:
+                        result[1][i]["chExists"] = False
+                    result[1][i]["provider_id"] = provider
+                return json.dumps({"success": True, "result": result[1]})
+            else:
+                return json.dumps({"success": False, "message": f"An error occured: {str(result[1])}"})        
+    except:
+        return json.dumps({"success": False, "message": "Failed to load the channels."})
+
 @route("/api/replace-id", method="POST")
 def replace_channel():
     if g.grabbing:
@@ -117,16 +166,36 @@ def add_channel():
     if g.grabbing:
         return json.dumps({"success": False, "message": "The grabber process needs to be finished first."})
     ids = json.loads(request.body.read()).get("ids")
-    for id in ids:
-        try:       
-            i = json.loads(t.get_channel_info(id))
-            if i["success"]:
-                if len(i["result"]) > 0 and i["result"][0].get("stationId") == id:
-                    g.user_db.main["channels"][id] = i["result"][0]
-                    g.user_db.save_settings()
-        except Exception as e:
-            print_error(traceback.format_exc())
-            return json.dumps({"success": False, "message": "Not all channels could not be added."})
+    provider_id = ids[0].split("|")
+    if len(provider_id) > 1:
+        provider_id = provider_id[0]
+    else:
+        provider_id = False
+    if not provider_id:
+        for id in ids:
+            try:       
+                i = json.loads(t.get_channel_info(id))
+                if i["success"]:
+                    if len(i["result"]) > 0 and i["result"][0].get("stationId") == id:
+                        g.user_db.main["channels"][id] = i["result"][0]
+                        g.user_db.save_settings()
+            except Exception as e:
+                print_error(traceback.format_exc())
+                return json.dumps({"success": False, "message": "Not all channels could not be added."})
+    else:
+        if "xml" in provider_id:
+            try:
+                ch_list = g.pr.ch_loader("xmltv", {"url": g.user_db.main["xmltv"][provider_id]["link"]})
+                if ch_list[0]:
+                    for id in ids:
+                        if ch_list[1].get(id.split("|")[1]):
+                            g.user_db.main["channels"][id.replace(f"{provider_id}|", f"{provider_id}_")] = \
+                                {"stationId": id.replace(f"{provider_id}|", ""), "name": ch_list[1][id.split("|")[1]]["name"], "preferredImage": {"uri": ch_list[1][id.split("|")[1]]["icon"]}}
+                            g.user_db.save_settings()
+            except Exception as e:
+                print_error(traceback.format_exc())
+                return json.dumps({"success": False, "message": "Not all channels could not be added."})
+
     return json.dumps({"success": True})
 
 @route("/api/remove", method="POST")

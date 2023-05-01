@@ -1,4 +1,4 @@
-from resources.lib import epg, web
+from resources.lib import db, epg, web
 from os import mkdir
 from threading import Thread
 import xbmc, xbmcvfs, xbmcaddon
@@ -15,7 +15,10 @@ try:
 except FileExistsError:
     pass
 
-my_server = web.WebServer(epg.Grabber(file_paths), file_paths)
+us = db.UserData(file_paths)
+pr = db.ProviderManager(file_paths, us)
+
+my_server = web.WebServer(epg.Grabber(file_paths, pr, us), file_paths)
 
 # START SERVER (+ STOP SERVER BEFORE CLOSING KODI)
 def check_for_quit_event():

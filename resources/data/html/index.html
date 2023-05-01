@@ -76,10 +76,53 @@
             <button id="ch-remove" class="remove-btn" type="button">Remove channel</button>
         </div>
     </section>
+    <section id="web-window" class="nav-bar search-window">
+        <button id="close-web-window" class="exit-btn" type="button">x</button>
+        <div class="section">
+            <p>WebTV / IPTV Providers</p>
+            <label for="web_selection">Select your TV provider</label>
+            <div>
+                <select id="web_country">
+                    <option id="wc_none">Country</option>                    
+                </select>
+                <select id="web_selection" disabled>
+                    <option id="wp_none" hidden>Please select...</option>                    
+                </select>
+            </div>
+        </div>
+    </section>
+    <section id="xml-window" class="nav-bar search-window">
+        <button id="close-xml-window" class="exit-btn" type="button">x</button>
+        
+        <div class="section">
+            <p>Add new XMLTV providers</p>
+            <label for="xml_selection">Add new file to XMLTV database</label>
+            <div>
+                <input type="search" id="xml-name" placeholder="Name">
+                <input type="search" id="xml-link" placeholder="https://example.com/file.xml">
+                <button id="xml-select" type="button" disabled>Add provider</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <p class="add-space">XMLTV Provider Selection</p>
+            <label for="xml_selection">Select from XMLTV database</label>
+            <div>
+                <select id="xml_selection">
+                    <option id="x_none">Please select...</option>                    
+                </select>
+                <button id="xml-load" type="button" disabled>Load channels</button>
+            </div>
+        </div>
+
+        <div>
+            <button id="xml-remove" class="add-space remove-btn" type="button" disabled>Remove provider</button>
+        </div>
+    </section>
     <section id="search-window" class="nav-bar search-window">
         <button id="close-search-window" class="exit-btn" type="button">x</button>
         <div class="section">
-            <p>Search by channel</p>
+            <p>TMS Search by channel</p>
             <label for="ch_filter">Search type</label>
             <div>
                 <select id="ch_filter">
@@ -91,7 +134,7 @@
             </div>
         </div>
         <div class="section">
-            <p class="add-space">Search by lineup</p>
+            <p class="add-space">TMS Search by lineup</p>
             <label for="region_selection">Region/Area</label>
             <div>
                 <select id="region_selection">
@@ -282,10 +325,11 @@
 
     </section>
     <section id="key-window" class="nav-bar">
+        <button id="close-key-window" class="exit-btn" type="button">x</button>
+
         <p>TMS API key required!</p>
 
-        This application creates XMLTV EPG files using Gracenote's TMS API.<br><br>
-        Please enter the 24-character key obtained during TMS application registration.<br><br>
+        Please enter the 24-character key obtained during TMS application registration to access Gracenote's TMS API.<br><br>
 
         <div>
             <input id="key-input" maxlength="24" type="search" placeholder="Gracenote API key">
@@ -361,6 +405,11 @@
         <div id="grabber-btn-group">
             <button id="start_dl" class="add-btn">Start</button>
             <button id="stop_dl" class="remove-btn">Cancel</button>
+        </div>
+        <div id="btn-se-select-group">
+            <button id="ch-se-web" hidden>WEB</button>
+            <button id="ch-se-tms" class="selected-btn">TMS</button>
+            <button id="ch-se-xml">XML</button>
         </div>
     </nav>
 </body>

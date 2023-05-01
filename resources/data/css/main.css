@@ -264,11 +264,11 @@ select {
   padding-bottom: 0.3rem;
 }
 
-.nav-bottom #btn-ch-select-group, .nav-bottom #btn-lp-select-group, .nav-bottom #about-btn-group, .nav-bottom #btn-main-group, .nav-bottom #grabber-btn-group {
+.nav-bottom #btn-ch-select-group, .nav-bottom #btn-lp-select-group, .nav-bottom #about-btn-group, .nav-bottom #btn-main-group, .nav-bottom #grabber-btn-group, .nav-bottom #btn-se-select-group {
   display: none;
 }
 
-.nav-bottom #btn-ch-select-group button, .nav-bottom #btn-lp-select-group button, .nav-bottom #about-btn-group button, .nav-bottom #grabber-btn-group button {
+.nav-bottom #btn-ch-select-group button, .nav-bottom #btn-lp-select-group button, .nav-bottom #about-btn-group button, .nav-bottom #grabber-btn-group button, .nav-bottom #btn-se-select-group button {
   cursor: pointer;
   border: solid;
   border-color: #0692ef;
@@ -281,23 +281,29 @@ select {
   color: white;
 }
 
-.nav-bottom #btn-ch-select-group .remove-btn, .nav-bottom #btn-lp-select-group .remove-btn, .nav-bottom #about-btn-group .remove-btn, .nav-bottom #grabber-btn-group .remove-btn {
+.nav-bottom #btn-ch-select-group .remove-btn, .nav-bottom #btn-lp-select-group .remove-btn, .nav-bottom #about-btn-group .remove-btn, .nav-bottom #grabber-btn-group .remove-btn, .nav-bottom #btn-se-select-group .remove-btn {
   border-color: red;
   background-color: red;
 }
 
-.nav-bottom #btn-ch-select-group .map-btn, .nav-bottom #btn-lp-select-group .map-btn, .nav-bottom #about-btn-group .map-btn, .nav-bottom #grabber-btn-group .map-btn {
+.nav-bottom #btn-ch-select-group .map-btn, .nav-bottom #btn-lp-select-group .map-btn, .nav-bottom #about-btn-group .map-btn, .nav-bottom #grabber-btn-group .map-btn, .nav-bottom #btn-se-select-group .map-btn {
   border-color: yellow;
   background-color: yellow;
   color: black;
 }
 
-.nav-bottom #btn-ch-select-group .add-btn, .nav-bottom #btn-lp-select-group .add-btn, .nav-bottom #about-btn-group .add-btn, .nav-bottom #grabber-btn-group .add-btn {
+.nav-bottom #btn-ch-select-group .add-btn, .nav-bottom #btn-lp-select-group .add-btn, .nav-bottom #about-btn-group .add-btn, .nav-bottom #grabber-btn-group .add-btn, .nav-bottom #btn-se-select-group .add-btn {
   border-color: yellowgreen;
   background-color: yellowgreen;
 }
 
-.nav-bottom #btn-ch-select-group button:disabled, .nav-bottom #btn-lp-select-group button:disabled, .nav-bottom #about-btn-group button:disabled, .nav-bottom #grabber-btn-group button:disabled {
+.nav-bottom #btn-ch-select-group .selected-btn, .nav-bottom #btn-lp-select-group .selected-btn, .nav-bottom #about-btn-group .selected-btn, .nav-bottom #grabber-btn-group .selected-btn, .nav-bottom #btn-se-select-group .selected-btn {
+  border-color: white;
+  background-color: white;
+  color: blue;
+}
+
+.nav-bottom #btn-ch-select-group button:disabled, .nav-bottom #btn-lp-select-group button:disabled, .nav-bottom #about-btn-group button:disabled, .nav-bottom #grabber-btn-group button:disabled, .nav-bottom #btn-se-select-group button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
   background-color: white;

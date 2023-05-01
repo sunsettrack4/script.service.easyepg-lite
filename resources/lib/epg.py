@@ -1,61 +1,19 @@
-from resources.lib import tools
 from datetime import datetime
 from threading import Thread
 from time import sleep
-import concurrent.futures, gzip, json, os, shutil, traceback
+import gzip, json, os, shutil, traceback
 import xmltodict
 
 
-class UserData():
-    def __init__(self, file_paths):
-        self.file_paths = file_paths
-        self.create_cache()
-        self.import_data()
-
-    def create_cache(self):
-        if not os.path.exists(f"{self.file_paths['storage']}cache"):
-            os.mkdir(f"{self.file_paths['storage']}cache")
-
-    def import_data(self):
-        try:
-            with open(f"{self.file_paths['storage']}settings.json", "r") as f:
-                self.main = json.load(f)
-        except:
-            self.main = dict()
-
-        try:
-            with open(f"{self.file_paths['included']}resources/data/json/genres.json", "r") as f:
-                self.genres = json.load(f)
-        except:
-            self.genres = dict()
-
-        # Init default settings
-        if "channels" not in self.main:
-            self.main["channels"] = {}
-        if "settings" not in self.main:
-            self.main["settings"] = {"api_key": None, "days": "7", "rm": "none", "is": "Md", "it": "16x9", "at": "fsk", "rate": "0", "ut": "04:00", "ag": "no", "file": False, "dl_threads": 1, "pn_max": 50000}
-        
-        # Check settings / insert default values (if needed)
-        if self.main["settings"].get("ut", "") == "":
-            self.main["settings"]["ut"] = "04:00"
-            self.save_settings()
-        
-        return True
-
-    
-    def save_settings(self):
-        with open(f"{self.file_paths['storage']}settings.json", "w") as f:
-            json.dump(self.main, f)
-        return True
-
 class Grabber():
-    def __init__(self, file_paths):
-        self.user_db = UserData(file_paths)
+    def __init__(self, file_paths, provider_manager, user_db):
+        self.user_db = user_db
+        self.pr = provider_manager
         self.file_paths = file_paths
 
         self.grabbing = False
         self.status = "Idle"
-        self.progress = 100
+        self.pr.progress = 100
 
         if os.path.exists(f"{self.file_paths['storage']}grabber_error_log_old.txt"):
             os.remove(f"{self.file_paths['storage']}grabber_error_log_old.txt")
@@ -90,7 +48,7 @@ class Grabber():
         self.thread.start()
 
     def grabber_status(self):
-        return {"grabbing": self.grabbing, "status": self.status, "progress": self.progress, "file_available": self.file_available, "file_created": self.file_created}
+        return {"grabbing": self.grabbing, "status": self.status, "progress": self.pr.progress, "file_available": self.file_available, "file_created": self.file_created}
 
     def epg_process(self, start_up, start_dt):
         if start_up:
@@ -109,24 +67,10 @@ class Grabber():
                         start_dt = f'{datetime.now().strftime("%Y%m%d")}'
                 sleep(1)
 
-    def load_airings(self, channel):
-        if self.cancellation or self.exit:
-            return
-        return tools.API.grab_channel(self, channel, self.user_db.main["settings"]), channel
-
-    def cache_airings(self, data):
-        if self.cancellation or self.exit:
-            return
-        data = data.result()
-        with open(f"{self.file_paths['storage']}cache/epg_cache/{data[1]}", "w") as f:
-            f.write(json.dumps(data[0]))
-        self.worker = self.worker + 1
-        self.progress = (self.worker / len(self.user_db.main["channels"])) * 100 / 2
-
     def grabber_process(self):
         try:
-            self.progress = 0
-            self.worker = 0
+            self.pr.progress = 0
+            self.pr.worker = 0
             missing_genres = []
 
             # PREPARING FILES/DIRECTORIES
@@ -136,8 +80,8 @@ class Grabber():
                 shutil.rmtree(f"{self.file_paths['storage']}cache/epg_cache", ignore_errors=True)
                 os.mkdir(f"{self.file_paths['storage']}cache/epg_cache")
 
-            if os.path.exists(f"{self.file_paths['storage']}test.xml"):
-                os.remove(f"{self.file_paths['storage']}test.xml")
+            if os.path.exists(f"{self.file_paths['storage']}xml/test.xml"):
+                os.remove(f"{self.file_paths['storage']}xml/test.xml")
 
             # DOWNLOAD FILES
             self.status = "Downloading EPG data..."
@@ -145,9 +89,29 @@ class Grabber():
             if len(self.user_db.main["channels"]) == 0:
                 raise Exception("Please add your channels first before starting the grabber process.")
             
-            executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.user_db.main["settings"]["dl_threads"])
-            {executor.submit(self.load_airings, channel).add_done_callback(self.cache_airings) for channel in self.user_db.main["channels"]}
-            executor.shutdown(wait=True)
+            # Check Provider List
+            pr_check = []
+            for ch in self.user_db.main["channels"].keys():
+                a = ch.split("_")  # web/xml
+                if len(a) > 1:
+                    if a[0] not in pr_check:
+                        pr_check.append(a[0])
+                else:
+                    try:
+                        a = int(ch)  # tms id
+                        if "gntms" not in pr_check:
+                            pr_check.append("gntms")
+                    except:
+                        pass
+
+            for provider in pr_check:
+                if "xml" in provider:
+                    data = {"link": self.user_db.main["xmltv"][provider]["link"], "id": provider}
+                    self.pr.main_downloader("xmltv", data)
+                elif self.pr.providers[provider].get("adv_loader"):
+                    self.pr.advanced_downloader(provider, self.pr.main_downloader(provider))
+                else:
+                    self.pr.main_downloader(provider)
 
             if self.cancellation or self.exit:
                 raise Exception("Process stopped.")
@@ -171,9 +135,12 @@ class Grabber():
                 for channel in self.user_db.main["channels"].keys():
                     c_data = self.user_db.main["channels"][channel]
                     image = c_data.get("preferredImage", {"uri": None})["uri"]
-                    lang = c_data["bcastLangs"][0].lower()
-                    if "-" in lang:
-                        lang = lang.split("-")[1]
+                    if len(channel.split("_")) == 1:
+                        lang = c_data["bcastLangs"][0].lower()
+                        if "-" in lang:
+                            lang = lang.split("-")[1]
+                    else:
+                        lang = "en"
                     ch_part = {"@id": c_data.get("tvg-id", channel), "display-name": {"@lang": lang, "#text": c_data["name"]}}
                     if image:
                         ch_part["icon"] = {"@src": image}
@@ -185,48 +152,42 @@ class Grabber():
                 pn = 0
                 for channel in self.user_db.main["channels"].keys():
                     c_data = self.user_db.main["channels"][channel]
-                    lang = c_data["bcastLangs"][0].lower()
-                    if "-" in lang:
-                        lang = lang.split("-")[1]
-                    with open(f"{self.file_paths['storage']}cache/epg_cache/{channel}", "r") as f:
-                        data = json.loads(f.read())
-                        inner_value = len(data)
-                        inner_worker = 0
+                    if len(channel.split("_")) == 1:
+                        lang = c_data["bcastLangs"][0].lower()
+                        if "-" in lang:
+                            lang = lang.split("-")[1]
+                    else:
+                        lang = "en"
 
-                        if type(data) != list and data.get("errorCode"):
-                            raise Exception(f'* FAILED TO GRAB DATA FOR CHANNEL {channel}: {data.get("errorMessage", "An unknown error occured.")}')
+                    results = self.pr.epg_db.retrieve_epg_db_items("gntms" if len(channel.split("_")) == 1 
+                                                                   else channel.split("_")[0], self.user_db.main["channels"][channel]["stationId"])
 
-                        for i in data:
+                    inner_value = len(results)
+                    inner_worker = 0
+                    
+                    for (channel_id, broadcast_id, start, end, title, subtitle, desc, image, 
+                         date, country, star, rating, credits, season_episode_num, genres, advanced) \
+                            in results:
+
                             if self.cancellation or self.exit:
                                 raise Exception("Process stopped.")
 
                             # DEFINE PARAMS
-                            p = i["program"]
-                            start = i["startTime"].replace("T", "").replace("Z", ":00 +0000").replace("-", "").replace(":", "")
-                            end = i["endTime"].replace("T", "").replace("Z", ":00 +0000").replace("-", "").replace(":", "")
-                            image = p.get("preferredImage", {"uri": None})["uri"]
-                            title = p["title"]
-                            subtitle = p.get("episodeTitle", p.get("eventTitle"))
-                            desc = p.get("longDescription", p.get("shortDescription"))
-                            date = datetime.strptime(p["origAirDate"], "%Y-%m-%d").strftime("%Y") if p.get("origAirDate") is not None else \
-                                str(p["releaseYear"]) if p.get("releaseYear") is not None else None
-                            star = p.get("qualityRating", {"value": None})["value"]
-                            director = p.get("directors", [])
-                            actor = p.get("topCast", [])
-                            episode_num = p.get("episodeNum")
-                            season_num = p.get("seasonNum")
-                            categories = p.get("genres", [])
-                            rating = None
-                            rating_type = None
-                            entity_type = p.get("entityType", "None")
-                            qualifiers = i.get("qualifiers", [])
-
-                            # DEFINE AGE RATING
-                            for r in p.get("ratings", []):
-                                if r["body"] == "Freiwillige Selbstkontrolle der Filmwirtschaft" and self.user_db.main["settings"]["at"] == "fsk" or \
-                                    r["body"] == "USA Parental Rating" and self.user_db.main["settings"]["at"] == "usa":
-                                        rating = r["code"]
-                                        rating_type = self.user_db.main["settings"]["at"].upper()
+                            start = datetime.fromtimestamp(float(start)).strftime("%Y%m%d%H%M%S +0000")
+                            end = datetime.fromtimestamp(float(end)).strftime("%Y%m%d%H%M%S +0000")
+                            star = json.loads(json.loads(star)) if type(star) == "str" else {}
+                            star_value = star.get("value")
+                            star_rating = star.get("system")
+                            credits = json.loads(json.loads(credits)) if type(credits) == "str" else {}
+                            director = credits.get("directors", [])
+                            actor = credits.get("actors", [])
+                            series_data = json.loads(json.loads(season_episode_num)) if type(season_episode_num) == "str" else {}
+                            episode_num = series_data.get("episode")
+                            season_num = series_data.get("season")
+                            categories = json.loads(json.loads(genres)) if type(genres) == "str" else {}
+                            age_rating = json.loads(json.loads(rating)) if type(rating) == "str" else {}
+                            rating = age_rating.get("value")
+                            rating_type = age_rating.get("system")
                             
                             # PROGRAM
                             program = {"@start": start, "@stop": end, "@channel": c_data.get("tvg-id", channel)}
@@ -237,17 +198,12 @@ class Grabber():
 
                             # TITLE
                             if title is not None and title != "":
-                                title_string = title
-                                if subtitle is not None and entity_type == "Sports":
-                                    title_string = f"{title_string} {subtitle}"
-                                if "Live" in qualifiers:
-                                    title_string = f"[LIVE] {title_string}"
-                                program["title"] = {"@lang": lang, "#text": title_string}
+                                program["title"] = {"@lang": lang, "#text": title}
                             else:
                                 program["title"] = {"@lang": lang, "#text": "No programme title available"}
 
                             # SUBTITLE
-                            if subtitle is not None and subtitle != "" and entity_type != "Sports":
+                            if subtitle is not None and subtitle != "":
                                 program["sub-title"] = {"@lang": lang, "#text": subtitle}
 
                             # DESC
@@ -283,14 +239,14 @@ class Grabber():
                                             desc_line = f"{desc_line} ● {rating_type if rating_type is not None else 'Age'}: {rating}"
                                         else:
                                             desc_line = f"{rating_type if rating_type is not None else 'Age:'} {rating}"
-                                    if star is not None and star != "":
-                                        if float(star) >= 3.5:
+                                    if star_value is not None and star_value != "":
+                                        if float(star_value) >= 3.5:
                                             star_desc_line = "★★★★"
-                                        elif 2.5 <= float(star) < 3.5:
+                                        elif 2.5 <= float(star_value) < 3.5:
                                             star_desc_line = "★★★☆"
-                                        elif 1.5 <= float(star) < 2.5:
+                                        elif 1.5 <= float(star_value) < 2.5:
                                             star_desc_line = "★★☆☆"
-                                        elif 0.5 <= float(star) < 1.5:
+                                        elif 0.5 <= float(star_value) < 1.5:
                                             star_desc_line = "★☆☆☆"
                                         else:
                                             star_desc_line = "☆☆☆☆"
@@ -386,14 +342,17 @@ class Grabber():
                                 program["rating"] = {"@system": rating_type, "value": {"#text": rating}}
 
                             # STAR RATING
-                            if star is not None and star != "":
-                                program["star-rating"] = {"@system": "TMS", "value": {"#text": f"{star}/4"}}
+                            if star_value is not None and star_value != "":
+                                if star_rating is not None and star_rating != "":
+                                    program["star-rating"] = {"@system": "TMS", "value": {"#text": f"{star_value}/4"}}
+                                else:
+                                    program["star-rating"] = {"value": {"#text": f"{star_value}/4"}}
 
                             pr["programme"].append(program)
                             pn = pn + 1
                             
                             inner_worker = inner_worker + 1
-                            self.progress = (inner_worker / inner_value) * self.basic_value + self.worker + 50
+                            self.pr.progress = (inner_worker / inner_value) * self.basic_value + self.pr.worker + 50
 
                             if pn == self.user_db.main["settings"]["pn_max"]:
                                 file.write(xmltodict.unparse(pr, pretty=True, encoding="UTF-8", full_document=False))
@@ -437,7 +396,7 @@ class Grabber():
             
             del missing_genres
             self.status = "File created successfully!"
-            self.progress = 100
+            self.pr.progress = 100
             self.grabbing = False
             self.started = False
             sleep(5)
@@ -458,7 +417,7 @@ class Grabber():
             self.grabbing = False
             self.started = False
             self.cancellation = False
-            self.progress = 100
+            self.pr.progress = 100
             self.status = "An error occurred. Please check the log file."
             sleep(5)
             self.status = "Idle"

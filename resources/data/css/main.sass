@@ -126,7 +126,7 @@ select
     animation: transitionInOut 3000ms
 
 .nav-bottom
-    #btn-ch-select-group, #btn-lp-select-group, #about-btn-group, #btn-main-group, #grabber-btn-group
+    #btn-ch-select-group, #btn-lp-select-group, #about-btn-group, #btn-main-group, #grabber-btn-group, #btn-se-select-group
         display: none
     
     position: fixed
@@ -141,7 +141,7 @@ select
     padding-top: 0.3rem
     padding-bottom: 0.3rem
 
-    #btn-ch-select-group, #btn-lp-select-group, #about-btn-group, #grabber-btn-group
+    #btn-ch-select-group, #btn-lp-select-group, #about-btn-group, #grabber-btn-group, #btn-se-select-group
         button
             cursor: pointer
             border: solid
@@ -166,6 +166,11 @@ select
         .add-btn
             border-color: yellowgreen
             background-color: yellowgreen
+
+        .selected-btn
+            border-color: white
+            background-color: white
+            color: blue
 
         button:disabled
             cursor: not-allowed

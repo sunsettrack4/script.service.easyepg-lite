@@ -25,10 +25,24 @@ const chMultiSelectBtnGroup = document.getElementById("btn-ch-select-group");
 const chLpMultiSelectBtnGroup = document.getElementById("btn-lp-select-group");
 const grabberBtnGroup = document.getElementById("grabber-btn-group");
 
+const prTypeBtnGroup = document.getElementById("btn-se-select-group");
+
 const openSearch = document.getElementById("open-search");
+const closeResultsWindow = document.getElementById("close-results-window");
+
+const openSearchWindow = document.getElementById("ch-se-tms");
 const searchWindow = document.getElementById("search-window");
 const closeSearchWindow = document.getElementById("close-search-window");
-const closeResultsWindow = document.getElementById("close-results-window");
+
+const openWebWindow = document.getElementById("ch-se-web");
+const webWindow = document.getElementById("web-window");
+const closeWebWindow = document.getElementById("close-web-window");
+
+const openXmlWindow = document.getElementById("ch-se-xml");
+const xmlWindow = document.getElementById("xml-window");
+const closeXmlWindow = document.getElementById("close-xml-window");
+
+const closeKeyWindow = document.getElementById("close-key-window");
 
 const openAbout = document.getElementById("open-about");
 const aboutWindow = document.getElementById("about-window");
@@ -111,6 +125,129 @@ const dlFileGetFile = document.getElementById("file_dl");
 const dlFileCreated = document.getElementById("dl_created");
 const startGrabber = document.getElementById("start_dl");
 const stopGrabber = document.getElementById("stop_dl");
+
+const xmlName = document.getElementById("xml-name");
+const xmlLink = document.getElementById("xml-link");
+const addXmlBtn = document.getElementById("xml-select");
+const loadXmlBtn = document.getElementById("xml-load");
+const removeXmlBtn = document.getElementById("xml-remove");
+const xmlSelection = document.getElementById("xml_selection");
+
+var url_expression = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
+var url_regex = new RegExp(url_expression);
+
+xmlName.addEventListener("keyup", function() {
+    if( xmlName.value != "" && xmlLink.value.match(url_regex) ) {
+        addXmlBtn.disabled = false;
+    } else {
+        addXmlBtn.disabled = true;
+    };
+});
+
+xmlLink.addEventListener("keyup", function() {
+    if( xmlName.value != "" && xmlLink.value.match(url_regex) ) {
+        addXmlBtn.disabled = false;
+    } else {
+        addXmlBtn.disabled = true;
+    };
+});
+
+addXmlBtn.addEventListener("click", function() {
+    addXmlBtn.textContent = "Adding...";
+    addXmlBtn.disabled = true;
+    let s = JSON.stringify({"name": xmlName.value, "link": xmlLink.value})
+    fetch("api/xmltv_lineups/add", {
+        method: "POST",
+        body: s
+    })
+    .then(response => {
+        response.json().then(function(d) {
+            if( d["success"] === true ) {
+                showNotiMessage(d["message"], "success");
+                retrieveXmlSources();
+            } else {
+                showNotiMessage(d["message"], "error");
+            };
+        });
+    })
+    .catch(error => {
+        console.log(error);
+        showNotiMessage("An error occurred while serving the request.", "error");
+    });
+    addXmlBtn.textContent = "Add provider";
+    addXmlBtn.disabled = false;
+});
+
+xmlSelection.addEventListener("change", function() {
+    var x_type = xmlSelection.options[xmlSelection.options.selectedIndex].getAttribute("id");
+    if( x_type != "x_none" ) {
+        loadXmlBtn.disabled = false;
+        removeXmlBtn.disabled = false;
+    } else {
+        loadXmlBtn.disabled = true;
+        removeXmlBtn.disabled = true;
+    };
+});
+
+loadXmlBtn.addEventListener("click", function() {
+    loadExtLineupChannels(xmlSelection.options[xmlSelection.options.selectedIndex].getAttribute("id"));
+});
+
+removeXmlBtn.addEventListener("click", function() {
+    var x_type = xmlSelection.options[xmlSelection.options.selectedIndex].getAttribute("id");
+    let s = JSON.stringify({"id": x_type})
+    fetch("api/xmltv_lineups/remove", {
+        method: "POST",
+        body: s
+    })
+    .then(response => {
+        response.json().then(function(d) {
+            if( d["success"] === true ) {
+                showNotiMessage("The EPG source has been removed!", "success");
+            } else {
+                showNotiMessage(d["message"], "error");
+            };
+        });
+    })
+    .catch(error => {
+        console.log(error);
+        showNotiMessage("An error occurred while serving the request.", "error");
+    });
+    retrieveXmlSources();
+});
+
+function retrieveXmlSources() {
+    var i, L = xmlSelection.options.length - 1;
+    for(i = L; i >= 1; i--) {
+        xmlSelection.remove(i);
+    };
+    xmlName.value = "";
+    xmlLink.value = "";
+    addXmlBtn.disabled = true;
+    loadXmlBtn.disabled = true;
+    removeXmlBtn.disabled = true;
+    fetch("api/xmltv_lineups/get", {
+        method: "GET"
+    })
+    .then(response => {
+        response.json().then(function(d) {
+            if( d["success"] === true ) {
+                for( i in d["result"] ) {
+                    var opt = document.createElement('option');
+                    opt.id = i;
+                    opt.innerHTML = d["result"][i]["name"];
+                    xmlSelection.appendChild(opt);
+                };
+            } else {
+                showNotiMessage(d["message"], "error");
+            };
+        });
+    })
+    .catch(error => {
+        console.log(error);
+        showNotiMessage("An error occurred while serving the request.", "error");
+    });
+};
 
 dlFileCopyURL.addEventListener("click", function() {
     var f_type = dlFileTypeSelection.options[dlFileTypeSelection.options.selectedIndex].getAttribute("id");
@@ -330,7 +467,13 @@ function doneTypingLpChannel(status) {
     };
 };
 
-apiCheck(null);
+// apiCheck(null);
+grabberCheckAutoUpdate();
+loadChannelList();
+loadSettings(0);
+mainBtnGroup.style.display = "inline";
+blockPage.style.display = "none";
+showNotiMessage("Welcome to easyepg!");
 
 function apiCheck(key) {
     fetch("api/key_check", {
@@ -341,16 +484,16 @@ function apiCheck(key) {
         response.json().then(function(i) {
             if( i["success"] === true ) {
                 keyWindow.classList.add("nav-bar-move");
-                blockPage.style.display = "none";
-                setTimeout(function() {keyWindow.style.display = "none"; keyWindow.classList.remove("add-blocker"); keyWindow.classList.remove("nav-bar-move"); showNotiMessage("Welcome to easyepg!");}, 600);
-                grabberCheckAutoUpdate();
-                loadChannelList();
-                loadSettings(0);
-                mainBtnGroup.style.display = "inline";
+                setTimeout(function() {keyWindow.style.display = "none"; keyWindow.classList.remove("add-blocker"); keyWindow.classList.remove("nav-bar-move");}, 600);
+                loadTmsEvent();
+                blockPage.removeEventListener("click", closeKeyWindowEvent);
+                blockPage.addEventListener("click", closeSearchWindowEvent);
+                searchWindow.style.display = "inline";
             } else {
                 if( keyInput.value.length > 0 ) {
                     showNotiMessage("Your key is invalid.", "error");
                 };
+                blockPage.addEventListener("click", closeKeyWindowEvent);
                 enterApiKey();
             };
         });
@@ -663,7 +806,7 @@ chLpAddAll.addEventListener("click", function() {
     var toBeAddedList = [];
     for( let i = 0; i < channelRows.length; i++ ) {
         if( channelRows[i].classList.contains("ch_selected") ) {
-            toBeAddedList.push(channelRows[i].getAttribute("id").replace("mn_", ""));
+            toBeAddedList.push(channelRows[i].getAttribute("id").replace("mn|", ""));
         };
     };
     fetch("api/add", {
@@ -675,8 +818,13 @@ chLpAddAll.addEventListener("click", function() {
             if( i["success"] === true ) {
                 showNotiMessage(toBeAddedList.length + " channel(s) added successfully!", "success");
                 for ( let i = 0; i < toBeAddedList.length; i++ ) {
-                    var elemTr = document.getElementById("mn_" + toBeAddedList[i]);
-                    var elem = document.getElementById(toBeAddedList[i]);
+                    if( toBeAddedList[i].includes("|") ) {
+                        var v = toBeAddedList[i].split("|")[1];
+                    } else {
+                        var v = toBeAddedList[i];
+                    };
+                    var elemTr = document.getElementById("mn|" + toBeAddedList[i]);
+                    var elem = document.getElementById(v);
                     elem.classList.remove("add-ch-disabled");
                     elem.classList.add("added-ch");
                     elem.disabled = true;
@@ -806,7 +954,140 @@ function showNotiMessage(content, notiType) {
     }, 2900);
 };
 
+openSearchWindow.addEventListener("click", function() {
+    if( !openSearchWindow.classList.contains("selected-btn") ) {
+        if( openWebWindow.classList.contains("selected-btn") ) {
+            webWindow.classList.add("nav-bar-move");
+            blockPage.removeEventListener("click", closeWebWindowEvent);
+            setTimeout(function() {webWindow.style.display = "none"; webWindow.classList.remove("nav-bar-move")}, 600);
+            openWebWindow.classList.remove("selected-btn");
+        };
+        if( openXmlWindow.classList.contains("selected-btn") ) {
+            xmlWindow.classList.add("nav-bar-move");
+            blockPage.removeEventListener("click", closeXmlWindowEvent);
+            setTimeout(function() {xmlWindow.style.display = "none"; xmlWindow.classList.remove("nav-bar-move")}, 600);
+            openXmlWindow.classList.remove("selected-btn");
+        };
+        openSearchWindow.classList.add("selected-btn");
+        apiCheck(null);
+    };
+});
+
+closeSearchWindow.addEventListener("click", closeSearchWindowEvent);
+
+function closeSearchWindowEvent() {
+    searchWindow.classList.add("nav-bar-move");
+    blockPage.style.display = "none";
+    blockPage.removeEventListener("click", closeSearchWindowEvent);
+    prTypeBtnGroup.style.display = "none";
+    mainBtnGroup.style.display = "inline";
+    setTimeout(function() {searchWindow.style.display = "none"; blockPage.classList.remove("add-blocker"); searchWindow.classList.remove("nav-bar-move")}, 600);
+};
+
+closeKeyWindow.addEventListener("click", closeKeyWindowEvent);
+
+function closeKeyWindowEvent() {
+    keyWindow.classList.add("nav-bar-move");
+    blockPage.style.display = "none";
+    blockPage.removeEventListener("click", closeKeyWindowEvent);
+    prTypeBtnGroup.style.display = "none";
+    mainBtnGroup.style.display = "inline";
+    setTimeout(function() {keyWindow.style.display = "none"; blockPage.classList.remove("add-blocker"); keyWindow.classList.remove("nav-bar-move")}, 600);
+};
+
+openWebWindow.addEventListener("click", function() {
+    if( !openWebWindow.classList.contains("selected-btn") ) {
+        if( openSearchWindow.classList.contains("selected-btn") ) {
+            if( keyWindow.style.display === "inline" ) {
+                keyWindow.classList.add("nav-bar-move");
+                blockPage.removeEventListener("click", closeKeyWindowEvent);
+                setTimeout(function() {keyWindow.style.display = "none"; keyWindow.classList.remove("nav-bar-move")}, 600);
+            } else {
+                searchWindow.classList.add("nav-bar-move");
+                blockPage.removeEventListener("click", closeSearchWindowEvent);
+                setTimeout(function() {searchWindow.style.display = "none"; searchWindow.classList.remove("nav-bar-move")}, 600);
+            };
+            openSearchWindow.classList.remove("selected-btn");
+        };
+        if( openXmlWindow.classList.contains("selected-btn") ) {
+            xmlWindow.classList.add("nav-bar-move");
+            blockPage.removeEventListener("click", closeXmlWindowEvent);
+            setTimeout(function() {xmlWindow.style.display = "none"; xmlWindow.classList.remove("nav-bar-move")}, 600);
+            openXmlWindow.classList.remove("selected-btn");
+        };
+        blockPage.addEventListener("click", closeWebWindowEvent);
+        openWebWindow.classList.add("selected-btn");
+        webWindow.style.display = "inline";
+    };
+});
+
+closeWebWindow.addEventListener("click", closeWebWindowEvent);
+
+function closeWebWindowEvent() {
+    webWindow.classList.add("nav-bar-move");
+    blockPage.style.display = "none";
+    blockPage.removeEventListener("click", closeWebWindowEvent);
+    prTypeBtnGroup.style.display = "none";
+    mainBtnGroup.style.display = "inline";
+    setTimeout(function() {webWindow.style.display = "none"; blockPage.classList.remove("add-blocker"); webWindow.classList.remove("nav-bar-move")}, 600);
+};
+
+openXmlWindow.addEventListener("click", function() {
+    if( !openXmlWindow.classList.contains("selected-btn") ) {
+        if( openSearchWindow.classList.contains("selected-btn") ) {
+            if( keyWindow.style.display === "inline" ) {
+                keyWindow.classList.add("nav-bar-move");
+                blockPage.removeEventListener("click", closeKeyWindowEvent);
+                setTimeout(function() {keyWindow.style.display = "none"; keyWindow.classList.remove("nav-bar-move")}, 600);
+            } else {
+                searchWindow.classList.add("nav-bar-move");
+                blockPage.removeEventListener("click", closeSearchWindowEvent);
+                setTimeout(function() {searchWindow.style.display = "none"; searchWindow.classList.remove("nav-bar-move")}, 600);
+            };
+            openSearchWindow.classList.remove("selected-btn");
+        };
+        if( openWebWindow.classList.contains("selected-btn") ) {
+            webWindow.classList.add("nav-bar-move");
+            blockPage.removeEventListener("click", closeWebWindowEvent);
+            setTimeout(function() {webWindow.style.display = "none"; webWindow.classList.remove("nav-bar-move")}, 600);
+            openWebWindow.classList.remove("selected-btn");
+        };
+        blockPage.addEventListener("click", closeXmlWindowEvent);
+        openXmlWindow.classList.add("selected-btn");
+        retrieveXmlSources();
+        xmlWindow.style.display = "inline";
+    };
+});
+
+closeXmlWindow.addEventListener("click", closeXmlWindowEvent);
+
+function closeXmlWindowEvent() {
+    xmlWindow.classList.add("nav-bar-move");
+    blockPage.style.display = "none";
+    blockPage.removeEventListener("click", closeXmlWindowEvent);
+    prTypeBtnGroup.style.display = "none";
+    mainBtnGroup.style.display = "inline";
+    setTimeout(function() {xmlWindow.style.display = "none"; blockPage.classList.remove("add-blocker"); xmlWindow.classList.remove("nav-bar-move")}, 600);
+};
+
 openSearch.addEventListener("click", function() {
+    if( openWebWindow.classList.contains("selected-btn") ) {
+        webWindow.style.display = "inline";
+        blockPage.addEventListener("click", closeWebWindowEvent);
+    } else if( openSearchWindow.classList.contains("selected-btn") ) {
+        apiCheck(null);
+    } else if( openXmlWindow.classList.contains("selected-btn") ) {
+        retrieveXmlSources();
+        xmlWindow.style.display = "inline";
+        blockPage.addEventListener("click", closeXmlWindowEvent);
+    };
+    blockPage.classList.add("add-blocker");
+    blockPage.style.display = "inline";
+    mainBtnGroup.style.display = "none";
+    prTypeBtnGroup.style.display = "inline";
+});
+
+function loadTmsEvent() {
     chSearch.value = "";
     if( getCookie("LineupFilter") != "" ) {
         var filterData = JSON.parse(getCookie("LineupFilter"));
@@ -820,21 +1101,6 @@ openSearch.addEventListener("click", function() {
     } else {
         defaultLineup.selected = "true";
     };
-    searchWindow.style.display = "inline";
-    blockPage.classList.add("add-blocker");
-    blockPage.style.display = "inline";
-    blockPage.addEventListener("click", closeSearchWindowEvent);
-    mainBtnGroup.style.display = "none";
-});
-
-closeSearchWindow.addEventListener("click", closeSearchWindowEvent);
-
-function closeSearchWindowEvent() {
-    searchWindow.classList.add("nav-bar-move");
-    blockPage.style.display = "none";
-    blockPage.removeEventListener("click", closeSearchWindowEvent);
-    mainBtnGroup.style.display = "inline";
-    setTimeout(function() {searchWindow.style.display = "none"; blockPage.classList.remove("add-blocker"); searchWindow.classList.remove("nav-bar-move")}, 600);
 };
 
 closeChInfoWindow.addEventListener("click", closeChInfoWindowEvent);
@@ -1171,6 +1437,140 @@ function doneTypingPostalCode() {
     });
 };
 
+function loadExtLineupChannels(value) {
+    loadXmlBtn.textContent = "Loading...";
+    loadXmlBtn.disabled = true;
+    xmlSelection.disabled = true;
+    removeXmlBtn.disabled = true;
+    var selectedLineup = xmlSelection.options[xmlSelection.options.selectedIndex].textContent;
+
+    fetch("api/xmltv_lineup_channels", {
+        method: "POST",
+        body: JSON.stringify({"id": value})
+    })
+    .then(response => {
+        response.json().then(function(d) {
+            if( d["success"] === true ) {
+                loadXmlBtn.textContent = "Load channels";
+                loadXmlBtn.disabled = false;
+                xmlSelection.disabled = false;
+                removeXmlBtn.disabled = false;
+                blockPage.style.display = "none";
+                if( openXmlWindow.classList.contains("selected-btn") ) {
+                    xmlWindow.classList.add("nav-bar-move");
+                    blockPage.removeEventListener("click", closeXmlWindowEvent);
+                    setTimeout(function() {xmlWindow.style.display = "none"; blockPage.classList.remove("add-blocker"); xmlWindow.classList.remove("nav-bar-move")}, 600);
+                };
+                if( openWebWindow.classList.contains("selected-btn") ) {
+                    webWindow.classList.add("nav-bar-move");
+                    blockPage.removeEventListener("click", closeWebWindowEvent);
+                    setTimeout(function() {webWindow.style.display = "none"; blockPage.classList.remove("add-blocker"); webWindow.classList.remove("nav-bar-move")}, 600);
+                };
+                mainBtnGroup.style.display = "inline";
+                prTypeBtnGroup.style.display = "none";
+                openSearch.style.display = "none";
+                closeResultsWindow.style.display = "none";
+                var data = d["result"]
+                console.log(data);
+                for( let i = 0; i < tableClass.length; i++ ) {
+                    tableClass[i].style.display = "none";
+                };
+                searchTable.innerHTML = "";
+
+                var j = [];
+                for( k in data ) {
+                    j.push(data[k]["name"] + "|" + k);
+                };
+                j.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+
+                for( var b = 0; b < j.length; b++ ) {
+                    i = j[b].split("|")[1];
+                    var newRow = searchTable.insertRow();
+                    newRow.id = "mn|" + value + "|" + i;
+                    newRow.classList.add("mn_row");
+                    if( data[i].hasOwnProperty("icon") ) {
+                        var imgSrc = '<img src="' + data[i]["icon"] + '" alt="">';
+                    } else {
+                        var imgSrc = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16"><path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/></svg>'
+                    };
+                    if( data[i]["chExists"] === true ) {
+                        var btnShow = '<button disabled id="' + i + '" class="added-ch"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16"><path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/><path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/></svg></button>';
+                        newRow.classList.remove("mn_row");
+                    } else {
+                        var btnShow = '<button id="' + i + '" class="add-ch"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg></button>';
+                    };
+                    newRow.innerHTML = '<td>' + imgSrc + '</td><td>' + data[i]["name"] + '<p>ID: ' + i + '</p></td><td>' + btnShow + '</td>'
+                    document.getElementById(i).addEventListener("click", function() {
+                        addNewChannel(value + "|" + this.getAttribute("id"), true);
+                    });                    
+                };
+
+                if( document.getElementById("search-table").rows.length === 0 ) {
+                    // HEADER
+                    tableSection.classList.add("hide-window");
+                    setTimeout(function() {
+                         tableSection.style.display = "none";
+                         tableSection.classList.remove("hide-window");
+                         loadChannelList();
+                     }, 200);
+                 } else {
+                     // HEADER
+                     tableSection.style.display = "block";
+                 };
+
+                 var channelRows = document.getElementsByClassName("mn_row");
+                 var channelInfoElements = document.getElementsByClassName("add-ch");
+
+                 for( let c = 0; c < channelRows.length; c++ ) {
+                     var td = channelRows[c].getElementsByTagName("td");
+                     for( let r = 0; r < 2; r++ ) {
+                         td[r].addEventListener("click", function() {
+                             if( channelRows[c].classList.contains("ch_selected") ) {
+                                 channelRows[c].classList.remove("ch_selected");    
+                             } else if ( !channelRows[c].classList.contains("mn_added") ) {
+                                 channelRows[c].classList.add("ch_selected");
+                             };
+                             var multiSelectMode = false
+                             for( let d = 0; d < channelRows.length; d++ ) {
+                                 if( channelRows[d].classList.contains("ch_selected") ) {
+                                     multiSelectMode = true;
+                                 };
+                             };
+                             if( multiSelectMode === true ) {
+                                 mainBtnGroup.style.display = "none";
+                                 chLpMultiSelectBtnGroup.style.display = "inline";
+                                 for( let d = 0; d < channelInfoElements.length; d++ ) {
+                                     if( !channelRows[d].classList.contains("mn_added") ) {
+                                         channelInfoElements[d].disabled = true;
+                                         channelInfoElements[d].classList.add("add-ch-disabled");
+                                     };
+                                 };
+                             } else {
+                                 mainBtnGroup.style.display = "inline";
+                                 chLpMultiSelectBtnGroup.style.display = "none";
+                                 for( let d = 0; d < channelInfoElements.length; d++ ) {
+                                     if( !channelRows[d].classList.contains("mn_added") ) {
+                                         channelInfoElements[d].disabled = false;
+                                         channelInfoElements[d].classList.remove("add-ch-disabled");
+                                     };
+                                 };
+                             };
+                         });
+                     };
+                 };
+                searchResultsText.innerText = "Lineup: " + selectedLineup;
+                openSearch.style.display = "inline";
+                closeResultsWindow.style.display = "inline";
+            } else {
+                loadXmlBtn.textContent = "Load channels";
+                loadXmlBtn.disabled = false;
+                xmlSelection.disabled = false;
+                removeXmlBtn.disabled = false;
+            };
+        })
+    })
+};
+
 function loadLineupChannels(value) {
     // searchResultsText.innerText = "Search results";
     var selectedLineup = allLineups.options[allLineups.selectedIndex].textContent;
@@ -1185,6 +1585,7 @@ function loadLineupChannels(value) {
                 blockPage.style.display = "none";
                 blockPage.removeEventListener("click", closeSearchWindowEvent);
                 mainBtnGroup.style.display = "inline";
+                prTypeBtnGroup.style.display = "none";
                 setTimeout(function() {searchWindow.style.display = "none"; blockPage.classList.remove("add-blocker"); searchWindow.classList.remove("nav-bar-move")}, 600);
                 openSearch.style.display = "none";
                 closeResultsWindow.style.display = "none";
@@ -1203,7 +1604,7 @@ function loadLineupChannels(value) {
                 for( var b = 0; b < j.length; b++ ) {
                     i = j[b].split("_")[1];
                     var newRow = searchTable.insertRow();
-                    newRow.id = "mn_" + data[i]["stationId"];
+                    newRow.id = "mn|" + data[i]["stationId"];
                     newRow.classList.add("mn_row");
                     if( data[i].hasOwnProperty("preferredImage") ) {
                         var imgSrc = '<img src="' + data[i]["preferredImage"]["uri"] + '" alt="">';
@@ -1226,7 +1627,7 @@ function loadLineupChannels(value) {
                     tableSection.style.display = "block";
                 };
                 
-                searchResultsText.innerText = "Fetching lineup channel details...";
+                searchResultsText.innerText = "Fetching TMS lineup channel details...";
 
                 for( let c = 0; c < j.length; c++ ) {
                     b = j[c].split("_")[1];
@@ -1245,11 +1646,11 @@ function loadLineupChannels(value) {
                                 };
                                 if( info[0]["chExists"] === true ) {
                                     var btnShow = '<button disabled id="' + info[0]["stationId"] + '" class="added-ch"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16"><path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/><path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/></svg></button>';
-                                    document.getElementById("mn_" + info[0]["stationId"]).classList.remove("mn_row");
+                                    document.getElementById("mn|" + info[0]["stationId"]).classList.remove("mn_row");
                                 } else {
                                     var btnShow = '<button id="' + info[0]["stationId"] + '" class="add-ch"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg></button>';
                                 };
-                                document.getElementById("mn_" + info[0]["stationId"]).innerHTML = '<td>' + imgSrc + '</td><td>' + info[0]["name"] + '<p>ID: ' + info[0]["stationId"] + ' | ' + info[0]["callSign"] + ' | ' + info[0]["bcastLangs"][0] + ' | ' + info[0]["type"] + '</p></td><td>' + btnShow + '</td>'
+                                document.getElementById("mn|" + info[0]["stationId"]).innerHTML = '<td>' + imgSrc + '</td><td>' + info[0]["name"] + '<p>ID: ' + info[0]["stationId"] + ' | ' + info[0]["callSign"] + ' | ' + info[0]["bcastLangs"][0] + ' | ' + info[0]["type"] + '</p></td><td>' + btnShow + '</td>'
                                 document.getElementById(info[0]["stationId"]).addEventListener("click", function() {
                                     addNewChannel(this.getAttribute("id"), true);
                                 });
@@ -1295,7 +1696,7 @@ function loadLineupChannels(value) {
                                             });
                                         };
                                     };
-                                    searchResultsText.innerText = "Lineup: " + selectedLineup;
+                                    searchResultsText.innerText = "TMS Lineup: " + selectedLineup;
                                     openSearch.style.display = "inline";
                                     closeResultsWindow.style.display = "inline";
                                     showNotiMessage("All lineup channels fetched. Multi-selection enabled.");
@@ -1327,12 +1728,17 @@ function addNewChannel(value, lineup) {
     .then(response => {
         response.json().then(function(data) {
             if( data["success"] === true ) {
-                document.getElementById(value).classList.add("added-ch");
-                document.getElementById(value).disabled = true;
-                if( lineup === true ) {
-                    document.getElementById("mn_" + value).classList.add("mn_added");
+                if( value.includes("|") ) {
+                    var v = value.split("|")[1];
+                } else {
+                    var v = value;
                 };
-                document.getElementById(value).innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16"><path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/><path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/></svg>';
+                document.getElementById(v).classList.add("added-ch");
+                document.getElementById(v).disabled = true;
+                if( lineup === true ) {
+                    document.getElementById("mn|" + value).classList.add("mn_added");
+                };
+                document.getElementById(v).innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16"><path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/><path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/></svg>';
 
                 showNotiMessage("New channel added!", "success");
             } else {
@@ -1354,7 +1760,7 @@ function loadChannelList() {
         response.json().then(function(data) {
             var j = [];
             for( k in data ) {
-                j.push(data[k]["name"] + "_" + data[k]["stationId"]);
+                j.push(data[k]["name"] + "|" + k);
             };
             j.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
 
@@ -1380,7 +1786,7 @@ function loadChannelList() {
             };
 
             for( k in j ) {                
-                c_id = j[k].split("_").pop();
+                c_id = j[k].split("|").pop();
                 var newRow = channelTable.insertRow();
                 newRow.setAttribute("id", "ch_" + c_id);
                 newRow.classList.add("ch_row");
@@ -1394,7 +1800,17 @@ function loadChannelList() {
                 } else {
                     var imgSrc = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16"><path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/></svg>'
                 };
-                newRow.innerHTML = '<td>' + imgSrc + '</td><td>' + data[c_id]["name"] + tvg + '<p>ID: ' + data[c_id]["stationId"] + ' | ' + data[c_id]["callSign"] + ' | ' + data[c_id]["bcastLangs"][0] + ' | ' + data[c_id]["type"] + '</p></td><td><button id="' + data[c_id]["stationId"] + '" class="info-ch"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg></button></td>'
+                if( data[c_id].hasOwnProperty("bcastLangs") ) {
+                    var bcastLangs = data[c_id]["bcastLangs"][0];
+                } else {
+                    var bcastLangs = undefined;
+                };
+
+                if( bcastLangs === undefined && data[c_id]["callSign"] === undefined && data[c_id]["type"] === undefined ) {
+                    newRow.innerHTML = '<td>' + imgSrc + '</td><td>' + data[c_id]["name"] + tvg + '<p>ID: ' + data[c_id]["stationId"] + '</p></td><td><button id="' + data[c_id]["stationId"] + '" class="info-ch"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg></button></td>'
+                } else {
+                    newRow.innerHTML = '<td>' + imgSrc + '</td><td>' + data[c_id]["name"] + tvg + '<p>ID: ' + data[c_id]["stationId"] + ' | ' + data[c_id]["callSign"] + ' | ' + bcastLangs + ' | ' + data[c_id]["type"] + '</p></td><td><button id="' + data[c_id]["stationId"] + '" class="info-ch"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg></button></td>'
+                };
             };
             channelSection.style.display = "block";
             if( channelTable.getElementsByTagName("td").length > 0 ) {
