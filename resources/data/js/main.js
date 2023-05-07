@@ -89,6 +89,7 @@ const chInfoWindow = document.getElementById("ch-info-window");
 const closeChInfoWindow = document.getElementById("close-ch-info");
 const chInfoChName = document.getElementById("chname-input");
 const chInfoChCallSign = document.getElementById("tv-callsign");
+const chInfoChCallSignLabel = document.getElementById("tv-callsign-label");
 const chInfoChId = document.getElementById("tv-id");
 const chInfoChIdInput = document.getElementById("tvg-id-input");
 const chInfoChIdResult = document.getElementById("tvg-id-result");
@@ -169,13 +170,15 @@ addXmlBtn.addEventListener("click", function() {
                 showNotiMessage(d["message"], "error");
             };
         });
+        addXmlBtn.textContent = "Add provider";
+        addXmlBtn.disabled = false;
     })
     .catch(error => {
         console.log(error);
         showNotiMessage("An error occurred while serving the request.", "error");
+        addXmlBtn.textContent = "Add provider";
+        addXmlBtn.disabled = false;
     });
-    addXmlBtn.textContent = "Add provider";
-    addXmlBtn.disabled = false;
 });
 
 xmlSelection.addEventListener("change", function() {
@@ -217,6 +220,8 @@ removeXmlBtn.addEventListener("click", function() {
 });
 
 function retrieveXmlSources() {
+    openSearchWindow.disabled = true;
+    openWebWindow.disabled = true;
     var i, L = xmlSelection.options.length - 1;
     for(i = L; i >= 1; i--) {
         xmlSelection.remove(i);
@@ -242,10 +247,14 @@ function retrieveXmlSources() {
                 showNotiMessage(d["message"], "error");
             };
         });
+        openSearchWindow.disabled = false;
+        openWebWindow.disabled = false;
     })
     .catch(error => {
         console.log(error);
         showNotiMessage("An error occurred while serving the request.", "error");
+        openSearchWindow.disabled = false;
+        openWebWindow.disabled = false;
     });
 };
 
@@ -476,6 +485,8 @@ blockPage.style.display = "none";
 showNotiMessage("Welcome to easyepg!");
 
 function apiCheck(key) {
+    openXmlWindow.disabled = true;
+    openWebWindow.disabled = true;
     fetch("api/key_check", {
         method: "POST",
         body: JSON.stringify({"key": key})
@@ -496,9 +507,13 @@ function apiCheck(key) {
                 blockPage.addEventListener("click", closeKeyWindowEvent);
                 enterApiKey();
             };
+            openXmlWindow.disabled = false;
+            openWebWindow.disabled = false;
         });
     })
     .catch(error => {
+        openXmlWindow.disabled = false;
+        openWebWindow.disabled = false;
         console.log(error);
         showNotiMessage("An error occurred while serving the request.", "error");
     });
@@ -1146,7 +1161,15 @@ function doneTypingId() {
                                 var k = i["result"][0];
                                 chInfoChId.value = chInfoReplaceInput.value;
                                 chInfoChName.value = k["name"];
-                                chInfoChCallSign.value = k["callSign"];
+                                if( k.hasOwnProperty("callSign") ) {
+                                    chInfoChCallSign.hidden = false;
+                                    chInfoChCallSignLabel.hidden = false;
+                                    chInfoChCallSign.value = k["callSign"];
+                                } else {
+                                    chInfoChCallSign.hidden = true;
+                                    chInfoChCallSignLabel.hidden = true;
+                                    chInfoChCallSign.value = "";
+                                };
                                 chInfoImage.setAttribute("src", k["preferredImage"]["uri"]);
                                 showNotiMessage("The channel has been replaced!", "success");
                                 loadChannelList();
@@ -1488,7 +1511,11 @@ function loadExtLineupChannels(value) {
                     newRow.id = "mn|" + value + "|" + i;
                     newRow.classList.add("mn_row");
                     if( data[i].hasOwnProperty("icon") ) {
-                        var imgSrc = '<img src="' + data[i]["icon"] + '" alt="">';
+                        if( data[i]["icon"] == null ) {
+                            var imgSrc = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16"><path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/></svg>';
+                        } else {
+                            var imgSrc = '<img src="' + data[i]["icon"] + '" alt="">';
+                        };
                     } else {
                         var imgSrc = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16"><path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/></svg>'
                     };
@@ -1795,7 +1822,11 @@ function loadChannelList() {
                     var tvg = "";
                 };
                 if( data[c_id].hasOwnProperty("preferredImage" ) ) {
-                    var imgSrc = '<img src="' + data[c_id]["preferredImage"]["uri"] + '" alt="">'
+                    if( data[c_id]["preferredImage"]["uri"] == null ) {
+                        var imgSrc = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16"><path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/></svg>';
+                    } else {
+                        var imgSrc = '<img src="' + data[c_id]["preferredImage"]["uri"] + '" alt="">'
+                    };
                 } else {
                     var imgSrc = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16"><path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/></svg>'
                 };
@@ -1862,13 +1893,26 @@ function loadChannelList() {
                 channelInfoElements[i].addEventListener("click", function() {
                     mainBtnGroup.style.display = "none";
                     var k = channelInfoElements[i].getAttribute("id");
+                    chInfoImage.style.visibility = "visible";
                     if( data[k].hasOwnProperty("preferredImage") ) {
-                        chInfoImage.setAttribute("src", data[k]["preferredImage"]["uri"]);
+                        if( data[k]["preferredImage"]["uri"] == null ) {
+                            chInfoImage.style.visibility = "hidden";
+                        } else {
+                            chInfoImage.setAttribute("src", data[k]["preferredImage"]["uri"]);
+                        };
                     } else {
                         chInfoImage.setAttribute("src", "");
                     };
                     chInfoChName.value = data[k]["name"];
-                    chInfoChCallSign.value = data[k]["callSign"];
+                    if( data[k].hasOwnProperty("callSign") ) {
+                        chInfoChCallSign.hidden = false;
+                        chInfoChCallSignLabel.hidden = false;
+                        chInfoChCallSign.value = data[k]["callSign"];
+                    } else {
+                        chInfoChCallSign.hidden = true;
+                        chInfoChCallSignLabel.hidden = true;
+                        chInfoChCallSign.value = "";
+                    };
                     chInfoChId.value = k;
                     chInfoWindow.style.display = "inline";
                     blockPage.classList.add("add-blocker");

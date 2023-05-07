@@ -21,7 +21,9 @@ class WebServer():
         # IT'S NOT THE BEST SOLUTION... BUT IT WORKS.
         if self.g.grabbing:
             self.g.cancellation = True
+            self.g.pr.cancellation = True
             self.g.exit = True
+            self.g.pr.exit = True
         requests.get("http://localhost:4000")
 
     def kill(self):
@@ -257,6 +259,7 @@ def start_grabber():
 @route("/api/stop-grabber", method="GET")
 def stop_grabber():
     g.cancellation = True
+    g.pr.cancellation = True
     return json.dumps({"success": True})
 
 @route("/download/<file_name>", method="GET")

@@ -299,6 +299,9 @@ class ProviderManager():
         if len(url_list_part) > 0:
             final_list.append(url_list_part)
         
+        self.fl_num = len(final_list)
+        self.fl_pr = 0
+        
         # MAX NUMBER OF THREADS WITHIN THE BLOCK
         if not self.providers[provider_name].get("max_dl_threads") or \
                 self.providers[provider_name]["max_dl_threads"] <= self.user_db.main["settings"]["dl_threads"]:
@@ -308,6 +311,9 @@ class ProviderManager():
         
         # SENDING DL BLOCKS WITH SELECTED NUMBER OF THREADS
         for url_list in final_list:
+            self.l_pr = 0
+            self.l_num = len(url_list)
+            
             executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
             {executor.submit(self.load_main, provider_name, item, item.get("n", str(index))).add_done_callback(self.url_threads_handler) for index, item in enumerate(url_list)}
             executor.shutdown(wait=True)
@@ -323,17 +329,24 @@ class ProviderManager():
                           i.get("date", ""), i.get("country", ""), i.get("star", {}), i.get("rating", {}), i.get("credits", {}),
                           i.get("season_episode_num", {}), i.get("genres", [])) for i in m], True)
             self.epg_cache = {}
+            self.fl_pr = self.fl_pr + 1
 
         # WRITE DATA INTO REAL DB
         self.epg_db.confirm_update()
         del final_list, url_list
         self.epg_cache = {}
 
+        # CLEAN UP
+        if not self.providers[provider_name].get("adv_loader", False):
+            self.epg_db.remove_epg_db(provider_name if not xmltv else data["id"], False)
+
         self.epg_db.create_epg_db(provider_name if not xmltv else data["id"], False)
         self.status_ext = None
         return self.epg_db.simple_epg_db_update(provider_name if not xmltv else data["id"])
 
     def load_main(self, provider_name, item, name):
+        if self.exit or self.cancellation:
+            return
         sleep(self.providers[provider_name].get("dl_delay", 0))
         try:
             if item.get("d"):
@@ -349,9 +362,11 @@ class ProviderManager():
         return provider_name, r.content, item.get("c"), name
 
     def url_threads_handler(self, item):
+        if self.exit or self.cancellation:
+            return
         self.epg_cache[f"{'.' if item.result()[1] == '' else ''}{item.result()[3]}"] = item.result()[1], item.result()[2]
-        self.worker = self.worker + 1
-        self.progress = (self.worker / len(self.user_db.main["channels"])) * 100 / 2
+        self.l_pr = self.l_pr + 1
+        self.progress = ((((self.l_pr / self.l_num) * 100) / self.fl_num / 2) + (self.fl_pr / self.fl_num) * 100 / 2) / self.pr_num + (self.pr_pr / self.pr_num * 100 / 2)
         return
 
     # ADVANCED DATA

@@ -56,7 +56,8 @@ def epg_main_converter(data, channels, settings, ch_id=None):
             str(i["program"]["releaseYear"]) if i["program"].get("releaseYear") is not None else None
         
         star = i["program"].get("qualityRating", {"value": None})["value"]
-        g["star"] = {"system": "TMS", "value": star}
+        if star is not None:
+            g["star"] = {"system": "TMS", "value": f"{str(star)}/4"}
 
         g["director"] = i["program"].get("directors", [])
         g["actor"] = i["program"].get("topCast", [])

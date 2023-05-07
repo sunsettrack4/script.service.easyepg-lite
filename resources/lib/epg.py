@@ -71,6 +71,8 @@ class Grabber():
         try:
             self.pr.progress = 0
             self.pr.worker = 0
+            self.pr.cancellation = self.cancellation
+            self.pr.exit = self.exit
             missing_genres = []
 
             # PREPARING FILES/DIRECTORIES
@@ -103,7 +105,9 @@ class Grabber():
                             pr_check.append("gntms")
                     except:
                         pass
-
+            
+            self.pr.pr_num = len(pr_check)
+            self.pr.pr_pr = 0
             for provider in pr_check:
                 if "xml" in provider:
                     data = {"link": self.user_db.main["xmltv"][provider]["link"], "id": provider}
@@ -112,6 +116,7 @@ class Grabber():
                     self.pr.advanced_downloader(provider, self.pr.main_downloader(provider))
                 else:
                     self.pr.main_downloader(provider)
+                self.pr.pr_pr = self.pr.pr_pr + 1
 
             if self.cancellation or self.exit:
                 raise Exception("Process stopped.")
@@ -177,11 +182,11 @@ class Grabber():
                             end = datetime.fromtimestamp(float(end)).strftime("%Y%m%d%H%M%S +0000")
                             star = json.loads(json.loads(star)) if type(star) == str else {}
                             star_value = star.get("value")
-                            star_rating = star.get("system")
+                            star_rating = star.get("system", "")
                             credits = json.loads(json.loads(credits)) if type(credits) == str else {}
-                            director = credits.get("directors", [])
-                            actor = credits.get("actors", [])
-                            series_data = json.loads(json.loads(season_episode_num)) if type(season_episode_num) == "str" else {}
+                            director = credits.get("director", [])
+                            actor = credits.get("actor", [])
+                            series_data = json.loads(json.loads(season_episode_num)) if type(season_episode_num) == str else {}
                             episode_num = series_data.get("episode")
                             season_num = series_data.get("season")
                             categories = json.loads(json.loads(genres)) if type(genres) == str else []
@@ -213,11 +218,16 @@ class Grabber():
                                 if self.user_db.main["settings"]["rm"] == "add-info" or \
                                     self.user_db.main["settings"]["rm"] == "add-info-cast":
                                     desc_line = ""
+                                    if country is not None and country != "":
+                                        if desc_line != "":
+                                            desc_line = f"{desc_line} {country}"
+                                        else:
+                                            desc_line = f"{country}"
                                     if date is not None and date != "":
                                         if desc_line != "":
-                                            desc_line = f"{desc_line} {date}"
+                                            desc_line = f"{desc_line} {date[0:4]}"
                                         else:
-                                            desc_line = f"{date}"
+                                            desc_line = f"{date[0:4]}"
                                     if (episode_num is not None and episode_num != "") and \
                                         (season_num is not None and season_num != ""):
                                         if desc_line != "":
@@ -239,21 +249,24 @@ class Grabber():
                                             desc_line = f"{desc_line} ● {rating_type if rating_type is not None else 'Age'}: {rating}"
                                         else:
                                             desc_line = f"{rating_type if rating_type is not None else 'Age:'} {rating}"
-                                    if star_value is not None and star_value != "":
-                                        if float(star_value) >= 3.5:
-                                            star_desc_line = "★★★★"
-                                        elif 2.5 <= float(star_value) < 3.5:
-                                            star_desc_line = "★★★☆"
-                                        elif 1.5 <= float(star_value) < 2.5:
-                                            star_desc_line = "★★☆☆"
-                                        elif 0.5 <= float(star_value) < 1.5:
-                                            star_desc_line = "★☆☆☆"
+                                    if star_value is not None and star_value != "" and len(star_value.split("/")) > 1:
+                                        current_star_num = float(star_value.split("/")[0])
+                                        max_star_num = float(star_value.split("/")[1])
+                                        balance = current_star_num / max_star_num
+                                        if float(balance) >= 0.8:
+                                            star_desc_line = "★★★★★"
+                                        elif 0.6 <= float(balance) < 0.8:
+                                            star_desc_line = "★★★★☆"
+                                        elif 0.4 <= float(balance) < 0.6:
+                                            star_desc_line = "★★★☆☆"
+                                        elif 0.2 <= float(balance) < 0.4:
+                                            star_desc_line = "★★☆☆☆"
                                         else:
-                                            star_desc_line = "☆☆☆☆"
+                                            star_desc_line = "★☆☆☆☆"
                                         if desc_line != "":
-                                            desc_line = f"{desc_line} ● TMS Rating: {star_desc_line}"
+                                            desc_line = f"{desc_line} ● {star_rating if star_rating != '' else 'Star'} Rating: {star_desc_line}"
                                         else:
-                                            desc_line = f"TMS Rating: {star_desc_line}"
+                                            desc_line = f"{star_rating if star_rating != '' else 'Star'} Rating: {star_desc_line}"
                                     if desc_line != "":
                                         desc = f"{desc_line}\n{desc}"
 
@@ -308,6 +321,10 @@ class Grabber():
                             if date is not None and date != "":
                                 program["date"] = {"#text": date}
 
+                            # COUNTRY
+                            if country is not None and country != "":
+                                program["country"] = {"#text": country}
+
                             # CATEGORIES
                             genres = []
                             mapped_genres = []
@@ -339,20 +356,23 @@ class Grabber():
 
                             # AGE RATING
                             if rating is not None and rating != "":
-                                program["rating"] = {"@system": rating_type, "value": {"#text": rating}}
+                                if rating_type is not None and rating_type != "":
+                                    program["rating"] = {"@system": rating_type, "value": {"#text": rating}}
+                                else:
+                                    program["rating"] = {"value": {"#text": rating}}
 
                             # STAR RATING
                             if star_value is not None and star_value != "":
-                                if star_rating is not None and star_rating != "":
-                                    program["star-rating"] = {"@system": "TMS", "value": {"#text": f"{star_value}/4"}}
+                                if star_rating != "":
+                                    program["star-rating"] = {"@system": star_rating, "value": {"#text": star_value}}
                                 else:
-                                    program["star-rating"] = {"value": {"#text": f"{star_value}/4"}}
+                                    program["star-rating"] = {"value": {"#text": star_value}}
 
                             pr["programme"].append(program)
                             pn = pn + 1
                             
                             inner_worker = inner_worker + 1
-                            self.pr.progress = (inner_worker / inner_value) * self.basic_value + self.pr.worker + 50
+                            self.pr.progress = (inner_worker / inner_value) * self.basic_value + self.worker + 50
 
                             if pn == self.user_db.main["settings"]["pn_max"]:
                                 file.write(xmltodict.unparse(pr, pretty=True, encoding="UTF-8", full_document=False))
@@ -402,23 +422,27 @@ class Grabber():
             sleep(5)
             self.status = "Idle"
 
-        except Exception:
+        except Exception as e:
             
-            with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
-                log.write(f"--- ERROR LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
-                traceback.print_exc(file=log)
-                log.write(f"--- ERROR LOG END ---\n\n")
-            
-            try:
-                print(traceback.format_exc())
-            except:
-                pass
+            if str(e) != "Process stopped.":
+                with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
+                    log.write(f"--- ERROR LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+                    traceback.print_exc(file=log)
+                    log.write(f"--- ERROR LOG END ---\n\n")
+                
+                try:
+                    print(traceback.format_exc())
+                except:
+                    pass
 
             self.grabbing = False
             self.started = False
             self.cancellation = False
             self.pr.progress = 100
-            self.status = "An error occurred. Please check the log file."
+            if str(e) == "Process stopped.":
+                self.status = "Process stopped."
+            else:
+                self.status = "An error occurred. Please check the log file."
             sleep(5)
             self.status = "Idle"
     
