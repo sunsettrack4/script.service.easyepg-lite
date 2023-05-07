@@ -175,17 +175,17 @@ class Grabber():
                             # DEFINE PARAMS
                             start = datetime.fromtimestamp(float(start)).strftime("%Y%m%d%H%M%S +0000")
                             end = datetime.fromtimestamp(float(end)).strftime("%Y%m%d%H%M%S +0000")
-                            star = json.loads(json.loads(star)) if type(star) == "str" else {}
+                            star = json.loads(json.loads(star)) if type(star) == str else {}
                             star_value = star.get("value")
                             star_rating = star.get("system")
-                            credits = json.loads(json.loads(credits)) if type(credits) == "str" else {}
+                            credits = json.loads(json.loads(credits)) if type(credits) == str else {}
                             director = credits.get("directors", [])
                             actor = credits.get("actors", [])
                             series_data = json.loads(json.loads(season_episode_num)) if type(season_episode_num) == "str" else {}
                             episode_num = series_data.get("episode")
                             season_num = series_data.get("season")
-                            categories = json.loads(json.loads(genres)) if type(genres) == "str" else {}
-                            age_rating = json.loads(json.loads(rating)) if type(rating) == "str" else {}
+                            categories = json.loads(json.loads(genres)) if type(genres) == str else []
+                            age_rating = json.loads(json.loads(rating)) if type(rating) == str else {}
                             rating = age_rating.get("value")
                             rating_type = age_rating.get("system")
                             
