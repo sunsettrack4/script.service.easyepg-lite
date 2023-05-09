@@ -61,7 +61,7 @@ class SQLiteManager():
         self.init_db()
 
     def init_db(self):
-        self.conn = sqlite3.connect(f"{file_path}epg.db", check_same_thread=False)
+        self.conn = sqlite3.connect(f"{self.file_path}epg.db", check_same_thread=False)
         self.c = self.conn.cursor()
         return
 
