@@ -55,12 +55,13 @@ class UserData():
         return True
 
 class SQLiteManager():
-    def __init__(self, config):
+    def __init__(self, config, file_path):
         self.config = config
+        self.file_path = file_path
         self.init_db()
 
     def init_db(self):
-        self.conn = sqlite3.connect("epg.db", check_same_thread=False)
+        self.conn = sqlite3.connect(f"{file_path}epg.db", check_same_thread=False)
         self.c = self.conn.cursor()
         return
 
@@ -194,7 +195,7 @@ class ProviderManager():
         self.file_paths = file_paths
         self.user_db = user_db
         self.import_data()
-        self.epg_db = SQLiteManager(self.providers)
+        self.epg_db = SQLiteManager(self.providers, file_paths["storage"])
         self.import_provider_modules()
 
     # PROVIDER CONFIG
