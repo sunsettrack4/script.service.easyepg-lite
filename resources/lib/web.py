@@ -132,16 +132,19 @@ def get_xmltv_lineup_channels():
     try:
         if "xml" in provider:
             result = g.pr.ch_loader("xmltv", {"url": g.user_db.main["xmltv"][provider]["link"]})
-            if result[0]:
-                for i in result[1].keys():
-                    if g.user_db.main["channels"].get(f"{provider}_{i}"):
-                        result[1][i]["chExists"] = True
-                    else:
-                        result[1][i]["chExists"] = False
-                    result[1][i]["provider_id"] = provider
-                return json.dumps({"success": True, "result": result[1]})
-            else:
-                return json.dumps({"success": False, "message": f"An error occured: {str(result[1])}"})        
+        else:
+            result = g.pr.ch_loader(provider)
+        
+        if result[0]:
+            for i in result[1].keys():
+                if g.user_db.main["channels"].get(f"{provider}_{i}"):
+                    result[1][i]["chExists"] = True
+                else:
+                    result[1][i]["chExists"] = False
+                result[1][i]["provider_id"] = provider
+            return json.dumps({"success": True, "result": result[1]})
+        else:
+            return json.dumps({"success": False, "message": f"An error occured: {str(result[1])}"})        
     except:
         return json.dumps({"success": False, "message": "Failed to load the channels."})
 
@@ -184,19 +187,21 @@ def add_channel():
             except Exception as e:
                 print_error(traceback.format_exc())
                 return json.dumps({"success": False, "message": "Not all channels could not be added."})
-    else:
-        if "xml" in provider_id:
-            try:
+    else: 
+        try:
+            if "xml" in provider_id:
                 ch_list = g.pr.ch_loader("xmltv", {"url": g.user_db.main["xmltv"][provider_id]["link"]})
-                if ch_list[0]:
-                    for id in ids:
-                        if ch_list[1].get(id.split("|")[1]):
-                            g.user_db.main["channels"][id.replace(f"{provider_id}|", f"{provider_id}_")] = \
-                                {"stationId": id.replace(f"{provider_id}|", ""), "name": ch_list[1][id.split("|")[1]]["name"], "preferredImage": {"uri": ch_list[1][id.split("|")[1]]["icon"]}}
-                            g.user_db.save_settings()
-            except Exception as e:
-                print_error(traceback.format_exc())
-                return json.dumps({"success": False, "message": "Not all channels could not be added."})
+            else:
+                ch_list = g.pr.ch_loader(provider_id)
+            if ch_list[0]:
+                for id in ids:
+                    if ch_list[1].get(id.split("|")[1]):
+                        g.user_db.main["channels"][id.replace(f"{provider_id}|", f"{provider_id}_")] = \
+                            {"stationId": id.replace(f"{provider_id}|", ""), "name": ch_list[1][id.split("|")[1]]["name"], "preferredImage": {"uri": ch_list[1][id.split("|")[1]]["icon"]}}
+                        g.user_db.save_settings()
+        except Exception as e:
+            print_error(traceback.format_exc())
+            return json.dumps({"success": False, "message": "Not all channels could not be added."})
 
     return json.dumps({"success": True})
 
@@ -285,6 +290,10 @@ def provide_css(file_name):
 @route("/app/data/img/<file_name>")
 def provide_img(file_name):
     return static_file(file_name, root=f"{f['included']}resources/data/img")
+
+@route("/app/data/json/<file_name>")
+def provide_json(file_name):
+    return static_file(file_name, root=f"{f['included']}resources/data/json")
 
 
 #

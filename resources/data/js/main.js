@@ -134,6 +134,9 @@ const loadXmlBtn = document.getElementById("xml-load");
 const removeXmlBtn = document.getElementById("xml-remove");
 const xmlSelection = document.getElementById("xml_selection");
 
+const webCountrySelection = document.getElementById("web_country");
+const webSelection = document.getElementById("web_selection");
+
 var url_expression = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 var url_regex = new RegExp(url_expression);
 
@@ -217,6 +220,84 @@ removeXmlBtn.addEventListener("click", function() {
         showNotiMessage("An error occurred while serving the request.", "error");
     });
     retrieveXmlSources();
+});
+
+function retrieveWebSources() {
+    var i, L = webSelection.options.length - 1;
+    for(i = L; i >= 1; i--) {
+        webSelection.remove(i);
+    };
+    var i, L = webCountrySelection.options.length - 1;
+    for(i = L; i >= 1; i--) {
+        webCountrySelection.remove(i);
+    };
+    webSelection.disabled = true;
+    openSearchWindow.disabled = true;
+    openXmlWindow.disabled = true;
+    fetch("app/data/json/providers.json", {
+        method: "GET"
+    })
+    .then(response => {
+        response.json().then(function(d) {
+            var countryList = [];
+            for( i in d ) {
+                var t = false;
+                if( d[i].hasOwnProperty("menu_visibility") ) {
+                    if( d[i]["menu_visibility"] == false ) {
+                        t = true;
+                    };
+                };
+                if( t == false ) {
+                    var opt = document.createElement('option');
+                    opt.id = i;
+                    opt.classList.add(d[i]["country"]);
+                    opt.innerHTML = d[i]["name"];
+                    webSelection.appendChild(opt);
+                    
+                    if( !countryList.includes(d[i]["country"]) ) {
+                        var opt = document.createElement('option');
+                        opt.id = d[i]["country"];
+                        opt.innerHTML = d[i]["country"];
+                        webCountrySelection.appendChild(opt);
+                        countryList.push(d[i]["country"]);
+                    };
+                };
+            };
+        });
+        openSearchWindow.disabled = false;
+        openXmlWindow.disabled = false;
+    })
+    .catch(error => {
+        console.log(error);
+        showNotiMessage("An error occurred while serving the request.", "error");
+        openSearchWindow.disabled = false;
+        openXmlWindow.disabled = false;
+    });
+};
+
+webCountrySelection.addEventListener("change" , function() {
+    var wcso = webCountrySelection.options;
+    var wso = webSelection.options;
+    var selectedWebRegion = wcso[webCountrySelection.selectedIndex].getAttribute("id");
+    if( selectedWebRegion != "wc_none" ) {
+        for( var i = 0; i < webSelection.options.length; i++ ) {
+            if( wso[i].classList.contains(selectedWebRegion) ) {
+                wso[i].hidden = false;
+            } else {
+                wso[i].hidden = true;
+            };
+        };
+        webSelection.disabled = false;
+    } else {
+        webSelection.disabled = true;
+    };
+});
+
+webSelection.addEventListener("change", function() {
+    var wp_id = webSelection.options[webSelection.selectedIndex].getAttribute("id");
+    if( wp_id != "wp_none" ) {
+        loadExtLineupChannels(wp_id);
+    };    
 });
 
 function retrieveXmlSources() {
@@ -1032,6 +1113,7 @@ openWebWindow.addEventListener("click", function() {
         };
         blockPage.addEventListener("click", closeWebWindowEvent);
         openWebWindow.classList.add("selected-btn");
+        retrieveWebSources();
         webWindow.style.display = "inline";
     };
 });
@@ -1087,6 +1169,7 @@ function closeXmlWindowEvent() {
 
 openSearch.addEventListener("click", function() {
     if( openWebWindow.classList.contains("selected-btn") ) {
+        retrieveWebSources();
         webWindow.style.display = "inline";
         blockPage.addEventListener("click", closeWebWindowEvent);
     } else if( openSearchWindow.classList.contains("selected-btn") ) {
@@ -1461,11 +1544,15 @@ function doneTypingPostalCode() {
 };
 
 function loadExtLineupChannels(value) {
-    loadXmlBtn.textContent = "Loading...";
-    loadXmlBtn.disabled = true;
-    xmlSelection.disabled = true;
-    removeXmlBtn.disabled = true;
-    var selectedLineup = xmlSelection.options[xmlSelection.options.selectedIndex].textContent;
+    if( value.includes("xml") ) {
+        var selectedLineup = xmlSelection.options[xmlSelection.options.selectedIndex].textContent;
+        loadXmlBtn.textContent = "Loading...";
+        loadXmlBtn.disabled = true;
+        xmlSelection.disabled = true;
+        removeXmlBtn.disabled = true;
+    } else {
+        var selectedLineup = webSelection.options[webSelection.options.selectedIndex].textContent;
+    };
 
     fetch("api/xmltv_lineup_channels", {
         method: "POST",
@@ -1511,7 +1598,7 @@ function loadExtLineupChannels(value) {
                     newRow.id = "mn|" + value + "|" + i;
                     newRow.classList.add("mn_row");
                     if( data[i].hasOwnProperty("icon") ) {
-                        if( data[i]["icon"] == null ) {
+                        if( data[i]["icon"] == null || data[i]["icon"] == "" ) {
                             var imgSrc = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16"><path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/></svg>';
                         } else {
                             var imgSrc = '<img src="' + data[i]["icon"] + '" alt="">';
@@ -1588,10 +1675,13 @@ function loadExtLineupChannels(value) {
                 openSearch.style.display = "inline";
                 closeResultsWindow.style.display = "inline";
             } else {
-                loadXmlBtn.textContent = "Load channels";
-                loadXmlBtn.disabled = false;
-                xmlSelection.disabled = false;
-                removeXmlBtn.disabled = false;
+                if( value.includes("xml") ) {
+                    loadXmlBtn.textContent = "Load channels";
+                    loadXmlBtn.disabled = false;
+                    xmlSelection.disabled = false;
+                    removeXmlBtn.disabled = false;
+                };
+                showNotiMessage("An error occurred while loading the channel list.", "error");
             };
         })
     })
@@ -1822,7 +1912,7 @@ function loadChannelList() {
                     var tvg = "";
                 };
                 if( data[c_id].hasOwnProperty("preferredImage" ) ) {
-                    if( data[c_id]["preferredImage"]["uri"] == null ) {
+                    if( data[c_id]["preferredImage"]["uri"] == null || data[c_id]["preferredImage"]["uri"] == "" ) {
                         var imgSrc = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16"><path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/></svg>';
                     } else {
                         var imgSrc = '<img src="' + data[c_id]["preferredImage"]["uri"] + '" alt="">'

@@ -34,6 +34,28 @@
 
         "menu_visibility": false
 
+    },
+
+    "tkmde":
+
+    {
+
+        "module": "tkmde",
+        
+        "name": "Telekom Magenta TV",
+        "country": "DE",
+
+        "login_req": true,
+        "auth_req": false,
+        "exp": 1800,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+
+        "adv_loader": false
+
     }
 
 }

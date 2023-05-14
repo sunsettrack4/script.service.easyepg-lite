@@ -218,6 +218,7 @@ class ProviderManager():
     # PROVIDER LOGIN
     def login(self, provider_name, data=None):
         data = self.providers[provider_name].get("data") if not data else data
+        auth_data = {}
 
         if not self.providers[provider_name].get("login_req"):
             return
@@ -231,12 +232,12 @@ class ProviderManager():
                 if session.get("expiration", False) is False or session.get("expiration", 0) > datetime.timestamp():
                     return True
    
-        try:
+        try:          
             session = sys.modules[self.providers[provider_name].get("module", provider_name)].login(
                 data, auth_data, general_header)
             if not session[0]:
                 return False, session[1]["message"]
-            exp = (datetime.timestamp() + self.providers[provider_name]["exp"]) if self.providers[provider_name].get("exp") else False
+            exp = (datetime.now().timestamp() + self.providers[provider_name]["exp"]) if self.providers[provider_name].get("exp") else False
             self.user_db.main["sessions"][provider_name] = {"session": session[1], "expiration": exp}
             self.user_db.save_settings()
             return True
@@ -244,7 +245,7 @@ class ProviderManager():
             return False, str(e)
         
     # LOAD CHLIST
-    def ch_loader(self, provider_name, data=None):
+    def ch_loader(self, provider_name, data={}):
         data = self.providers[provider_name].get("data") if not data else data
         
         # RETRIEVE SESSION
@@ -350,9 +351,9 @@ class ProviderManager():
         sleep(self.providers[provider_name].get("dl_delay", 0))
         try:
             if item.get("d"):
-                r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"])
+                r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}))
             else:
-                r = requests.get(item["url"], headers=item.get("h", general_header))
+                r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}))
         except:
             return provider_name, "", item.get("c"), name
         
