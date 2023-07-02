@@ -211,14 +211,6 @@ class Grabber():
                             if subtitle is not None and subtitle != "":
                                 program["sub-title"] = {"@lang": lang, "#text": subtitle}
 
-                           # QUALIFIERS
-                            if 'New' in qualifiers:
-                                program["new"]={""}
-                            if 'Live' in qualifiers:
-                                program["live"]={""}
-                            if 'Premiere' in qualifiers:
-                                program["premiere"]={"Premiere"}
-                                
                            # DESC
                             if desc is not None and desc != "":
 
@@ -377,6 +369,14 @@ class Grabber():
                                 else:
                                     program["star-rating"] = {"value": {"#text": star_value}}
 
+                           # QUALIFIERS
+                            if 'New' in qualifiers:
+                                program["new"]={""}
+                            if 'Live' in qualifiers:
+                                program["live"]={""}
+                            if 'Premiere' in qualifiers:
+                                program["premiere"]={"Premiere"}
+                                
                             pr["programme"].append(program)
                             pn = pn + 1
                             
