@@ -171,7 +171,7 @@ class Grabber():
                     inner_worker = 0
                     
                     for (channel_id, broadcast_id, start, end, title, subtitle, desc, image, 
-                         date, country, star, rating, credits, season_episode_num, genres, advanced) \
+                         date, country, star, rating, credits, season_episode_num, genres, qualifiers, advanced) \
                             in results:
 
                             if self.cancellation or self.exit:
@@ -207,11 +207,19 @@ class Grabber():
                             else:
                                 program["title"] = {"@lang": lang, "#text": "No programme title available"}
 
-                            # SUBTITLE
+                           # SUBTITLE
                             if subtitle is not None and subtitle != "":
                                 program["sub-title"] = {"@lang": lang, "#text": subtitle}
 
-                            # DESC
+                           # QUALIFIERS
+                            if 'New' in qualifiers:
+                                program["new"]={""}
+                            if 'Live' in qualifiers:
+                                program["live"]={""}
+                            if 'Premiere' in qualifiers:
+                                program["premiere"]={"Premiere"}
+                                
+                           # DESC
                             if desc is not None and desc != "":
 
                                 # RATING MAPPER
@@ -354,6 +362,7 @@ class Grabber():
                                 program["episode-num"] = {"@system": "xmltv_ns", 
                                     "#text": f"{int(season_num) - 1} . {int(episode_num) - 1} . "}
 
+
                             # AGE RATING
                             if rating is not None and rating != "":
                                 if rating_type is not None and rating_type != "":
@@ -373,14 +382,15 @@ class Grabber():
                             
                             inner_worker = inner_worker + 1
                             self.pr.progress = (inner_worker / inner_value) * self.basic_value + self.worker + 50
-
-                            if pn == self.user_db.main["settings"]["pn_max"]:
+    
+                            if pn == self.user_db.main["settings"]["pn_max"]:                                
                                 file.write(xmltodict.unparse(pr, pretty=True, encoding="UTF-8", full_document=False))
+ 
                                 pn = 0
                                 pr["programme"] = []
-                    
+                                
                     self.worker = self.worker + (100 * self.basic_value / 2)
-                
+               
                 if len(pr["programme"]) > 0:
                     file.write(xmltodict.unparse(pr, pretty=True, encoding="UTF-8", full_document=False))
                 
@@ -389,6 +399,18 @@ class Grabber():
             if os.path.exists(f"{self.file_paths['storage']}xml/epg.xml"):
                 os.remove(f"{self.file_paths['storage']}xml/epg.xml")
             os.rename(f"{self.file_paths['storage']}xml/test.xml", f"{self.file_paths['storage']}xml/epg.xml")
+            
+            replacements = {'<new></new>':'<new />', '<live></live>':'<live />'}
+
+            with open(f"{self.file_paths['storage']}xml/epg.xml") as infile, open(f"{self.file_paths['storage']}xml/epg_new.xml", 'w') as outfile:
+                for line in infile:
+                   for src, target in replacements.items():
+                       line = line.replace(src, target)
+                   outfile.write(line)
+                   
+            if os.path.exists(f"{self.file_paths['storage']}xml/epg.xml"):
+                os.remove(f"{self.file_paths['storage']}xml/epg.xml")
+            os.rename(f"{self.file_paths['storage']}xml/epg_new.xml", f"{self.file_paths['storage']}xml/epg.xml")           
 
             self.status = "Creating compressed file..."
             with open(f"{self.file_paths['storage']}xml/epg.xml", 'rb') as f_in, gzip.open(f"{self.file_paths['storage']}xml/epg.xml.gz", 'wb') as f_out:
