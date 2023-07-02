@@ -68,6 +68,8 @@ def epg_main_converter(data, channels, settings, ch_id=None):
         g["season_episode_num"] = {"season": s_num, "episode": e_num}
 
         g["genres"] = i["program"].get("genres", [])
+        if qualifiers is not None:
+            g["qualifiers"] = i.get("qualifiers", [])
 
         # DEFINE AGE RATING
         rating = None
