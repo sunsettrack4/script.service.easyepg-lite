@@ -68,6 +68,8 @@ def epg_main_converter(data, channels, settings, ch_id=None):
         g["season_episode_num"] = {"season": s_num, "episode": e_num}
 
         g["genres"] = i["program"].get("genres", [])
+        if entity_type == "Sports" or entity_type =="Movie":
+        	g["genres"].append(entity_type)
         if qualifiers is not None:
             g["qualifiers"] = i.get("qualifiers", [])
 
