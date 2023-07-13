@@ -293,11 +293,10 @@ class ProviderManager():
         url_list_part = []
         
         for i in url_list:
-            if len(url_list_part) >= self.providers[provider_name].get("max_dl_num", 50):
+            url_list_part.append(i)
+            if len(url_list_part) == self.providers[provider_name].get("max_dl_num", 50):
                 final_list.append(url_list_part)
                 url_list_part = []
-            else:
-                url_list_part.append(i)
         if len(url_list_part) > 0:
             final_list.append(url_list_part)
         
