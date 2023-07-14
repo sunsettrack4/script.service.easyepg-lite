@@ -70,7 +70,7 @@ class SQLiteManager():
                        """(channel_id TEXT, broadcast_id TEXT PRIMARY KEY, start INTEGER, end INTEGER,"""
                        """ title TEXT, subtitle TEXT, desc TEXT, image TEXT, date TEXT, country TEXT,"""
                        """ star TEXT, rating TEXT, credits TEXT, season_episode_num TEXT,"""
-                       """ genres TEXT, advanced INTEGER, db_link TEXT)""".format(f"pre_{provider}" if pre_load else provider))
+                       """ genres TEXT, qualifiers TEXT, advanced INTEGER, db_link TEXT)""".format(f"pre_{provider}" if pre_load else provider))
         self.confirm_update()
         return
     
@@ -84,7 +84,7 @@ class SQLiteManager():
 
     def retrieve_epg_db_items(self, provider, channel):
         self.c.execute("""SELECT channel_id, broadcast_id, start, end, title, subtitle, desc, """
-                        """image, date, country, star, rating, credits, season_episode_num, genres, advanced"""
+                        """image, date, country, star, rating, credits, season_episode_num, genres, qualifiers, advanced"""
                         """ FROM {} WHERE channel_id = ? ORDER BY start ASC""".format(provider),
                        (channel,))
         return self.c.fetchall()
@@ -92,13 +92,13 @@ class SQLiteManager():
     def write_epg_db_items(self, provider, to_be_added, pre_load):
         [self.c.execute("""INSERT OR REPLACE INTO {} """
                         """(channel_id, broadcast_id, start, end, title, subtitle, desc, """
-                        """image, date, country, star, rating, credits, season_episode_num, genres, advanced, db_link)"""
-                        """VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".format(f"pre_{provider}" if pre_load else provider),
+                        """image, date, country, star, rating, credits, season_episode_num, genres, qualifiers, advanced, db_link)"""
+                        """VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".format(f"pre_{provider}" if pre_load else provider),
                         (channel_id, broadcast_id, start, end, title, subtitle, desc, 
                          image, date, country, json.dumps(star), json.dumps(rating), json.dumps(credits), 
-                         json.dumps(season_episode_num), json.dumps(genres), 0, None))
+                         json.dumps(season_episode_num), json.dumps(genres), json.dumps(qualifiers), 0, None))
         for channel_id, broadcast_id, start, end, title, subtitle, desc, image, date,
-            country, star, rating, credits, season_episode_num, genres in to_be_added]
+            country, star, rating, credits, season_episode_num, genres, qualifiers in to_be_added]
         return
     
     def remove_epg_db_items(self, provider, to_be_removed):
@@ -112,12 +112,12 @@ class SQLiteManager():
                         """desc = coalesce(?, desc), image = coalesce(?, image), """
                         """date = coalesce(?, date), country = coalesce(?, country), star = coalesce(?, star), rating = coalesce(?, rating), """
                         """credits = coalesce(?, credits), season_episode_num = coalesce(?, season_episode_num), """
-                        """genres = coalesce(?, genres), advanced = {} """
+                        """genres = coalesce(?, genres), qualifiers = {}, advanced = {} """
                         """WHERE broadcast_id = ?""".format(provider, 1 if advanced else 0),
                         (start, end, title, subtitle, desc, image, date, country, json.dumps(star), json.dumps(rating), 
-                         json.dumps(credits), json.dumps(season_episode_num), json.dumps(genres), broadcast_id))
+                         json.dumps(credits), json.dumps(season_episode_num), json.dumps(genres), json.dumps(qualifiers), broadcast_id))
         for channel_id, start, end, title, subtitle, desc, image, date, country, star, rating,
-            credits, season_episode_num, genres, broadcast_id in to_be_updated]
+            credits, season_episode_num, genres, qualifiers, broadcast_id in to_be_updated]
         return
 
     def simple_epg_db_update(self, provider):
@@ -164,7 +164,7 @@ class SQLiteManager():
             del cached_broadcasts, cached_advanced_broadcasts
 
             self.c.execute("""SELECT channel_id, broadcast_id, start, end, title, subtitle, """
-                            """desc, image, date, country, star, rating, credits, season_episode_num, genres """
+                            """desc, image, date, country, star, rating, credits, season_episode_num, genres, qualifiers """
                             """FROM {} WHERE channel_id IN ({})""".format(f"pre_{provider}", channel))
             new_broadcasts_items = [item for item in self.c.fetchall()]
 
@@ -293,11 +293,10 @@ class ProviderManager():
         url_list_part = []
         
         for i in url_list:
-            if len(url_list_part) >= self.providers[provider_name].get("max_dl_num", 50):
+            url_list_part.append(i)
+            if len(url_list_part) == self.providers[provider_name].get("max_dl_num", 50):
                 final_list.append(url_list_part)
                 url_list_part = []
-            else:
-                url_list_part.append(i)
         if len(url_list_part) > 0:
             final_list.append(url_list_part)
         
@@ -329,7 +328,7 @@ class ProviderManager():
                         [(i["c_id"], i["b_id"], i["start"], i["end"], i["title"], 
                           i.get("subtitle", ""), i.get("desc", ""), i.get("image", ""), 
                           i.get("date", ""), i.get("country", ""), i.get("star", {}), i.get("rating", {}), i.get("credits", {}),
-                          i.get("season_episode_num", {}), i.get("genres", [])) for i in m], True)
+                          i.get("season_episode_num", {}), i.get("genres", []), i.get("qualifiers", [])) for i in m], True)
             self.epg_cache = {}
             self.fl_pr = self.fl_pr + 1
 

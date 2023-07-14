@@ -11,7 +11,6 @@
 
         "main_loader": true,
         "main_threads": 1,
-
         "adv_loader": false,
 
         "menu_visibility": false
