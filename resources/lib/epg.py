@@ -402,7 +402,7 @@ class Grabber():
             
             replacements = {'<new></new>':'<new />', '<live></live>':'<live />'}
 
-            with open(f"{self.file_paths['storage']}xml/epg.xml") as infile, open(f"{self.file_paths['storage']}xml/epg_new.xml", 'w') as outfile:
+            with open(f"{self.file_paths['storage']}xml/epg.xml", encoding="UTF-8") as infile, open(f"{self.file_paths['storage']}xml/epg_new.xml", 'w', encoding="UTF-8") as outfile:
                 for line in infile:
                    for src, target in replacements.items():
                        line = line.replace(src, target)
