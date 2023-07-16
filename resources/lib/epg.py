@@ -392,25 +392,13 @@ class Grabber():
                     self.worker = self.worker + (100 * self.basic_value / 2)
                
                 if len(pr["programme"]) > 0:
-                    file.write(xmltodict.unparse(pr, pretty=True, encoding="UTF-8", full_document=False))
+                    file.write(xmltodict.unparse(pr, pretty=True, encoding="UTF-8", full_document=False).replace("<new></new>", "<new />").replace("<live></live>", "<live />"))
                 
                 file.write('</tv>\n')
             
             if os.path.exists(f"{self.file_paths['storage']}xml/epg.xml"):
                 os.remove(f"{self.file_paths['storage']}xml/epg.xml")
-            os.rename(f"{self.file_paths['storage']}xml/test.xml", f"{self.file_paths['storage']}xml/epg.xml")
-            
-            replacements = {'<new></new>':'<new />', '<live></live>':'<live />'}
-
-            with open(f"{self.file_paths['storage']}xml/epg.xml", encoding="UTF-8") as infile, open(f"{self.file_paths['storage']}xml/epg_new.xml", 'w', encoding="UTF-8") as outfile:
-                for line in infile:
-                   for src, target in replacements.items():
-                       line = line.replace(src, target)
-                   outfile.write(line)
-                   
-            if os.path.exists(f"{self.file_paths['storage']}xml/epg.xml"):
-                os.remove(f"{self.file_paths['storage']}xml/epg.xml")
-            os.rename(f"{self.file_paths['storage']}xml/epg_new.xml", f"{self.file_paths['storage']}xml/epg.xml")           
+            os.rename(f"{self.file_paths['storage']}xml/test.xml", f"{self.file_paths['storage']}xml/epg.xml")       
 
             self.status = "Creating compressed file..."
             with open(f"{self.file_paths['storage']}xml/epg.xml", 'rb') as f_in, gzip.open(f"{self.file_paths['storage']}xml/epg.xml.gz", 'wb') as f_out:
