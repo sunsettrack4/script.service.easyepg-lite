@@ -384,7 +384,7 @@ class Grabber():
                             self.pr.progress = (inner_worker / inner_value) * self.basic_value + self.worker + 50
     
                             if pn == self.user_db.main["settings"]["pn_max"]:                                
-                                file.write(xmltodict.unparse(pr, pretty=True, encoding="UTF-8", full_document=False))
+                                file.write(xmltodict.unparse(pr, pretty=True, encoding="UTF-8", full_document=False).replace("<new></new>", "<new />").replace("<live></live>", "<live />"))
  
                                 pn = 0
                                 pr["programme"] = []
