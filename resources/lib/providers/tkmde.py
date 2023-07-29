@@ -120,9 +120,9 @@ def epg_main_converter(data, channels, settings, ch_id=None):
             if dict_item.get("director"):
                 directors.extend([i for i in dict_item["director"].split(",")]) 
             if dict_item.get("producer"):
-                actors.extend([i for i in dict_item["producer"].split(",")])
+                producers.extend([i for i in dict_item["producer"].split(",")])
             if dict_item.get("actor"):
-                producers.extend([i for i in dict_item["actor"].split(",")])
+                actors.extend([i for i in dict_item["actor"].split(",")])
         return {"director": directors, "actor": actors, "producer": producers}
 
     for programme in item["playbilllist"]:
