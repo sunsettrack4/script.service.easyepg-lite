@@ -56,8 +56,11 @@ class API():
                         i["station"]["chExists"] = True
                     else:
                         i["station"]["chExists"] = False
-                    if i["station"]["bcastLangs"][0] in (lang.split("-")[0], lang) and value.lower() == i["station"]["name"].lower():
+                    if i["station"].get("bcastLangs") and i["station"]["bcastLangs"][0] in (lang.split("-")[0], lang) and value.lower() == i["station"]["name"].lower():
                         a.insert(0, i)
+                    elif not i["station"].get("bcastLangs"):
+                        i["station"]["bcastLangs"] = ["NONE"]
+                        a.append(i)
                     else:
                         a.append(i)
             return json.dumps({"success": True, "result": {"hitCount": r["hitCount"], "hits": a}})
