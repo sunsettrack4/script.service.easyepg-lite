@@ -124,6 +124,9 @@ def epg_main_converter(data, channels, settings, ch_id=None):
             if dict_item.get("actor"):
                 actors.extend([i for i in dict_item["actor"].split(",")])
         return {"director": directors, "actor": actors, "producer": producers}
+    
+    if not item.get("playbilllist"):
+        raise Exception(f"Playbilllist is unavailable - content: '{str(item)}'")
 
     for programme in item["playbilllist"]:
         if programme["channelid"] in channels:
