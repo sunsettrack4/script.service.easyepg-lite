@@ -118,11 +118,14 @@ class Grabber():
                     try:
                         self.pr.main_downloader(provider)
                     except Exception as e:
-                        with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
-                            log.write(f"--- {provider.upper()} WARNING LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
-                            traceback.print_exc(file=log)
-                            log.write(f"--- {provider.upper()} WARNING LOG END ---\n\n")
-                        print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: An error occured while grabbing EPG data for {provider}")
+                        try:
+                            with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
+                                log.write(f"--- {provider.upper()} WARNING LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+                                traceback.print_exc(file=log)
+                                log.write(f"--- {provider.upper()} WARNING LOG END ---\n\n")
+                            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: An error occured while grabbing EPG data for {provider}")
+                        except:
+                            pass
                 self.pr.pr_pr = self.pr.pr_pr + 1
 
             if self.cancellation or self.exit:
