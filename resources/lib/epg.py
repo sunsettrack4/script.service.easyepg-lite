@@ -151,7 +151,7 @@ class Grabber():
                     c_data = self.user_db.main["channels"][channel]
                     image = c_data.get("preferredImage", {"uri": None})["uri"]
                     if len(channel.split("_")) == 1:
-                        lang = c_data["bcastLangs"][0].lower()
+                        lang = c_data.get("bcastLangs", ["en"])[0].lower()
                         if "-" in lang:
                             lang = lang.split("-")[1]
                     else:
@@ -168,7 +168,7 @@ class Grabber():
                 for channel in self.user_db.main["channels"].keys():
                     c_data = self.user_db.main["channels"][channel]
                     if len(channel.split("_")) == 1:
-                        lang = c_data["bcastLangs"][0].lower()
+                        lang = c_data.get("bcastLangs", ["en"])[0].lower()
                         if "-" in lang:
                             lang = lang.split("-")[1]
                     else:
