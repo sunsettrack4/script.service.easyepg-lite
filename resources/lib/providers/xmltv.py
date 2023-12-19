@@ -33,10 +33,16 @@ def channels(data, session, headers={}):
     p = file_decoder(r.content)
 
     for ch in p["tv"]["channel"]:
+        chlist[ch["@id"]] = {}
+        if ch.get("icon") and type(ch["icon"]) == dict:
+            chlist[ch["@id"]]["icon"] = ch["icon"]["@src"]
+        elif ch.get("icon") and type(ch["icon"]) == list:
+            chlist[ch["@id"]]["icon"] = ch["icon"][0]["@src"]
         if "@lang" in ch["display-name"]:
-            chlist[ch["@id"]] = {"name": ch["display-name"]["#text"], "lang": ch["display-name"]["@lang"], "icon": ch.get("icon", {"@src": None})["@src"]}
+            chlist[ch["@id"]]["name"] = ch["display-name"]["#text"]
+            chlist[ch["@id"]]["lang"] = ch["display-name"]["@lang"]
         else:
-            chlist[ch["@id"]] = {"name": ch["display-name"], "icon": ch.get("icon", {"@src": None})["@src"]}
+            chlist[ch["@id"]]["name"] = ch["display-name"]
 
     return chlist
 
