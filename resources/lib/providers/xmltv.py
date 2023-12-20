@@ -33,16 +33,17 @@ def channels(data, session, headers={}):
     p = file_decoder(r.content)
 
     for ch in p["tv"]["channel"]:
-        chlist[ch["@id"]] = {}
+        chan = ch["@id"].replace("&amp;", "and")
+        chlist[chan] = {}
         if ch.get("icon") and type(ch["icon"]) == dict:
-            chlist[ch["@id"]]["icon"] = ch["icon"]["@src"]
+            chlist[chan]["icon"] = ch["icon"]["@src"]
         elif ch.get("icon") and type(ch["icon"]) == list:
-            chlist[ch["@id"]]["icon"] = ch["icon"][0]["@src"]
+            chlist[chan]["icon"] = ch["icon"][0]["@src"]
         if "@lang" in ch["display-name"]:
-            chlist[ch["@id"]]["name"] = ch["display-name"]["#text"]
-            chlist[ch["@id"]]["lang"] = ch["display-name"]["@lang"]
+            chlist[chan]["name"] = ch["display-name"]["#text"]
+            chlist[chan]["lang"] = ch["display-name"]["@lang"]
         else:
-            chlist[ch["@id"]]["name"] = ch["display-name"]
+            chlist[chan]["name"] = ch["display-name"]
 
     return chlist
 
@@ -61,14 +62,17 @@ def epg_main_converter(data, channels, settings, ch_id=None):
     for p in item["tv"]["programme"]:
         g = dict()
 
-        g["c_id"] = p["@channel"]
+        g["c_id"] = p["@channel"].replace("&amp;", "and")
         
         g["start"] = int(datetime.strptime(f'{p["@start"]} {datetime.now(timezone.utc).astimezone().strftime("%z")}' if len(p["@start"]) == 14 else p["@start"], "%Y%m%d%H%M%S %z").timestamp())
         g["end"] = int(datetime.strptime(f'{p["@stop"]} {datetime.now(timezone.utc).astimezone().strftime("%z")}' if len(p["@stop"]) == 14 else p["@stop"], "%Y%m%d%H%M%S %z").timestamp())
         g["b_id"] = f"{g['c_id']}_{g['start']}"
 
         if g["c_id"] in channels and dt_start <= g["start"] <= dt_end:
-            g["title"] = p["title"]["#text"] if "@lang" in p["title"] else p["title"]
+            if type(p["title"]) == list:
+                g["title"] = p["title"][0]["#text"] if "@lang" in p["title"][0] else p["title"][0]
+            else:
+                g["title"] = p["title"]["#text"] if "@lang" in p["title"] else p["title"]
             if p.get("icon"):
                 g["image"] = p["icon"]["@src"]
             if p.get("sub-title"):
@@ -78,7 +82,10 @@ def epg_main_converter(data, channels, settings, ch_id=None):
             if p.get("date"):
                 g["date"] = p["date"]
             if p.get("country"):
-                g["country"] = p["country"]
+                if type(p["country"]) == list:
+                    g["country"] = ", ".join([i["#text"] for i in p["country"]]) if any([i.get("@lang") for i in p["country"]]) else ", ".join(p["country"])
+                else:
+                    g["country"] = p["country"]["#text"] if "@lang" in p["country"] else p["country"]            
             if p.get("star-rating"):
                 if p["star-rating"].get("@system"):
                     g["star"] = {"system": p["star-rating"]["@system"], "value": p["star-rating"]["value"]}
@@ -93,12 +100,17 @@ def epg_main_converter(data, channels, settings, ch_id=None):
                         g["director"] = [p["credits"]["director"]]
                 g["actor"] = []
                 if p["credits"].get("actor"):
+                    g["actor"] = []
                     if type(p["credits"]["actor"]) == list:
-                        g["actor"] = p["credits"]["actor"]
+                        for i in p["credits"]["actor"]:
+                            if type(i) == str:
+                                g["actor"].append(i)
+                            elif type(i) == dict and i.get("#text"):
+                                g["actor"].append(i["#text"])
+                    elif type(p["credits"]["actor"]) == dict and p["credits"]["actor"].get("#text"):
+                        g["actor"].append(p["credits"]["actor"]["#text"])
                     elif type(p["credits"]["actor"]) == str:
                         g["actor"] = [p["credits"]["actor"]]
-                    else:
-                        g["actor"] = []
                 g["credits"] = {"director": g["director"], "actor": g["actor"]}
                 if p.get("episode-num"):
                     if p["episode-num"].get("@system") == "xmltv_ns":

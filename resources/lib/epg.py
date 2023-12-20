@@ -156,7 +156,7 @@ class Grabber():
                             lang = lang.split("-")[1]
                     else:
                         lang = "en"
-                    ch_part = {"@id": c_data.get("tvg-id", channel), "display-name": {"@lang": lang, "#text": c_data["name"]}}
+                    ch_part = {"@id": c_data.get("tvg-id", channel), "display-name": {"@lang": lang, "#text": c_data["name"].replace("&amp;", "&")}}
                     if image:
                         ch_part["icon"] = {"@src": image}
                     ch["channel"].append(ch_part)
