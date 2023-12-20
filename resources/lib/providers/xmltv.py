@@ -2,6 +2,18 @@ from datetime import datetime, timedelta, timezone
 import gzip, lzma, requests, xmltodict
 
 
+def convert_timestring(string):
+    dt = datetime.strptime(string,'%Y%m%d%H%M%S %z')
+    
+    if string[15] == "+":
+        dt -= timedelta(hours=int(string[16:18]), 
+                                 minutes=int(string[18:]))
+    elif string[15] == '-':
+        dt += timedelta(hours=int(string[16:18]),
+                                 minutes=int(string[18:]))
+
+    return int(dt.timestamp())
+
 def file_decoder(data):
     p = None
 
@@ -64,8 +76,8 @@ def epg_main_converter(data, channels, settings, ch_id=None):
 
         g["c_id"] = p["@channel"].replace("&amp;", "and")
         
-        g["start"] = int(datetime.strptime(f'{p["@start"]} {datetime.now(timezone.utc).astimezone().strftime("%z")}' if len(p["@start"]) == 14 else p["@start"], "%Y%m%d%H%M%S %z").timestamp())
-        g["end"] = int(datetime.strptime(f'{p["@stop"]} {datetime.now(timezone.utc).astimezone().strftime("%z")}' if len(p["@stop"]) == 14 else p["@stop"], "%Y%m%d%H%M%S %z").timestamp())
+        g["start"] = convert_timestring(f'{p["@start"]} {datetime.now(timezone.utc).astimezone().strftime("%z")}' if len(p["@start"]) == 14 else p["@start"])
+        g["end"] = convert_timestring(f'{p["@stop"]} {datetime.now(timezone.utc).astimezone().strftime("%z")}' if len(p["@stop"]) == 14 else p["@stop"])
         g["b_id"] = f"{g['c_id']}_{g['start']}"
 
         if g["c_id"] in channels and dt_start <= g["start"] <= dt_end:
