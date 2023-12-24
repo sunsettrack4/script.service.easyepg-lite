@@ -186,7 +186,7 @@ def add_channel():
                         g.user_db.save_settings()
             except Exception as e:
                 print_error(traceback.format_exc())
-                return json.dumps({"success": False, "message": "Not all channels could not be added."})
+                return json.dumps({"success": False, "message": "The channels could not be added."})
     else: 
         try:
             if "xml" in provider_id:
@@ -201,7 +201,7 @@ def add_channel():
                         g.user_db.save_settings()
         except Exception as e:
             print_error(traceback.format_exc())
-            return json.dumps({"success": False, "message": "Not all channels could not be added."})
+            return json.dumps({"success": False, "message": "The channels could not be added."})
 
     return json.dumps({"success": True})
 
