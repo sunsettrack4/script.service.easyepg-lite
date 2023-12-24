@@ -3,7 +3,7 @@ import gzip, lzma, requests, xmltodict
 
 
 def convert_timestring(string):
-    dt = datetime.strptime(string,'%Y%m%d%H%M%S %z')
+    dt = datetime.strptime(string[0:13],'%Y%m%d%H%M%S').astimezone(timezone.utc)
     
     if string[15] == "+":
         dt -= timedelta(hours=int(string[16:18]), 
@@ -51,7 +51,9 @@ def channels(data, session, headers={}):
             chlist[chan]["icon"] = ch["icon"]["@src"]
         elif ch.get("icon") and type(ch["icon"]) == list:
             chlist[chan]["icon"] = ch["icon"][0]["@src"]
-        if "@lang" in ch["display-name"]:
+        if type(ch["display-name"]) == list:
+            chlist[chan]["name"] = ch["display-name"][0]
+        elif "@lang" in ch["display-name"]:
             chlist[chan]["name"] = ch["display-name"]["#text"]
             chlist[chan]["lang"] = ch["display-name"]["@lang"]
         else:
