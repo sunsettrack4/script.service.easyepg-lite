@@ -18,19 +18,19 @@ def file_decoder(data):
     p = None
 
     try:  # RAW XML
-        p = xmltodict.parse(data)
+        p = xmltodict.parse(data, dict_constructor=dict)
     except:
         pass
             
     if not p:        
         try:  # GZIP/GZ
-            p = xmltodict.parse(gzip.decompress(data))
+            p = xmltodict.parse(gzip.decompress(data), dict_constructor=dict)
         except:
             pass
     
     if not p:
         try:  # XZ
-            p = xmltodict.parse(lzma.decompress(data))
+            p = xmltodict.parse(lzma.decompress(data), dict_constructor=dict)
         except:
             raise Exception("File type could not be verified.")
         
