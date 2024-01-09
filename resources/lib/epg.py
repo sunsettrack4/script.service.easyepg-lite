@@ -73,6 +73,7 @@ class Grabber():
             self.pr.worker = 0
             self.pr.cancellation = self.cancellation
             self.pr.exit = self.exit
+            self.warning = False
             missing_genres = []
 
             # PREPARING FILES/DIRECTORIES
@@ -126,6 +127,9 @@ class Grabber():
                             print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: An error occured while grabbing EPG data for {provider}")
                         except:
                             pass
+                        self.warning = True
+                        self.pr.epg_db.remove_epg_db(provider, True)
+                        self.pr.epg_db.create_epg_db(provider, False)
                 self.pr.pr_pr = self.pr.pr_pr + 1
 
             if self.cancellation or self.exit:
@@ -435,7 +439,10 @@ class Grabber():
                 pass
             
             del missing_genres
-            self.status = "File created successfully!"
+            if self.warning:
+                self.status = "File created successfully, but an error occured. Please check the log file."
+            else:
+                self.status = "File created successfully!"
             self.pr.progress = 100
             self.grabbing = False
             self.started = False
