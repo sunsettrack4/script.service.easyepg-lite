@@ -1,7 +1,7 @@
 from datetime import datetime
 from threading import Thread
 from time import sleep
-import gzip, json, os, shutil, traceback
+import gzip, json, os, shutil, time, traceback
 import xmltodict
 
 
@@ -39,7 +39,7 @@ class Grabber():
         if self.user_db.main["settings"]["ag"] == "yes":
             start_up = True
         if self.user_db.main["settings"]["ag"] == "out" and self.file_available and \
-            int(self.user_db.main["settings"]["rate"]) * 3600 + os.path.getmtime(f"{self.file_paths['storage']}xml/epg.xml") <= datetime.strptime(f'{start_dt} {self.user_db.main["settings"]["ut"]}', "%Y%m%d %H:%M").timestamp():
+            int(self.user_db.main["settings"]["rate"]) * 3600 + os.path.getmtime(f"{self.file_paths['storage']}xml/epg.xml") <= datetime(*(time.strptime(f'{start_dt} {self.user_db.main["settings"]["ut"]}', "%Y%m%d %H:%M")[0:6])).timestamp():
                 start_up = True
         if self.user_db.main["settings"]["ag"] == "out" and not self.file_available:
             start_up = True
@@ -62,7 +62,7 @@ class Grabber():
                 if self.exit:
                     break
                 if int(self.user_db.main["settings"]["rate"]) != 0 and \
-                    (int(self.user_db.main["settings"]["rate"]) * 3600 + datetime.strptime(f'{start_dt} {self.user_db.main["settings"]["ut"]}', "%Y%m%d %H:%M").timestamp()) < datetime.now().timestamp():
+                    (int(self.user_db.main["settings"]["rate"]) * 3600 + datetime(*(time.strptime(f'{start_dt} {self.user_db.main["settings"]["ut"]}', "%Y%m%d %H:%M")[0:6])).timestamp()) < datetime.now().timestamp():
                         self.grabbing = True
                         start_dt = f'{datetime.now().strftime("%Y%m%d")}'
                 sleep(1)
@@ -73,6 +73,7 @@ class Grabber():
             self.pr.worker = 0
             self.pr.cancellation = self.cancellation
             self.pr.exit = self.exit
+            self.warning = False
             missing_genres = []
 
             # PREPARING FILES/DIRECTORIES
@@ -126,6 +127,9 @@ class Grabber():
                             print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: An error occured while grabbing EPG data for {provider}")
                         except:
                             pass
+                        self.warning = True
+                        self.pr.epg_db.remove_epg_db(provider, True)
+                        self.pr.epg_db.create_epg_db(provider, False)
                 self.pr.pr_pr = self.pr.pr_pr + 1
 
             if self.cancellation or self.exit:
@@ -435,7 +439,10 @@ class Grabber():
                 pass
             
             del missing_genres
-            self.status = "File created successfully!"
+            if self.warning:
+                self.status = "File created successfully, but an error occured. Please check the log file."
+            else:
+                self.status = "File created successfully!"
             self.pr.progress = 100
             self.grabbing = False
             self.started = False
@@ -465,4 +472,3 @@ class Grabber():
                 self.status = "An error occurred. Please check the log file."
             sleep(5)
             self.status = "Idle"
-    

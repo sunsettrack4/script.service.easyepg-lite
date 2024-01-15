@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
-import gzip, lzma, requests, xmltodict
+import gzip, lzma, requests, time, xmltodict
 
 
 def convert_timestring(string):
-    dt = datetime.strptime(string[0:13],'%Y%m%d%H%M%S').astimezone(timezone.utc)
+    dt = datetime(*(time.strptime(string[0:13],'%Y%m%d%H%M%S')[0:6])).astimezone(timezone.utc)
     
     if string[15] == "+":
         dt -= timedelta(hours=int(string[16:18]), 

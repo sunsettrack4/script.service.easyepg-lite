@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-import json, requests
+import json, requests, time
 
 
 def login(data, credentials, headers):
@@ -83,10 +83,10 @@ def epg_main_converter(data, channels, settings, ch_id=None):
     airings = []
 
     def get_time(string_item):
-        return str(datetime.strptime(string_item.replace(" UTC+00:00", ""), "%Y-%m-%d %H:%M:%S").timestamp()).split(".")[0]
+        return str(datetime(*(time.strptime(string_item.replace(" UTC+00:00", ""), "%Y-%m-%d %H:%M:%S")[0:6])).timestamp()).split(".")[0]
 
     def get_year(string_item):
-        return str(datetime.strptime(string_item, "%Y-%m-%d").year) if string_item else None
+        return str(datetime(*(time.strptime(string_item, "%Y-%m-%d")[0:6])).year) if string_item else None
 
     def get_country(string_item):
         return string_item.upper() if string_item else None

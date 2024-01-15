@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-import json, requests
+import json, requests, time
 
 def login(data, credentials, headers):
     new_key = credentials["key"]
@@ -32,8 +32,8 @@ def epg_main_converter(data, channels, settings, ch_id=None):
         g = dict()
         
         g["c_id"] = ch_id
-        g["start"] = int(datetime.strptime(i["startTime"], "%Y-%m-%dT%H:%MZ").timestamp())
-        g["end"] = int(datetime.strptime(i["endTime"], "%Y-%m-%dT%H:%MZ").timestamp())
+        g["start"] = int(datetime(*(time.strptime(i["startTime"], "%Y-%m-%dT%H:%MZ")[0:6])).timestamp())
+        g["end"] = int(datetime(*(time.strptime(i["endTime"], "%Y-%m-%dT%H:%MZ")[0:6])).timestamp())
         g["b_id"] = f'{i["program"]["tmsId"]}_{g["start"]}_{g["end"]}_{g["c_id"]}'
 
         entity_type = i["program"].get("entityType", "None")
@@ -52,7 +52,7 @@ def epg_main_converter(data, channels, settings, ch_id=None):
 
         g["image"] = i["program"].get("preferredImage", {"uri": None})["uri"]
         g["desc"] = i["program"].get("longDescription", i["program"].get("shortDescription"))
-        g["date"] = datetime.strptime(i["program"]["origAirDate"], "%Y-%m-%d").strftime("%Y") if i["program"].get("origAirDate") is not None else \
+        g["date"] = datetime(*(time.strptime(i["program"]["origAirDate"], "%Y-%m-%d")[0:6])).strftime("%Y") if i["program"].get("origAirDate") is not None else \
             str(i["program"]["releaseYear"]) if i["program"].get("releaseYear") is not None else None
         
         star = i["program"].get("qualityRating", {"value": None})["value"]
