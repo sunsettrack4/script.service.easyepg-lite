@@ -78,7 +78,7 @@ class SQLiteManager():
         try:
             self.c.execute("""DROP TABLE {}""".format(f"pre_{provider}" if pre_load else provider))
             self.confirm_update()
-        except sqlite3.OperationalError:
+        except:
             pass
         return
 
