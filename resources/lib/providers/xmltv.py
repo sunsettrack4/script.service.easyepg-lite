@@ -44,7 +44,23 @@ def channels(data, session, headers={}):
     r = requests.get(url, headers=headers)
     p = file_decoder(r.content)
 
-    for ch in p["tv"]["channel"]:
+    if type(p["tv"]["channel"]) == list:
+        for ch in p["tv"]["channel"]:
+            chan = ch["@id"].replace("&amp;", "and")
+            chlist[chan] = {}
+            if ch.get("icon") and type(ch["icon"]) == dict:
+                chlist[chan]["icon"] = ch["icon"]["@src"]
+            elif ch.get("icon") and type(ch["icon"]) == list:
+                chlist[chan]["icon"] = ch["icon"][0]["@src"]
+            if type(ch["display-name"]) == list:
+                chlist[chan]["name"] = ch["display-name"][0]
+            elif "@lang" in ch["display-name"]:
+                chlist[chan]["name"] = ch["display-name"]["#text"]
+                chlist[chan]["lang"] = ch["display-name"]["@lang"]
+            else:
+                chlist[chan]["name"] = ch["display-name"]
+    elif type(p["tv"]["channel"]) == dict:
+        ch = p["tv"]["channel"]
         chan = ch["@id"].replace("&amp;", "and")
         chlist[chan] = {}
         if ch.get("icon") and type(ch["icon"]) == dict:
