@@ -106,9 +106,9 @@ def epg_main_converter(data, channels, settings, ch_id=None):
             if p.get("icon"):
                 g["image"] = p["icon"]["@src"]
             if p.get("sub-title"):
-                g["subtitle"] = p["sub-title"]["#text"] if "@lang" in p["sub-title"] else p["sub-title"]
+                g["subtitle"] = p["sub-title"]["#text"] if "@lang" in p["sub-title"] and p["sub-title"].get("#text") else p["sub-title"] if type(p["sub-title"]) != dict else None
             if p.get("desc"):
-                g["desc"] = p["desc"]["#text"] if "@lang" in p["desc"] else p["desc"]
+                g["desc"] = p["desc"]["#text"] if "@lang" in p["desc"] and p["desc"].get("#text") else p["desc"] if type(p["desc"]) != dict else None
             if p.get("date"):
                 g["date"] = p["date"]
             if p.get("country"):
