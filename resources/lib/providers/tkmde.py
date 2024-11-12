@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta, timezone
-import json, requests, time
+import json, requests, time, uuid
 
 
 def login(data, credentials, headers):
+    mac = str(uuid.uuid4())
+    ter = str(uuid.uuid4())
     login_url = 'https://api.prod.sngtv.magentatv.de/EPG/JSON/Login?&T=Windows_chrome_86'
-    login_data = {"userId": "Guest", "mac": "00:00:00:00:00:00"}
+    login_data = {"userId": "Guest", "mac": mac}
     session = requests.Session()
 
     session.post(login_url, timeout=5, data=login_data, headers=headers)
@@ -13,7 +15,7 @@ def login(data, credentials, headers):
     j_session = login_session["JSESSIONID"]
 
     auth_url = 'https://api.prod.sngtv.magentatv.de/EPG/JSON/Authenticate?SID=firstup&T=Windows_chrome_86'
-    auth_data = '{"terminalid":"00:00:00:00:00:00","mac":"00:00:00:00:00:00","terminaltype":"WEBTV","utcEnable":1,' \
+    auth_data = '{"terminalid":"'+ter+'","mac":"'+mac+'","terminaltype":"WEBTV","utcEnable":1,' \
                 '"timezone":"UTC","userType":3,"terminalvendor":"Unknown","preSharedKeyID":"PC01P00002",' \
                 '"cnonce":"ca29eb89d78894464ab9ad3e4797eff6"}'
     auth_cookies = {'JSESSIONID': j_session}
