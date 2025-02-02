@@ -2,32 +2,29 @@ from datetime import datetime, timedelta, timezone
 import json, requests, time, uuid
 
 
-def login(data, credentials, headers):
+def login(data, credentials, headers, x=0):
     mac = str(uuid.uuid4())
     ter = str(uuid.uuid4())
-    login_url = 'https://api.prod.sngtv.magentatv.de/EPG/JSON/Login?&T=Windows_chrome_86'
-    login_data = {"userId": "Guest", "mac": mac}
-    session = requests.Session()
 
-    session.post(login_url, timeout=5, data=login_data, headers=headers)
-    login_session = session.cookies.get_dict()
-
-    j_session = login_session["JSESSIONID"]
-
-    auth_url = 'https://api.prod.sngtv.magentatv.de/EPG/JSON/Authenticate?SID=firstup&T=Windows_chrome_86'
-    auth_data = '{"terminalid":"'+ter+'","mac":"'+mac+'","terminaltype":"WEBTV","utcEnable":1,' \
-                '"timezone":"UTC","userType":3,"terminalvendor":"Unknown","preSharedKeyID":"PC01P00002",' \
-                '"cnonce":"ca29eb89d78894464ab9ad3e4797eff6"}'
-    auth_cookies = {'JSESSIONID': j_session}
+    auth_url = 'https://api.prod.sngtv.magentatv.de/EPG/JSON/Authenticate'
+    auth_data = '{"areaid":"1","cnonce":"c4b11948545fb3089720dd8b12c81f8e","mac":"'+mac+'","preSharedKeyID":"NGTV000001","subnetId":"4901","templatename":"NGTV","terminalid":"'+ter+'","terminaltype":"WEB-MTV","terminalvendor":"WebTV","timezone":"UTC","usergroup":"-1","userType":3,"utcEnable":1}'
     auth_session = requests.Session()
-    auth_session.post(auth_url, timeout=5, data=auth_data, headers=headers, cookies=auth_cookies)
+    t = auth_session.post(auth_url, timeout=5, data=auth_data, headers=headers)
+    
+    while x < 120:
+        if t.json().get("retcode", "0") == "-2":
+            time.sleep(0.1)
+            x = x + 1
+            v = login(data, credentials, headers, x)
+        else:
+            return v
     
     return True, {"cookies": auth_session.cookies.get_dict(), "data": None}
 
 def channels(data, session, headers={}):
     chlist = {}
 
-    channel_url = 'https://api.prod.sngtv.magentatv.de/EPG/JSON/AllChannel?SID=first&T=Windows_chrome_86'
+    channel_url = 'https://api.prod.sngtv.magentatv.de/EPG/JSON/AllChannel'
     channel_data = '{"properties":[{"name":"logicalChannel",' \
                    '"include":"/channellist/logicalChannel/contentId,/channellist/logicalChannel/type,' \
                    '/channellist/logicalChannel/name,/channellist/logicalChannel/chanNo,' \
@@ -40,7 +37,7 @@ def channels(data, session, headers={}):
                    '"metaDataVer":"Channel/1.1","channelNamespace":"2",' \
                    '"filterlist":[{"key":"IsHide","value":"-1"}],"returnSatChannel":0}'
 
-    headers.update({"X_CSRFToken": session["session"]["cookies"]["CSRFSESSION"]})
+    headers.update({"X_csrftoken": session["session"]["cookies"]["CSRFSESSION"]})
 
     channel_page = requests.post(channel_url, timeout=5, data=channel_data, headers=headers,
                                  cookies=session["session"]["cookies"])
@@ -60,7 +57,7 @@ def channels(data, session, headers={}):
 
 def epg_main_links(data, channels, settings, session, headers):
     url_list = []
-    headers.update({"X_CSRFToken": session["session"]["cookies"]["CSRFSESSION"]})
+    headers.update({"X_csrftoken": session["session"]["cookies"]["CSRFSESSION"]})
     today = datetime.today()
 
     for day in range(int(settings["days"])):
@@ -68,8 +65,7 @@ def epg_main_links(data, channels, settings, session, headers):
                            + timedelta(days=day))).strftime("%Y%m%d%H%M%S")
         time_end = ((datetime(today.year, today.month, today.day, 5, 59, 0).replace(tzinfo=timezone.utc)
                          + timedelta(days=(day + 1)))).strftime("%Y%m%d%H%M%S")
-        guide_url = "https://api.prod.sngtv.magentatv.de/EPG/JSON/PlayBillList?userContentFilter=1992763264&sessionArea=1" \
-                    "&SID=guidebatch&T=Windows_chrome_86"
+        guide_url = "https://api.prod.sngtv.magentatv.de/EPG/JSON/PlayBillList"
         guide_data = f'{{"type":2,"isFiltrate":0,"orderType":4,"isFillProgram":1,"channelNamespace":"2","offset":0,' \
                      f'"count":-1,"properties":[{{"name":"playbill","include":"subName,id,name,starttime,endtime,' \
                      f'channelid,ratingid,genres,introduce,cast,genres,country,pictures,producedate,' \
