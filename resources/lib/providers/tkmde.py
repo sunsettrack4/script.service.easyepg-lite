@@ -2,23 +2,24 @@ from datetime import datetime, timedelta, timezone
 import json, requests, time, uuid
 
 
-def login(data, credentials, headers, x=0):
-    mac = str(uuid.uuid4())
-    ter = str(uuid.uuid4())
-
-    auth_url = 'https://api.prod.sngtv.magentatv.de/EPG/JSON/Authenticate'
-    auth_data = '{"areaid":"1","cnonce":"c4b11948545fb3089720dd8b12c81f8e","mac":"'+mac+'","preSharedKeyID":"NGTV000001","subnetId":"4901","templatename":"NGTV","terminalid":"'+ter+'","terminaltype":"WEB-MTV","terminalvendor":"WebTV","timezone":"UTC","usergroup":"-1","userType":3,"utcEnable":1}'
-    auth_session = requests.Session()
-    t = auth_session.post(auth_url, timeout=5, data=auth_data, headers=headers)
-    
+def login(data, credentials, headers):
+    x = 0
     while x < 120:
+        mac = str(uuid.uuid4())
+        ter = str(uuid.uuid4())
+
+        auth_url = 'https://api.prod.sngtv.magentatv.de/EPG/JSON/Authenticate'
+        auth_data = '{"areaid":"1","cnonce":"c4b11948545fb3089720dd8b12c81f8e","mac":"'+mac+'","preSharedKeyID":"NGTV000001","subnetId":"4901","templatename":"NGTV","terminalid":"'+ter+'","terminaltype":"WEB-MTV","terminalvendor":"WebTV","timezone":"UTC","usergroup":"-1","userType":3,"utcEnable":1}'
+        auth_session = requests.Session()
+        t = auth_session.post(auth_url, timeout=5, data=auth_data, headers=headers)
+        
         if t.json().get("retcode", "0") == "-2":
             time.sleep(0.1)
             x = x + 1
-            v = login(data, credentials, headers, x)
+            continue
         else:
-            return v
-    
+            break
+        
     return True, {"cookies": auth_session.cookies.get_dict(), "data": None}
 
 def channels(data, session, headers={}):
