@@ -103,8 +103,17 @@ def epg_main_converter(data, channels, settings, ch_id=None):
                 g["title"] = p["title"][0]["#text"] if "@lang" in p["title"][0] else p["title"][0]
             else:
                 g["title"] = p["title"]["#text"] if "@lang" in p["title"] else p["title"]
-            if p.get("icon"):
-                g["image"] = p["icon"]["@src"]
+            if p.get("icon") or p.get("image"):
+                if p.get("icon"):
+                    g["image"] = p["icon"]["@src"]
+                elif p.get("image"):
+                    if ("@type" in p["image"] and p["image"].get("#text")) or \
+                        ("@size" in p["image"] and p["image"].get("#text")) or \
+                        ("@orient" in p["image"] and p["image"].get("#text")) or \
+                        ("@system" in p["image"] and p["image"].get("#text")):
+                            g["image"] = p["image"]["#text"]
+                    else:
+                        g["image"] = p["image"]
             if p.get("sub-title"):
                 g["subtitle"] = p["sub-title"]["#text"] if "@lang" in p["sub-title"] and p["sub-title"].get("#text") else p["sub-title"] if type(p["sub-title"]) != dict else None
             if p.get("desc"):
