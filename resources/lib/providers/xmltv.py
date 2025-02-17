@@ -105,15 +105,27 @@ def epg_main_converter(data, channels, settings, ch_id=None):
                 g["title"] = p["title"]["#text"] if "@lang" in p["title"] else p["title"]
             if p.get("icon") or p.get("image"):
                 if p.get("icon"):
-                    g["image"] = p["icon"]["@src"]
-                elif p.get("image"):
-                    if ("@type" in p["image"] and p["image"].get("#text")) or \
-                        ("@size" in p["image"] and p["image"].get("#text")) or \
-                        ("@orient" in p["image"] and p["image"].get("#text")) or \
-                        ("@system" in p["image"] and p["image"].get("#text")):
-                            g["image"] = p["image"]["#text"]
+                    if type(p["icon"]) == list:
+                        g["image"] = p["icon"][0]["@src"]
                     else:
-                        g["image"] = p["image"]
+                        g["image"] = p["icon"]["@src"]
+                elif p.get("image"):
+                    if type(p["image"]) == list:
+                        if ("@type" in p["image"][0] and p["image"][0].get("#text")) or \
+                            ("@size" in p["image"][0] and p["image"][0].get("#text")) or \
+                            ("@orient" in p["image"][0] and p["image"][0].get("#text")) or \
+                            ("@system" in p["image"][0] and p["image"][0].get("#text")):
+                                g["image"] = p["image"][0]["#text"]
+                        else:
+                            g["image"] = p["image"][0]
+                    else:
+                        if ("@type" in p["image"] and p["image"].get("#text")) or \
+                            ("@size" in p["image"] and p["image"].get("#text")) or \
+                            ("@orient" in p["image"] and p["image"].get("#text")) or \
+                            ("@system" in p["image"] and p["image"].get("#text")):
+                                g["image"] = p["image"]["#text"]
+                        else:
+                            g["image"] = p["image"]
             if p.get("sub-title"):
                 g["subtitle"] = p["sub-title"]["#text"] if "@lang" in p["sub-title"] and p["sub-title"].get("#text") else p["sub-title"] if type(p["sub-title"]) != dict else None
             if p.get("desc"):
@@ -122,7 +134,13 @@ def epg_main_converter(data, channels, settings, ch_id=None):
                 g["date"] = p["date"]
             if p.get("country"):
                 if type(p["country"]) == list:
-                    g["country"] = ", ".join([i["#text"] for i in p["country"]]) if any([i.get("@lang") for i in p["country"]]) else ", ".join(p["country"])
+                    c_temp = []
+                    for i in p["country"]:
+                        if type(i) != str:
+                            c_temp.append(i["#text"])
+                        else:
+                            c_temp.append(i)
+                    g["country"] = ", ".join(c_temp)
                 else:
                     g["country"] = p["country"]["#text"] if "@lang" in p["country"] else p["country"]            
             if p.get("star-rating"):
