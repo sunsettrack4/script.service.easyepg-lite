@@ -53,7 +53,10 @@ def channels(data, session, headers={}):
             elif ch.get("icon") and type(ch["icon"]) == list:
                 chlist[chan]["icon"] = ch["icon"][0]["@src"]
             if type(ch["display-name"]) == list:
-                chlist[chan]["name"] = ch["display-name"][0]
+                if "@lang" in ch["display-name"][0]:
+                    chlist[chan]["name"] = ch["display-name"][0]["#text"]
+                else:    
+                    chlist[chan]["name"] = ch["display-name"][0]
             elif "@lang" in ch["display-name"]:
                 chlist[chan]["name"] = ch["display-name"]["#text"]
                 chlist[chan]["lang"] = ch["display-name"]["@lang"]
