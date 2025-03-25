@@ -46,7 +46,7 @@ def channels(data, session, headers={}):
 
     if type(p["tv"]["channel"]) == list:
         for ch in p["tv"]["channel"]:
-            chan = ch["@id"].replace("&amp;", "and")
+            chan = ch["@id"].replace("&amp;", "and").replace("'", "")
             chlist[chan] = {}
             if ch.get("icon") and type(ch["icon"]) == dict:
                 chlist[chan]["icon"] = ch["icon"]["@src"]
@@ -95,7 +95,7 @@ def epg_main_converter(data, channels, settings, ch_id=None):
     for p in item["tv"]["programme"]:
         g = dict()
 
-        g["c_id"] = p["@channel"].replace("&amp;", "and")
+        g["c_id"] = p["@channel"].replace("&amp;", "and").replace("'", "")
         
         g["start"] = convert_timestring(f'{p["@start"]} {datetime.now(timezone.utc).astimezone().strftime("%z")}' if len(p["@start"]) == 14 else p["@start"])
         g["end"] = convert_timestring(f'{p["@stop"]} {datetime.now(timezone.utc).astimezone().strftime("%z")}' if len(p["@stop"]) == 14 else p["@stop"])
