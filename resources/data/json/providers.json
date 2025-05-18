@@ -55,6 +55,28 @@
 
         "adv_loader": false
 
+    },
+
+    "swcch":
+
+    {
+
+        "module": "swcch",
+        
+        "name": "Swisscom blue TV",
+        "country": "CH",
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "main_custom_genres": true,
+
+        "adv_loader": false
+
     }
 
 }

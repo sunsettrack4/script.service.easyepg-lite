@@ -320,9 +320,13 @@ class ProviderManager():
             executor.shutdown(wait=True)
 
             # WRITE PRELOAD EPG DATA INTO DB
+            gen = {}
+            if self.providers[provider_name].get("main_custom_genres"):
+                gen = sys.modules[self.providers[provider_name].get("module", provider_name)].genres()
+
             for i in self.epg_cache.keys():
                 m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_main_converter(
-                    self.epg_cache[i][0], channels, self.user_db.main["settings"], self.epg_cache[i][1])
+                    self.epg_cache[i][0], channels, self.user_db.main["settings"], self.epg_cache[i][1], gen)
                 if not "." in i:
                     self.epg_db.write_epg_db_items(provider_name  if not xmltv else data["id"],
                         [(i["c_id"], i["b_id"], i["start"], i["end"], i["title"], 

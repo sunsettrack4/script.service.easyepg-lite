@@ -83,7 +83,7 @@ def channels(data, session, headers={}):
 def epg_main_links(data, channels, settings, session, headers):
     return [{"url": data["link"]}]
 
-def epg_main_converter(data, channels, settings, ch_id=None):
+def epg_main_converter(data, channels, settings, ch_id=None, genres={}):
     item = file_decoder(data)
     
     airings = []
