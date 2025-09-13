@@ -57,6 +57,27 @@
 
     },
 
+    "wpude":
+
+    {
+
+        "module": "wpude",
+        
+        "name": "waipu.tv",
+        "country": "DE",
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 7,
+        "max_dl_num": 20,
+        "max_dl_threads": 10,
+
+        "adv_loader": false
+
+    },
+
     "swcch":
 
     {
