@@ -23,7 +23,7 @@ class API():
             
     def key_check(self, new_key):
         gn_status = key_checker(str(new_key) if new_key is not None else str(self.key))
-        if gn_status:
+        if gn_status and new_key is not None:
             self.key = new_key
         return gn_status
 
