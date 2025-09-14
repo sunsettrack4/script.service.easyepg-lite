@@ -1,4 +1,5 @@
 from datetime import datetime
+from resources.lib.tools import key_checker
 from threading import Thread
 from time import sleep
 import gzip, json, os, shutil, time, traceback
@@ -94,6 +95,7 @@ class Grabber():
             
             # Check Provider List
             pr_check = []
+            gn_status = None             
             for ch in self.user_db.main["channels"].keys():
                 a = ch.split("_")  # web/xml
                 if len(a) > 1:
@@ -102,8 +104,12 @@ class Grabber():
                 else:
                     try:
                         a = int(ch)  # tms id
-                        if "gntms" not in pr_check:
-                            pr_check.append("gntms")
+                        if "gntms" not in pr_check and "tvtms" not in pr_check:
+                            gn_status = key_checker(self.user_db.main["settings"].get("api_key", ""))
+                            if not gn_status:
+                                self.user_db.main["sessions"]["gntms"]["expiration"] = 0
+                                print("WARNING: Your TMS API KEY is invalid, using workaround to fetch the data anyway...")   
+                            pr_check.append("gntms") if gn_status else pr_check.append("tvtms")
                     except:
                         pass
             

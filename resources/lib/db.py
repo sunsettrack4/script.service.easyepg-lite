@@ -230,7 +230,7 @@ class ProviderManager():
                 return False, "No key found" if self.providers[provider_name]["auth_type"] == "api_key" else "No credentials found"
             session = self.user_db.main["sessions"].get(provider_name)
             if session:
-                if session.get("expiration", False) is False or session.get("expiration", 0) > datetime.timestamp():
+                if session.get("expiration", False) is False or session.get("expiration", 0) > datetime.now().timestamp():
                     return True
    
         try:          
@@ -264,19 +264,20 @@ class ProviderManager():
     # MAIN DATA
     def main_downloader(self, provider_name, data=None):
         data = self.providers[provider_name].get("data") if not data else data
+        provider = "gntms" if provider_name == "tvtms" else provider_name
 
         # RETRIEVE CHANNELS AND PROVIDER TYPE
         if type(data) == dict and data.get("id") and "xml" in data["id"]:
             channels = [i.replace(f"{data['id']}_", "") for i in self.user_db.main["channels"].keys() if f"{data['id']}_" in i]
             xmltv = True
         else:
-            channels = [i for i in self.user_db.main["channels"].keys() if "_" not in i] if provider_name == "gntms" else \
-                [i.replace(f"{provider_name}_", "") for i in self.user_db.main["channels"].keys() if f"{provider_name}_" in i]
+            channels = [i for i in self.user_db.main["channels"].keys() if "_" not in i] if provider == "gntms" else \
+                [i.replace(f"{provider}_", "") for i in self.user_db.main["channels"].keys() if f"{provider}_" in i]
             xmltv = False
 
         # REFRESH PRELOAD DB
-        self.epg_db.remove_epg_db(provider_name if not xmltv else data["id"], True)
-        self.epg_db.create_epg_db(provider_name if not xmltv else data["id"], True)
+        self.epg_db.remove_epg_db(provider if not xmltv else data["id"], True)
+        self.epg_db.create_epg_db(provider if not xmltv else data["id"], True)
         self.epg_cache = {}
         
         # RETRIEVE SESSION
@@ -328,7 +329,7 @@ class ProviderManager():
                 m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_main_converter(
                     self.epg_cache[i][0], channels, self.user_db.main["settings"], self.epg_cache[i][1], gen)
                 if not "." in i:
-                    self.epg_db.write_epg_db_items(provider_name  if not xmltv else data["id"],
+                    self.epg_db.write_epg_db_items(provider  if not xmltv else data["id"],
                         [(i["c_id"], i["b_id"], i["start"], i["end"], i["title"], 
                           i.get("subtitle", ""), i.get("desc", ""), i.get("image", ""), 
                           i.get("date", ""), i.get("country", ""), i.get("star", {}), i.get("rating", {}), i.get("credits", {}),
@@ -343,12 +344,12 @@ class ProviderManager():
 
         # CLEAN UP
         if not self.providers[provider_name].get("adv_loader", False):
-            self.epg_db.remove_epg_db(provider_name if not xmltv else data["id"], False)
+            self.epg_db.remove_epg_db(provider if not xmltv else data["id"], False)
 
-        self.epg_db.create_epg_db(provider_name if not xmltv else data["id"], False)
+        self.epg_db.create_epg_db(provider if not xmltv else data["id"], False)
         self.status_ext = None
         self.pr_pr = self.pr_pr + 1
-        return self.epg_db.simple_epg_db_update(provider_name if not xmltv else data["id"])
+        return self.epg_db.simple_epg_db_update(provider if not xmltv else data["id"])
 
     def load_main(self, provider_name, item, name):
         if self.exit or self.cancellation:

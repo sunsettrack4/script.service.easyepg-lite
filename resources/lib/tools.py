@@ -22,15 +22,10 @@ class API():
             return {}
             
     def key_check(self, new_key):
-        url = f"http://data.tmsapi.com/v1.1/stations/10359?lineupId=USA-TX42500-X&api_key={str(new_key) if new_key is not None else str(self.key)}"
-
-        try:
-            s = json.loads(requests.get(url, headers=general_header).content)
-            if new_key is not None:
-                self.key = new_key
-            return True
-        except (json.JSONDecodeError, requests.HTTPError):
-            return False
+        gn_status = key_checker(str(new_key) if new_key is not None else str(self.key))
+        if gn_status:
+            self.key = new_key
+        return gn_status
 
     def search_channel(self, value, lang, f_type):
         if f_type == "chid":
@@ -143,6 +138,14 @@ class API():
         except:
             return json.dumps({"success": False, "message": "Connection error."})
 
+def key_checker(new_key):
+        url = f"http://data.tmsapi.com/v1.1/stations/10359?lineupId=USA-TX42500-X&api_key={str(new_key)}"
+
+        try:
+            json.loads(requests.get(url, headers=general_header).content)
+            return True
+        except (json.JSONDecodeError, requests.HTTPError):
+            return False
 
 def save_file(file, path):
     with open(f"{path}playlist.m3u", "w") as f:

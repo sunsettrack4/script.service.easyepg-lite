@@ -171,7 +171,7 @@
 "Martial arts": "",
 "Medical": "Medicine / Physiology / Psychology",
 "Military": "",
-"Miniseries": "",
+"Miniseries": "Show / Game show",
 "Mixed martial arts": "",
 "Modern pentathlon": "Sports",
 "Motorcycle": "Motor sport",
@@ -481,5 +481,7 @@
 "Reisen Und Natur": "Tourism / Travel",
 "Crime Action": "Detective / Thriller",
 "Crime Drama": "Detective / Thriller",
-"Literatur": "Further education"}}
+"Literatur": "Further education",
+"Sports": "Sports",
+"Movie": "Movie / Drama"}}
 
