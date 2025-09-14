@@ -57,3 +57,57 @@ def epg_main_converter(data, channels, settings, ch_id=None, genres={}):
         airings.append(g)
 
     return airings
+
+def epg_advanced_links(data, session, settings, programmes, headers={}):
+    url_list = []
+    today = datetime.today()
+    
+    for i in programmes:
+        url_list.append(
+            {"url": f"https://epg-cache.waipu.tv/api/programs/{i}"})
+    
+    return url_list
+
+def epg_advanced_converter(item, data, cache, settings):
+    item = json.loads(cache[0])
+    
+    g = dict()
+    g["b_id"] = item["id"]
+    g["desc"] = item.get("textContent", {"descLong": None}).get("descLong")
+    g["date"] = item.get("production", {"year": None}).get("year")
+    
+    countries = item.get("production", {"countries": []}).get("countries", [])
+    if len(countries) > 0:
+        g["country"] = ", ".join(countries)
+    
+    if item.get("series"):
+        s_num = item["series"]["seasonNumber"] if item["series"].get("seasonNumber") else 0
+        e_num = item["series"]["episodeNumber"] if item["series"].get("episodeNumber") else 0
+        g["season_episode_num"] = {"season": s_num, "episode": e_num}
+    
+    if item.get("production"):
+        directors = []
+        actors = []
+
+        if len(item["production"].get("crewMembers", [])) > 0:
+            directors.extend([i["name"] for i in item["production"]["crewMembers"]])
+        if len(item["production"].get("castMembers", [])) > 0:
+            actors.extend([i["name"] for i in item["production"]["castMembers"]])
+
+        g["credits"] = {"director": directors, "actor": actors}
+
+    if item.get("contentMeta"):
+        genres = []
+
+        if len(item["contentMeta"].get("subGenres", [])) > 0:
+            genres.extend(item["contentMeta"]["subGenres"])
+        elif item["contentMeta"].get("mainGenre"):
+            genres = [item["contentMeta"]["mainGenre"]]
+
+        g["genres"] = genres
+
+    if item.get("ageRating"):
+        if item["ageRating"].get("parentalGuidance"):
+            g["rating"] = {"system": "FSK", "value": item["ageRating"]["parentalGuidance"].replace("fsk-", "")}
+    
+    return [g]

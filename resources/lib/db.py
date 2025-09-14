@@ -112,7 +112,7 @@ class SQLiteManager():
                         """desc = coalesce(?, desc), image = coalesce(?, image), """
                         """date = coalesce(?, date), country = coalesce(?, country), star = coalesce(?, star), rating = coalesce(?, rating), """
                         """credits = coalesce(?, credits), season_episode_num = coalesce(?, season_episode_num), """
-                        """genres = coalesce(?, genres), qualifiers = {}, advanced = {} """
+                        """genres = coalesce(?, genres), qualifiers = coalesce(?, qualifiers), advanced = {} """
                         """WHERE broadcast_id = ?""".format(provider, 1 if advanced else 0),
                         (start, end, title, subtitle, desc, image, date, country, json.dumps(star), json.dumps(rating), 
                          json.dumps(credits), json.dumps(season_episode_num), json.dumps(genres), json.dumps(qualifiers), broadcast_id))
@@ -347,6 +347,7 @@ class ProviderManager():
 
         self.epg_db.create_epg_db(provider_name if not xmltv else data["id"], False)
         self.status_ext = None
+        self.pr_pr = self.pr_pr + 1
         return self.epg_db.simple_epg_db_update(provider_name if not xmltv else data["id"])
 
     def load_main(self, provider_name, item, name):
@@ -375,5 +376,101 @@ class ProviderManager():
         return
 
     # ADVANCED DATA
-    def advanced_downloader(self, provider_name, programmes):
+    def advanced_downloader(self, provider_name, programmes, data=None):
+        if len(programmes) == 0:
+            return True
+        
+        data = self.providers[provider_name].get("data") if not data else data
+        
+        # RETRIEVE SESSION
+        self.login(provider_name, data)
+        session = self.user_db.main["sessions"].get(provider_name)
+
+        url_params = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_advanced_links(
+            data, session, self.user_db.main["settings"], programmes, general_header)
+        
+        # DUPLICATE CHECKER - REQUIRED FOR SHARED MOVIE/SERIES DATA (UNIQUE ID REQUIRED IN URL LIST)
+        u = {}
+        if self.providers[provider_name].get("duplicate_check_req"):
+            url_params_new = []
+            for i in url_params:
+                if u.get(i["uid"]):
+                    u[i["uid"]].append(i["name"])
+                else:
+                    u[i["uid"]] = [i["name"]]
+                    url_params_new.append(i)
+            u = {u[i][0]: [x for c, x in enumerate(u[i]) if c != 0] for i in u.keys()}
+            url_params = url_params_new
+        
+        self.params_len = len(url_params)
+        self.params_part_len = 0
+
+        # MULTIPLE STEPS
+        url_params_new = []
+        final_list = []
+        for i in url_params:
+            url_params_new.append(i)
+            if len(url_params_new) == self.providers[provider_name].get("advanced_max_dl_num", 50):
+                final_list.append(url_params_new)
+                url_params_new = []
+        if len(url_params_new) > 0:
+            final_list.append(url_params_new)
+        del url_params, url_params_new
+
+        self.fl_num = len(final_list)
+        self.fl_pr = 0
+
+        for grabber_param in final_list:
+
+            self.l_pr = 0
+            self.l_num = len(grabber_param)
+
+            if len(self.epg_cache) > 0:
+                self.epg_cache = {}
+
+            executor = concurrent.futures.ThreadPoolExecutor(
+                max_workers=self.providers[provider_name].get("advanced_download_threads", 10))
+            {executor.submit(self.load_main, provider_name, item, item.get("n", str(index))).add_done_callback(self.url_threads_handler) for index, item in enumerate(grabber_param)}
+            executor.shutdown(wait=True)
+            del executor
+
+            def duplicator(dup_ids, broadcast_list):
+                x = list(broadcast_list[0])  # BROADCAST LIST CONTAINS 1 ELEMENT ONLY
+                for item in dup_ids:
+                    x[1] = item
+                    broadcast_list.append(tuple(x))
+                return broadcast_list
+
+            for i in self.epg_cache.keys():
+                m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_advanced_converter(
+                    i, self.epg_db.config[provider_name].get("data"), self.epg_cache[i],
+                    self.user_db.main["settings"])
+
+                if not "." in i:
+                    if len(u) > 0 and u.get(i):  # INSERT DETAILS FOR BROADCASTS WITH IDENTICAL DATA
+                        self.epg_db.update_epg_db_items(provider_name, duplicator(u[i], 
+                            [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
+                                i.get("subtitle", ""), i.get("desc", ""), i.get("image", ""), 
+                                i.get("date", ""), i.get("country", ""), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
+                                json.dumps(i.get("season_episode_num", {})), json.dumps(i.get("genres", [])), json.dumps(i.get("qualifiers", [])), i["b_id"]) for i in m]), True)
+                    else:
+                        self.epg_db.update_epg_db_items(provider_name,
+                            [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
+                                i.get("subtitle", ""), i.get("desc", ""), i.get("image", ""), 
+                                i.get("date", ""), i.get("country", ""), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
+                                json.dumps(i.get("season_episode_num", {})), json.dumps(i.get("genres", [])), json.dumps(i.get("qualifiers", [])), i["b_id"]) for i in m], True)
+            
+            self.epg_cache = {}
+
+            self.params_part_len = self.params_part_len + self.providers[provider_name].get("advanced_max_dl_num", 50) \
+                if (self.params_len - self.params_part_len) > self.providers[provider_name].get("advanced_max_dl_num", 50) else self.params_len
+            
+            self.fl_pr = self.fl_pr + 1
+
+        self.epg_db.confirm_update()
+        del final_list
+        self.epg_cache = {}
+
+        self.status_ext = None
+        self.pr_pr = self.pr_pr + 1
         return True

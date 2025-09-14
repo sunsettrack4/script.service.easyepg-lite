@@ -74,7 +74,7 @@
         "max_dl_num": 20,
         "max_dl_threads": 10,
 
-        "adv_loader": false
+        "adv_loader": true
 
     },
 

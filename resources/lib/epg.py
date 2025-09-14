@@ -108,29 +108,32 @@ class Grabber():
                         pass
             
             self.pr.pr_num = len(pr_check)
+            for i in pr_check:
+                if self.pr.providers[i].get("adv_loader"):
+                    self.pr.pr_num = self.pr.pr_num + 1
+            
             self.pr.pr_pr = 0
             for provider in pr_check:
-                if "xml" in provider:
-                    data = {"link": self.user_db.main["xmltv"][provider]["link"], "id": provider}
-                    self.pr.main_downloader("xmltv", data)
-                elif self.pr.providers[provider].get("adv_loader"):
-                    self.pr.advanced_downloader(provider, self.pr.main_downloader(provider))
-                else:
-                    try:
+                try:
+                    if "xml" in provider:
+                        data = {"link": self.user_db.main["xmltv"][provider]["link"], "id": provider}
+                        self.pr.main_downloader("xmltv", data)
+                    elif self.pr.providers[provider].get("adv_loader"):
+                        self.pr.advanced_downloader(provider, self.pr.main_downloader(provider))
+                    else:
                         self.pr.main_downloader(provider)
-                    except Exception as e:
-                        try:
-                            with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
-                                log.write(f"--- {provider.upper()} WARNING LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
-                                traceback.print_exc(file=log)
-                                log.write(f"--- {provider.upper()} WARNING LOG END ---\n\n")
-                            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: An error occured while grabbing EPG data for {provider}")
-                        except:
-                            pass
-                        self.warning = True
-                        self.pr.epg_db.remove_epg_db(provider, True)
-                        self.pr.epg_db.create_epg_db(provider, False)
-                self.pr.pr_pr = self.pr.pr_pr + 1
+                except Exception as e:
+                    try:
+                        with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
+                            log.write(f"--- {provider.upper()} WARNING LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+                            traceback.print_exc(file=log)
+                            log.write(f"--- {provider.upper()} WARNING LOG END ---\n\n")
+                        print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: An error occured while grabbing EPG data for {provider}")
+                    except:
+                        pass
+                    self.warning = True
+                    self.pr.epg_db.remove_epg_db(provider, True)
+                    self.pr.epg_db.create_epg_db(provider, False)
 
             if self.cancellation or self.exit:
                 raise Exception("Process stopped.")
