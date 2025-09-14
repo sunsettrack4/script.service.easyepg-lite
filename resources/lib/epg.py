@@ -109,7 +109,7 @@ class Grabber():
             
             self.pr.pr_num = len(pr_check)
             for i in pr_check:
-                if self.pr.providers[i].get("adv_loader"):
+                if "xml" not in i and self.pr.providers[i].get("adv_loader"):
                     self.pr.pr_num = self.pr.pr_num + 1
             
             self.pr.pr_pr = 0
