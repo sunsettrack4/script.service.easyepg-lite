@@ -343,7 +343,7 @@ class ProviderManager():
         self.epg_cache = {}
 
         # CLEAN UP
-        if not self.providers[provider_name].get("adv_loader", False):
+        if not self.providers[provider].get("adv_loader", False):
             self.epg_db.remove_epg_db(provider if not xmltv else data["id"], False)
 
         self.epg_db.create_epg_db(provider if not xmltv else data["id"], False)

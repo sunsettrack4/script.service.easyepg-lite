@@ -4,8 +4,10 @@ import json, time
 def epg_main_links(data, channels, settings, session, headers):
     url_list = []
     today = datetime.today()
+
+    days = int(settings["days"]) if int(settings["days"]) < 10 else 9
     
-    for day in range(int(settings["days"])):
+    for day in range(days):
         time_start = ((datetime(today.year, today.month, today.day, 6, 0, 0).replace(tzinfo=timezone.utc)
                            + timedelta(days=day))).strftime("%Y-%m-%dT06:00:00.000Z")
         time_end = ((datetime(today.year, today.month, today.day, 5, 59, 0).replace(tzinfo=timezone.utc)
