@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-import json, requests, time, uuid
+import json, requests, time
 
 
 def genres():
@@ -59,7 +59,7 @@ def epg_main_converter(data, channels, settings, ch_id=None, genres={}):
     airings = []
 
     def get_time(string_item):
-        return str(datetime.strptime(string_item, "%Y-%m-%dT%H:%M:%SZ").timestamp()).split(".")[0]
+        return str(datetime(*(time.strptime(string_item, "%Y-%m-%dT%H:%M:%SZ")[0:6])).timestamp()).split(".")[0]
 
     def get_year(string_item):
             return str(datetime.strptime(string_item, "%Y-%m-%dT%H:%M:%SZ").year) if string_item else None
