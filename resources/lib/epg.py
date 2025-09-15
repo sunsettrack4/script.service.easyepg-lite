@@ -107,8 +107,9 @@ class Grabber():
                         if "gntms" not in pr_check and "tvtms" not in pr_check:
                             gn_status = key_checker(self.user_db.main["settings"].get("api_key", ""))
                             if not gn_status:
-                                self.user_db.main["sessions"]["gntms"]["expiration"] = 0
-                                print("WARNING: Your TMS API KEY is invalid, using workaround to fetch the data anyway...")   
+                                if self.user_db.main["sessions"].get("gntms"):
+                                    self.user_db.main["sessions"]["gntms"]["expiration"] = 0
+                                print("WARNING: Your TMS API KEY is invalid, using workaround to fetch the data anyway...")
                             pr_check.append("gntms") if gn_status else pr_check.append("tvtms")
                     except:
                         pass

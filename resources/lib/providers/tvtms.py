@@ -25,7 +25,7 @@ def epg_main_links(data, channels, settings, session, headers):
                     "h": headers, "c": pre_list_string})
                 pre_list = []
                 x = 0
-        if x != 0 and len(channels) > 20:
+        if x != 0:
             pre_list_string = ",".join(pre_list)
             url_list.append(
                 {"url": f"https://www.tvtv.us/api/v1/lineup/USA-FL67387-X/grid/{time_start}/{time_end}/{pre_list_string}",
