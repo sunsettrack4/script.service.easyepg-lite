@@ -62,7 +62,7 @@ def epg_main_converter(data, channels, settings, ch_id=None, genres={}):
         return str(datetime(*(time.strptime(string_item, "%Y-%m-%dT%H:%M:%SZ")[0:6])).timestamp()).split(".")[0]
 
     def get_year(string_item):
-            return str(datetime.strptime(string_item, "%Y-%m-%dT%H:%M:%SZ").year) if string_item else None
+        return str(datetime(*(time.strptime(string_item, "%Y-%m-%dT%H:%M:%SZ")[0:6])).year) if string_item else None
 
     def get_age_rating(string_item):
         return string_item.replace("+", "") if string_item else None
