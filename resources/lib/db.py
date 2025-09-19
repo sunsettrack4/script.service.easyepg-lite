@@ -231,7 +231,8 @@ class ProviderManager():
             session = self.user_db.main["sessions"].get(provider_name)
             if session:
                 if session.get("expiration", False) is False or session.get("expiration", 0) > datetime.now().timestamp():
-                    return True
+                    if self.user_db.main["sessions"].get(provider_name)["session"]["key"] == auth_data["key"]:
+                        return True
    
         try:          
             session = sys.modules[self.providers[provider_name].get("module", provider_name)].login(
@@ -451,14 +452,14 @@ class ProviderManager():
                     if len(u) > 0 and u.get(i):  # INSERT DETAILS FOR BROADCASTS WITH IDENTICAL DATA
                         self.epg_db.update_epg_db_items(provider_name, duplicator(u[i], 
                             [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
-                                i.get("subtitle", ""), i.get("desc", ""), i.get("image", ""), 
-                                i.get("date", ""), i.get("country", ""), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
+                                i.get("subtitle"), i.get("desc"), i.get("image"), 
+                                i.get("date"), i.get("country"), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
                                 json.dumps(i.get("season_episode_num", {})), json.dumps(i.get("genres", [])), json.dumps(i.get("qualifiers", [])), i["b_id"]) for i in m]), True)
                     else:
                         self.epg_db.update_epg_db_items(provider_name,
                             [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
-                                i.get("subtitle", ""), i.get("desc", ""), i.get("image", ""), 
-                                i.get("date", ""), i.get("country", ""), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
+                                i.get("subtitle"), i.get("desc"), i.get("image"), 
+                                i.get("date"), i.get("country"), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
                                 json.dumps(i.get("season_episode_num", {})), json.dumps(i.get("genres", [])), json.dumps(i.get("qualifiers", [])), i["b_id"]) for i in m], True)
             
             self.epg_cache = {}
