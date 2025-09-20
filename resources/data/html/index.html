@@ -89,6 +89,12 @@
                     <option id="wp_none" hidden>Please select...</option>                    
                 </select>
             </div>
+            <label for="web_user">Add your credentials</label>
+            <div>
+                <input disabled type="input" placeholder="Username" id="web_user">
+                <input disabled type="password" placeholder="Password" id="web_pw">
+                <button id="web_send_credentials" type="button" disabled>Login</button>
+            </div>
         </div>
     </section>
     <section id="xml-window" class="nav-bar search-window">
@@ -315,9 +321,8 @@
 
         This application creates XMLTV EPG files using Gracenote's API and other web and XMLTV resources. A simple web interface allows you to select all channels needed for your individual TV setup.<br>
         <br>
-        <b>Web app</b><br>
-        Version 1.0.0<br>
-        © 2022-2023 Jan-Luca Neumann<br>
+        <b>Web app</b>
+        © 2022-2025 Jan-Luca Neumann<br>
         <br>
         <b>TMS API</b><br>
         Version 1.1<br>
@@ -334,6 +339,20 @@
         <div>
             <input id="key-input" maxlength="24" type="search" placeholder="Gracenote API key">
         </div>
+
+        <!--
+        <br>You can also use TVTV to fetch general TMS data by adding the channel id.<br><br>
+
+        <div>
+            <input id="tms-chid-input" type="search" placeholder="TMS Channel ID">
+            <input id="tms-chname-input" type="search" placeholder="Name (optional)">
+            <input id="tms-chlogo-input" type="search" placeholder="Logo URL (optional)">
+        </div>
+
+        <div>
+            <button id="tms-chid-add" type="button" class="add-btn" disabled>Add channel</button>
+        </div>
+        -->
 
     </section>
     <section id="mapping-window" class="nav-bar">
@@ -407,8 +426,8 @@
             <button id="stop_dl" class="remove-btn">Cancel</button>
         </div>
         <div id="btn-se-select-group">
-            <button id="ch-se-web">WEB</button>
-            <button id="ch-se-tms" class="selected-btn">TMS</button>
+            <button id="ch-se-tms">TMS</button>
+            <button id="ch-se-web" class="selected-btn">WEB</button>
             <button id="ch-se-xml">XML</button>
         </div>
     </nav>
