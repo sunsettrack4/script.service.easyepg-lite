@@ -168,6 +168,7 @@ def replace_channel():
 
 @route("/api/add", method="POST")
 def add_channel():
+    d = dict()
     if g.grabbing:
         return json.dumps({"success": False, "message": "The grabber process needs to be finished first."})
     ids = json.loads(request.body.read()).get("ids")
@@ -177,16 +178,15 @@ def add_channel():
     else:
         provider_id = False
     if not provider_id:
-        for id in ids:
-            try:       
+        try:
+            for id in ids:
                 i = json.loads(t.get_channel_info(id))
                 if i["success"]:
                     if len(i["result"]) > 0 and i["result"][0].get("stationId") == id:
-                        g.user_db.main["channels"][id] = i["result"][0]
-                        g.user_db.save_settings()
-            except Exception as e:
-                print_error(traceback.format_exc())
-                return json.dumps({"success": False, "message": "The channels could not be added."})
+                        d[id] = i["result"][0]
+        except Exception as e:
+            print_error(traceback.format_exc())
+            return json.dumps({"success": False, "message": "The channels could not be added."})
     else: 
         try:
             if "xml" in provider_id:
@@ -196,13 +196,20 @@ def add_channel():
             if ch_list[0]:
                 for id in ids:
                     if ch_list[1].get(id.split("|")[1]):
-                        g.user_db.main["channels"][id.replace(f"{provider_id}|", f"{provider_id}_")] = \
+                        d[id.replace(f"{provider_id}|", f"{provider_id}_")] = \
                             {"stationId": id.replace(f"{provider_id}|", ""), "name": ch_list[1][id.split("|")[1]]["name"], "preferredImage": {"uri": ch_list[1][id.split("|")[1]].get("icon")}}
-                        g.user_db.save_settings()
         except Exception as e:
             print_error(traceback.format_exc())
             return json.dumps({"success": False, "message": "The channels could not be added."})
-
+    
+    try:
+        for cid in d.keys():
+            g.user_db.main["channels"][cid] = d[cid]
+        g.user_db.save_settings()
+    except Exception as e:
+        print_error(traceback.format_exc())
+        return json.dumps({"success": False, "message": "Failed to save the channel list."})
+    
     return json.dumps({"success": True})
 
 @route("/api/remove", method="POST")
