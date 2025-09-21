@@ -1,7 +1,7 @@
 from datetime import datetime
 from importlib import util
 from time import sleep
-import concurrent.futures, json, os, requests, sqlite3, sys
+import concurrent.futures, json, os, requests, sqlite3, sys, traceback
 
 general_header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                                 'Chrome/81.0.4044.138 Safari/537.36'}
@@ -114,8 +114,10 @@ class SQLiteManager():
                         """credits = coalesce(?, credits), season_episode_num = coalesce(?, season_episode_num), """
                         """genres = coalesce(?, genres), qualifiers = coalesce(?, qualifiers), advanced = {} """
                         """WHERE broadcast_id = ?""".format(provider, 1 if advanced else 0),
-                        (start, end, title, subtitle, desc, image, date, country, json.dumps(star), json.dumps(rating), 
-                         json.dumps(credits), json.dumps(season_episode_num), json.dumps(genres), json.dumps(qualifiers), broadcast_id))
+                        (start, end, title, subtitle, desc, image, date, country, 
+                         json.dumps(star) if star != "{}" else None, json.dumps(rating) if rating != "{}" else None,
+                         json.dumps(credits) if credits != "{}" else None, json.dumps(season_episode_num) if season_episode_num != "{}" else None, 
+                         json.dumps(genres) if genres != "[]" else None, json.dumps(qualifiers) if qualifiers != "[]" else None, broadcast_id))
         for channel_id, start, end, title, subtitle, desc, image, date, country, star, rating,
             credits, season_episode_num, genres, qualifiers, broadcast_id in to_be_updated]
         return
@@ -227,11 +229,11 @@ class ProviderManager():
             auth_data = {"key": self.user_db.main["settings"].get("api_key")} if provider_name == "gntms" \
                 else self.user_db.main["auth_data"].get(provider_name)
             if not auth_data:
-                return False, "No key found" if self.providers[provider_name]["auth_type"] == "api_key" else "No credentials found"
+                return False, "No key found" if self.providers[provider_name].get("auth_type", "") == "api_key" else "No credentials found"
             session = self.user_db.main["sessions"].get(provider_name)
             if session:
                 if session.get("expiration", False) is False or session.get("expiration", 0) > datetime.now().timestamp():
-                    if self.user_db.main["sessions"].get(provider_name)["session"]["key"] == auth_data["key"]:
+                    if provider_name != "gntms" or self.user_db.main["sessions"].get(provider_name)["session"]["key"] == auth_data["key"]:
                         return True
    
         try:          
@@ -244,14 +246,18 @@ class ProviderManager():
             self.user_db.save_settings()
             return True
         except Exception as e:
-            return False, str(e)
+            print(traceback.format_exc())
+            return False, "Login module error"
         
     # LOAD CHLIST
     def ch_loader(self, provider_name, data={}):
         data = self.providers[provider_name].get("data") if not data else data
         
         # RETRIEVE SESSION
-        self.login(provider_name, data)
+        msg = self.login(provider_name, data)
+        if type(msg) == tuple and not msg[0]:
+            return False, msg[1]
+        
         session = self.user_db.main["sessions"].get(provider_name)
 
         try:

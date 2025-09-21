@@ -140,9 +140,9 @@ def epg_main_converter(data, channels, settings, ch_id=None, genres={}):
             g["desc"] = programme.get("introduce")
             g["date"] = get_year(programme.get("producedate"))
             g["country"] = get_country(programme.get("country"))
-            s_num = programme.get("seasonNum"),
-            e_num = programme.get("subNum"),
-            g["season_episode_num"] = {"season": s_num[0], "episode": e_num[0]}
+            s_num = programme.get("seasonNum")
+            e_num = programme.get("subNum")
+            g["season_episode_num"] = {"season": s_num, "episode": e_num}
             g["rating"] = {"system": "FSK", "value": get_age_rating(programme["ratingid"])}
             g["image"] = get_image(programme.get("pictures"))
             g["credits"] = get_credits(programme["cast"])

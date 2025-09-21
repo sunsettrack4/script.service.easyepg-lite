@@ -145,7 +145,8 @@ def get_xmltv_lineup_channels():
             return json.dumps({"success": True, "result": result[1]})
         else:
             return json.dumps({"success": False, "message": f"An error occured: {str(result[1])}"})        
-    except:
+    except Exception as e:
+        print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": "Failed to load the channels."})
 
 @route("/api/replace-id", method="POST")
@@ -165,6 +166,16 @@ def replace_channel():
             return json.dumps({"success": True})
         else:
             return n
+
+@route("/api/save_credentials", method="POST")
+def save_credentials():
+    if g.grabbing:
+        return json.dumps({"success": False, "message": "The grabber process needs to be finished first."})
+    
+    file = json.loads(request.body.read())
+    g.user_db.main["auth_data"][file["id"]] = {"user": file["user"], "pw": file["pw"]}
+    g.user_db.save_settings()
+    return json.dumps({"success": True, "message": "Credentials saved."})
 
 @route("/api/add", method="POST")
 def add_channel():

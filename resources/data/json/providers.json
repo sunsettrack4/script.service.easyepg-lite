@@ -112,6 +112,96 @@
 
         "adv_loader": false
 
+    },
+
+    "zttde":
+
+    {
+
+        "module": "zttch",
+        
+        "name": "Zattoo DE",
+        "country": "DE",
+
+        "data": {
+            "domain": "zattoo.com",
+            "country": "DE"
+        },
+
+        "login_req": true,
+        "auth_req": true,
+        "exp": 1800,
+        "is_utc": true,
+
+        "main_loader": true,
+        "main_threads": 1,
+        "max_dl_num": 50,
+        "max_dl_threads": 5,
+        "dl_delay": 1,
+
+        "adv_loader": true,
+        "advanced_download_threads": 1
+
+    },
+
+    "zttat":
+
+    {
+
+        "module": "zttch",
+        
+        "name": "Zattoo AT",
+        "country": "AT",
+
+        "data": {
+            "domain": "zattoo.com",
+            "country": "AT"
+        },
+
+        "login_req": true,
+        "auth_req": true,
+        "exp": 1800,
+        "is_utc": true,
+
+        "main_loader": true,
+        "main_threads": 1,
+        "max_dl_num": 50,
+        "max_dl_threads": 5,
+        "dl_delay": 1,
+
+        "adv_loader": true,
+        "advanced_download_threads": 1
+
+    },
+
+    "zttch":
+
+    {
+
+        "module": "zttch",
+        
+        "name": "Zattoo CH",
+        "country": "CH",
+
+        "data": {
+            "domain": "zattoo.com",
+            "country": "CH"
+        },
+
+        "login_req": true,
+        "auth_req": true,
+        "exp": 1800,
+        "is_utc": true,
+
+        "main_loader": true,
+        "main_threads": 1,
+        "max_dl_num": 50,
+        "max_dl_threads": 5,
+        "dl_delay": 1,
+
+        "adv_loader": true,
+        "advanced_download_threads": 1
+
     }
 
 }

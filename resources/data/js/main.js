@@ -140,8 +140,56 @@ const xmlSelection = document.getElementById("xml_selection");
 const webCountrySelection = document.getElementById("web_country");
 const webSelection = document.getElementById("web_selection");
 
+const webUser = document.getElementById("web_user");
+const webPw = document.getElementById("web_pw");
+const webSendCredentials = document.getElementById("web_send_credentials");
+
 var url_expression = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 var url_regex = new RegExp(url_expression);
+
+webUser.addEventListener("keyup", function() {
+    if( webUser.value.length > 3 && webPw.value.length > 3 ) {
+        webSendCredentials.disabled = false;
+    } else {
+        webSendCredentials.disabled = true;
+    };
+});
+
+webPw.addEventListener("keyup", function() {
+    if( webUser.value.length > 3 && webPw.value.length > 3 ) {
+        webSendCredentials.disabled = false;
+    } else {
+        webSendCredentials.disabled = true;
+    };
+});
+
+webSendCredentials.addEventListener("click", function() {
+    saveCredentials();
+});
+
+function saveCredentials() {
+    var prov_id = webSelection.options[webSelection.selectedIndex].getAttribute("id");
+
+    let s = JSON.stringify({"id": prov_id, "user": webUser.value, "pw": webPw.value})
+    fetch("api/save_credentials", {
+        method: "POST",
+        body: s
+    })
+    .then(response => {
+        response.json().then(function(d) {
+            if( d["success"] === true ) {
+                console.log(d["message"]);
+                loadExtLineupChannels(prov_id);
+            } else {
+                showNotiMessage(d["message"], "error");
+            };
+        });
+    })
+    .catch(error => {
+        console.log(error);
+        showNotiMessage("An error occurred while serving the request.", "error");
+    });
+};
 
 xmlName.addEventListener("keyup", function() {
     if( xmlName.value != "" && xmlLink.value.match(url_regex) ) {
@@ -251,10 +299,16 @@ function retrieveWebSources() {
                     };
                 };
                 if( t == false ) {
+                    var k = "🌐 "
+                    if( d[i].hasOwnProperty("auth_req") ) {
+                        if ( d[i]["auth_req"] == true ) {
+                            k = "🔑 "
+                        };
+                    };
                     var opt = document.createElement('option');
                     opt.id = i;
                     opt.classList.add(d[i]["country"]);
-                    opt.innerHTML = d[i]["name"];
+                    opt.innerHTML = k + d[i]["name"];
                     webSelection.appendChild(opt);
                     
                     if( !countryList.includes(d[i]["country"]) ) {
@@ -279,8 +333,14 @@ function retrieveWebSources() {
 };
 
 webCountrySelection.addEventListener("change" , function() {
+    webUser.disabled = true;
+    webPw.disabled = true;
+    webUser.value = "";
+    webPw.value = "";
+    webSendCredentials.disabled = true;
     var wcso = webCountrySelection.options;
     var wso = webSelection.options;
+    wso[0].selected = 'selected';
     var selectedWebRegion = wcso[webCountrySelection.selectedIndex].getAttribute("id");
     if( selectedWebRegion != "wc_none" ) {
         for( var i = 0; i < webSelection.options.length; i++ ) {
@@ -297,6 +357,11 @@ webCountrySelection.addEventListener("change" , function() {
 });
 
 webSelection.addEventListener("change", function() {
+    webUser.disabled = true;
+    webPw.disabled = true;
+    webUser.value = "";
+    webPw.value = "";
+    webSendCredentials.disabled = true;
     var wp_id = webSelection.options[webSelection.selectedIndex].getAttribute("id");
     if( wp_id != "wp_none" ) {
         loadExtLineupChannels(wp_id);
@@ -1215,6 +1280,11 @@ openSearch.addEventListener("click", function() {
     blockPage.style.display = "inline";
     mainBtnGroup.style.display = "none";
     prTypeBtnGroup.style.display = "inline";
+    webUser.disabled = true;
+    webPw.disabled = true;
+    webUser.value = "";
+    webPw.value = "";
+    webSendCredentials.disabled = true;
 });
 
 function loadTmsEvent() {
@@ -1713,7 +1783,19 @@ function loadExtLineupChannels(value) {
                     xmlSelection.disabled = false;
                     removeXmlBtn.disabled = false;
                 };
-                showNotiMessage("An error occurred while loading the channel list.", "error");
+                var selectedLineupString = webSelection.options[webSelection.options.selectedIndex].textContent;
+                if( selectedLineupString.includes("🔑") ) {
+                    if ( d["message"].includes("credentials") ) {
+                        showNotiMessage("Please insert/check your credentials.");
+                    } else {
+                        showNotiMessage(d["message"], "error");
+                    };
+                    webUser.disabled = false;
+                    webPw.disabled = false;
+                } else {
+                    webSelection.options[0].selected = 'selected';
+                    showNotiMessage("An error occurred while loading the channel list.", "error");
+                };
             };
         })
     })

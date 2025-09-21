@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from resources.lib.tools import key_checker
 from threading import Thread
 from time import sleep
@@ -202,8 +202,9 @@ class Grabber():
                                 raise Exception("Process stopped.")
 
                             # DEFINE PARAMS
-                            start = datetime.fromtimestamp(float(start)).strftime("%Y%m%d%H%M%S +0000")
-                            end = datetime.fromtimestamp(float(end)).strftime("%Y%m%d%H%M%S +0000")
+                            tz = timezone.utc if self.pr.providers["gntms" if len(channel.split("_")) == 1 else channel.split("_")[0]].get("is_utc") else None
+                            start = datetime.fromtimestamp(float(start), tz).strftime("%Y%m%d%H%M%S +0000")
+                            end = datetime.fromtimestamp(float(end), tz).strftime("%Y%m%d%H%M%S +0000")
                             star = json.loads(json.loads(star)) if type(star) == str else {}
                             star_value = star.get("value")
                             star_rating = star.get("system", "")
