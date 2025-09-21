@@ -2,6 +2,14 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
 import json, re, requests, time, uuid
 
+provider_headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36', 
+    'dnt': '1', 'origin': 'https://zattoo.com', 'pragma': 'no-cache', 'referer': 'https://zattoo.com/client', 
+    'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+    'sec-ch-ua-mobile': '?0', 'sec-ch-ua-platform': '"Windows"',
+    'sec-fetch-dest': 'empty', 'sec-fetch-mode': 'same-origin', 
+    'sec-fetch-site': 'same-origin'}
+
 
 def login(data, credentials, headers):
     homepage_url = f'https://{data["domain"]}'
@@ -11,7 +19,7 @@ def login(data, credentials, headers):
     app_token = None
 
     try:
-        token_page = requests.get(token_url, headers=headers)
+        token_page = requests.get(token_url, headers=provider_headers)
         token_page.raise_for_status()
         app_token = True
     except:
@@ -25,7 +33,7 @@ def login(data, credentials, headers):
             app_token = None
 
     if app_token is None:
-        login_page = requests.get(login_url, headers=headers)
+        login_page = requests.get(login_url, headers=provider_headers)
 
         login_page_parse = BeautifulSoup(login_page.content, 'html.parser')
         app_token_reference = login_page_parse.findAll('script')
@@ -50,7 +58,7 @@ def login(data, credentials, headers):
         if app_token is None and app_token_url is None:
             return
         elif app_token is None and app_token_url is not None:
-            js_page = requests.get(app_token_url, headers=headers)
+            js_page = requests.get(app_token_url, headers=provider_headers)
             js_page.raise_for_status()
             json_value_search = re.match(".*token-(.+?).json.*", str(js_page.content)).group(1)
             json_url = 'https://{}/token-{}.json'.format(data["domain"], json_value_search)
@@ -66,7 +74,7 @@ def login(data, credentials, headers):
     hello_data['app_version'] = '3.2411.0'
     hello_data['client_app_token'] = app_token
 
-    hello_page = requests.post(hello_url, data=hello_data, headers=headers)
+    hello_page = requests.post(hello_url, data=hello_data, headers=provider_headers)
 
     first_cookie = {'beaker.session.id': hello_page.cookies['beaker.session.id']}
 
@@ -74,7 +82,7 @@ def login(data, credentials, headers):
     login_page = 'https://{}/zapi/v2/account/login'.format(data["domain"])
     login_data = {'login': credentials["user"], 'password': credentials["pw"]}
 
-    login_page = requests.post(login_page, data=login_data, headers=headers,
+    login_page = requests.post(login_page, data=login_data, headers=provider_headers,
                                     cookies=first_cookie)
         
     cookies = {"beaker.session.id": login_page.cookies['beaker.session.id']}
@@ -96,7 +104,7 @@ def login(data, credentials, headers):
 
 def channels(data, session, headers={}):
     url = f'https://{data["domain"]}/zapi/v2/cached/channels/{session["session"]["data"]["power_guide_hash"]}?details=False'
-    page = requests.get(url, cookies=session["session"]["cookies"], headers=headers)
+    page = requests.get(url, cookies=session["session"]["cookies"], headers=provider_headers)
     data = page.json()
 
     chlist = {}
@@ -122,7 +130,7 @@ def epg_main_links(data, channels, settings, session, headers):
         time_end = str(int(((datetime(today.year, today.month, today.day, 6, 0, 0).replace(tzinfo=timezone.utc)
                          + timedelta(days=(day + 1)))).timestamp()))
         guide_url = f"https://{data['domain']}/zapi/v3/cached/{session['session']['data']['lineup_hash']}/guide?start={time_start}&end={time_end}"
-        url_list.append({"url": guide_url, "h": headers, "cc": session["session"]["cookies"]})
+        url_list.append({"url": guide_url, "h": provider_headers, "cc": session["session"]["cookies"]})
     
     return url_list
 
@@ -171,14 +179,14 @@ def epg_advanced_links(data, session, settings, programmes, headers={}):
             pre_list_string = ",".join(pre_list)
             url_list.append(
                 {"url": f"https://zattoo.com/zapi/v2/cached/program/power_details/{session['session']['data']['power_guide_hash']}?program_ids={pre_list_string}",
-                "h": headers, "cc": session['session']['cookies']})
+                "h": provider_headers, "cc": session['session']['cookies']})
             pre_list = []
             x = 0
     if x != 0:
         pre_list_string = ",".join(pre_list)
         url_list.append(
             {"url": f"https://zattoo.com/zapi/v2/cached/program/power_details/{session['session']['data']['power_guide_hash']}?program_ids={pre_list_string}",
-            "h": headers, "cc": session['session']['cookies']})
+            "h": provider_headers, "cc": session['session']['cookies']})
     
     return url_list
 
