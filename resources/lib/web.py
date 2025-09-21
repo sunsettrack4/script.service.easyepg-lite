@@ -171,7 +171,22 @@ def add_channel():
     d = dict()
     if g.grabbing:
         return json.dumps({"success": False, "message": "The grabber process needs to be finished first."})
-    ids = json.loads(request.body.read()).get("ids")
+    
+    file = json.loads(request.body.read())
+
+    try:
+        if type(file) == list:
+            if len(file) > 1 and file[0].get("stationId"):
+                raise Exception("Lineup files are not supported.")
+            elif file[0]["stationId"]:
+                ids = [file[0]["stationId"]]
+        else:
+            ids = file["ids"]
+            file = None
+    except Exception as e:
+        print_error(traceback.format_exc())
+        return json.dumps({"success": False, "message": "The file could not be validated."})
+    
     provider_id = ids[0].split("|")
     if len(provider_id) > 1:
         provider_id = provider_id[0]
@@ -180,7 +195,7 @@ def add_channel():
     if not provider_id:
         try:
             for id in ids:
-                i = json.loads(t.get_channel_info(id))
+                i = json.loads(t.get_channel_info(id, file))
                 if i["success"]:
                     if len(i["result"]) > 0 and i["result"][0].get("stationId") == id:
                         d[id] = i["result"][0]

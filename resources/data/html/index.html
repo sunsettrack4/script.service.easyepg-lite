@@ -340,19 +340,14 @@
             <input id="key-input" maxlength="24" type="search" placeholder="Gracenote API key">
         </div>
 
-        <!--
-        <br>You can also use TVTV to fetch general TMS data by adding the channel id.<br><br>
+        
+        <br>You can also use TVTV to fetch general TMS data.<br><br>
 
+        <label for="station-upload">Upload Station Configuration File</label>
         <div>
-            <input id="tms-chid-input" type="search" placeholder="TMS Channel ID">
-            <input id="tms-chname-input" type="search" placeholder="Name (optional)">
-            <input id="tms-chlogo-input" type="search" placeholder="Logo URL (optional)">
+            <input type="file" accept=".json" id="station-upload" placeholder="Click here to select your file...">
+            <button disabled id="station-upload-apply">Upload File</button>
         </div>
-
-        <div>
-            <button id="tms-chid-add" type="button" class="add-btn" disabled>Add channel</button>
-        </div>
-        -->
 
     </section>
     <section id="mapping-window" class="nav-bar">
@@ -419,7 +414,7 @@
         <div id="about-btn-group">
             <button onclick="location.href = 'https://github.com/sunsettrack4';">GitHub</button>
             <button onclick="location.href = 'https://paypal.me/sunsettrack4';">Donate</button>
-            <button onclick="location.href = 'https://www.gracenote.com/on-entertainment-tv-listings/';">About TV listings</button>
+            <button onclick="location.href = 'https://gracenote.com/de/products/streaming-and-linear-availability/';">About TV listings</button>
         </div>
         <div id="grabber-btn-group">
             <button id="start_dl" class="add-btn">Start</button>

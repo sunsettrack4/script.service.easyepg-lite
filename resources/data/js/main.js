@@ -115,6 +115,9 @@ const applyPlaylistURL = document.getElementById("m3u-url-apply");
 const uploadM3U = document.getElementById("m3u-upload");
 const applyUploadM3U = document.getElementById("m3u-upload-apply");
 
+const uploadStation = document.getElementById("station-upload");
+const applyUploadStation = document.getElementById("station-upload-apply");
+
 const mappingSection = document.getElementById("missing-mappings");
 const mappingTable = document.getElementById("missings-table");
 
@@ -473,6 +476,35 @@ applyUploadM3U.addEventListener("click", function() {
                 setTimeout(function() {mappingWindow.style.display = "none"; mappingWindow.classList.remove("add-blocker"); mappingWindow.classList.remove("nav-bar-move")}, 600);
             } else {
                 showNotiMessage("Upload failed. Please use UTF-8 encoded files only.", "error");
+            };
+        });
+    })
+    .catch(error => {
+        console.log(error);
+        showNotiMessage("An error occurred while serving the request.", "error");
+    })
+});
+
+uploadStation.addEventListener("change", function(e) {
+    if( uploadStation.value != "" ) {
+        applyUploadStation.disabled = false;
+    } else {
+        applyUploadStation.disabled = true;
+    };
+});
+
+applyUploadStation.addEventListener("click", function() {
+    fetch("api/add", {
+        method: "POST",
+        body: uploadStation.files[0]
+    })
+    .then(response => {
+        response.json().then(function(e) {
+            if( e["success"] === true ) {
+                showNotiMessage("The channel has been added!", "success");
+                loadChannelList();
+            } else {
+                showNotiMessage("Upload failed. Please use station config files only.", "error");
             };
         });
     })

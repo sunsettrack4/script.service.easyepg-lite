@@ -65,7 +65,11 @@ class API():
         except:
             return json.dumps({"success": False, "message": "Connection error."})
 
-    def get_channel_info(self, value):
+    def get_channel_info(self, value, file=None):
+        if file:
+            with open(f"{self.file_paths['storage']}cache/station_{value}.json", "w") as f:
+                f.write(json.dumps(file))
+
         if os.path.exists(f"{self.file_paths['storage']}cache/station_{value}.json"):
             with open(f"{self.file_paths['storage']}cache/station_{value}.json", "r") as f:
                 i = json.load(f)
