@@ -11,7 +11,7 @@ def login(data, credentials, headers):
     app_token = None
 
     try:
-        token_page = requests.get(token_url, timeout=5, headers=headers)
+        token_page = requests.get(token_url, headers=headers)
         token_page.raise_for_status()
         app_token = True
     except:
@@ -25,7 +25,7 @@ def login(data, credentials, headers):
             app_token = None
 
     if app_token is None:
-        login_page = requests.get(login_url, timeout=5, headers=headers)
+        login_page = requests.get(login_url, headers=headers)
 
         login_page_parse = BeautifulSoup(login_page.content, 'html.parser')
         app_token_reference = login_page_parse.findAll('script')
@@ -50,7 +50,7 @@ def login(data, credentials, headers):
         if app_token is None and app_token_url is None:
             return
         elif app_token is None and app_token_url is not None:
-            js_page = requests.get(app_token_url, timeout=5, headers=headers)
+            js_page = requests.get(app_token_url, headers=headers)
             js_page.raise_for_status()
             json_value_search = re.match(".*token-(.+?).json.*", str(js_page.content)).group(1)
             json_url = 'https://{}/token-{}.json'.format(data["domain"], json_value_search)
@@ -66,7 +66,7 @@ def login(data, credentials, headers):
     hello_data['app_version'] = '3.2411.0'
     hello_data['client_app_token'] = app_token
 
-    hello_page = requests.post(hello_url, timeout=5, data=hello_data, headers=headers)
+    hello_page = requests.post(hello_url, data=hello_data, headers=headers)
 
     first_cookie = {'beaker.session.id': hello_page.cookies['beaker.session.id']}
 
@@ -74,7 +74,7 @@ def login(data, credentials, headers):
     login_page = 'https://{}/zapi/v2/account/login'.format(data["domain"])
     login_data = {'login': credentials["user"], 'password': credentials["pw"]}
 
-    login_page = requests.post(login_page, timeout=5, data=login_data, headers=headers,
+    login_page = requests.post(login_page, data=login_data, headers=headers,
                                     cookies=first_cookie)
         
     cookies = {"beaker.session.id": login_page.cookies['beaker.session.id']}
@@ -96,7 +96,7 @@ def login(data, credentials, headers):
 
 def channels(data, session, headers={}):
     url = f'https://{data["domain"]}/zapi/v2/cached/channels/{session["session"]["data"]["power_guide_hash"]}?details=False'
-    page = requests.get(url, timeout=5, cookies=session["session"]["cookies"], headers=headers)
+    page = requests.get(url, cookies=session["session"]["cookies"], headers=headers)
     data = page.json()
 
     chlist = {}
