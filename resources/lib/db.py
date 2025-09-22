@@ -312,7 +312,9 @@ class ProviderManager():
         self.fl_pr = 0
         
         # MAX NUMBER OF THREADS WITHIN THE BLOCK
-        if not self.providers[provider_name].get("max_dl_threads") or \
+        if os.name != "nt":
+            max_workers = 1
+        elif not self.providers[provider_name].get("max_dl_threads") or \
                 self.providers[provider_name]["max_dl_threads"] <= self.user_db.main["settings"]["dl_threads"]:
             max_workers = self.user_db.main["settings"]["dl_threads"] 
         else:
@@ -447,8 +449,13 @@ class ProviderManager():
             if len(self.epg_cache) > 0:
                 self.epg_cache = {}
 
+            if os.name != "nt":
+                max_workers = 1
+            else:
+                max_workers = self.providers[provider_name].get("advanced_download_threads", 10)
+
             executor = concurrent.futures.ThreadPoolExecutor(
-                max_workers=self.providers[provider_name].get("advanced_download_threads", 10))
+                max_workers=max_workers)
             {executor.submit(self.load_main, provider_name, item, item.get("n", str(index))).add_done_callback(self.url_threads_handler) for index, item in enumerate(grabber_param)}
             executor.shutdown(wait=True)
             del executor
