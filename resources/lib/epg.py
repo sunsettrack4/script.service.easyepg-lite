@@ -202,7 +202,7 @@ class Grabber():
                                 raise Exception("Process stopped.")
 
                             # DEFINE PARAMS
-                            tz = timezone.utc if self.pr.providers["gntms" if len(channel.split("_")) == 1 else channel.split("_")[0]].get("is_utc") else None
+                            tz = timezone.utc if self.pr.providers.get("gntms" if len(channel.split("_")) == 1 else channel.split("_")[0], {}).get("is_utc") else None
                             start = datetime.fromtimestamp(float(start), tz).strftime("%Y%m%d%H%M%S +0000")
                             end = datetime.fromtimestamp(float(end), tz).strftime("%Y%m%d%H%M%S +0000")
                             star = json.loads(json.loads(star)) if type(star) == str else {}
