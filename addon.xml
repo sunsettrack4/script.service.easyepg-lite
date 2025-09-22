@@ -5,6 +5,7 @@
             <import addon="script.module.requests"/>
             <import addon="script.module.bottle"/>
             <import addon="script.module.xmltodict"/>
+            <import addon="script.module.beautifulsoup4"/>
   </requires>
   <extension point="xbmc.service" library="addon.py" start="startup" />
   <extension point="xbmc.addon.metadata">
