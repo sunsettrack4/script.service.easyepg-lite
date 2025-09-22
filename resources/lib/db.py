@@ -362,15 +362,26 @@ class ProviderManager():
         if self.exit or self.cancellation:
             return
         sleep(self.providers[provider_name].get("dl_delay", 0))
-        try:
-            if item.get("d"):
-                r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}))
-            else:
-                r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}))
-        except:
-            return provider_name, "", item.get("c"), name
+        x = 0
+        while True:
+            try:
+                if item.get("d"):
+                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}))
+                else:
+                    r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}))
+                break
+            except:
+                x = x + 1
+                print(f"{provider_name}: Connection error - retry... [{str(x)}/3]")
+                if x < 3:
+                    sleep(3)
+                    continue
+                else:
+                    print(f"{provider_name}: Connection error - closed.")
+                    return provider_name, "", item.get("c"), name
         
-        if str(r.status_code)[0] in ["4", "5"]:            
+        if str(r.status_code)[0] in ["4", "5"]:  
+            print(f"{provider_name}: HTTP error - {str(r.content)}")              
             return provider_name, "", item.get("c"), name
         
         return provider_name, r.content, item.get("c"), name
