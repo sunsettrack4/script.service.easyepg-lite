@@ -147,7 +147,7 @@ const webSendCredentials = document.getElementById("web_send_credentials");
 var url_expression = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 var url_regex = new RegExp(url_expression);
 
-webUser.addEventListener("keyup", function() {
+webUser.addEventListener("input", function() {
     if( webUser.value.length > 3 && webPw.value.length > 3 ) {
         webSendCredentials.disabled = false;
     } else {
@@ -155,7 +155,7 @@ webUser.addEventListener("keyup", function() {
     };
 });
 
-webPw.addEventListener("keyup", function() {
+webPw.addEventListener("input", function() {
     if( webUser.value.length > 3 && webPw.value.length > 3 ) {
         webSendCredentials.disabled = false;
     } else {
