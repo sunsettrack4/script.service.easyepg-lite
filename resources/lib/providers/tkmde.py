@@ -1,5 +1,10 @@
 from datetime import datetime, timedelta, timezone
-import json, requests, time, uuid
+import json, time, uuid
+
+try:
+    from curl_cffi import requests
+except:
+    import requests
 
 
 def login(data, credentials, headers):
