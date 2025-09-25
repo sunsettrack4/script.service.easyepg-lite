@@ -316,9 +316,9 @@ def download_file(file_name):
 def provide_css(file_name):
     return static_file(file_name, root=f"{f['included']}resources/data/css")
 
-@route("/app/data/js/<file_name>")
-def provide_css(file_name):
-    return static_file(file_name, root=f"{f['included']}resources/data/js")
+@route("/app/data/js/<file_name>-<date>.js")
+def provide_js(file_name, date):
+    return static_file(f"{file_name}.js", root=f"{f['included']}resources/data/js")
 
 @route("/app/data/img/<file_name>")
 def provide_img(file_name):
