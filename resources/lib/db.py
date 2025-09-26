@@ -401,6 +401,8 @@ class ProviderManager():
         if len(programmes) == 0:
             return True
         
+        self.error_cache = []
+        
         data = self.providers[provider_name].get("data") if not data else data
         
         # RETRIEVE SESSION
@@ -468,9 +470,14 @@ class ProviderManager():
                 return broadcast_list
 
             for i in self.epg_cache.keys():
-                m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_advanced_converter(
-                    i, self.epg_db.config[provider_name].get("data"), self.epg_cache[i],
-                    self.user_db.main["settings"])
+                try:
+                    m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_advanced_converter(
+                        i, self.epg_db.config[provider_name].get("data"), self.epg_cache[i],
+                        self.user_db.main["settings"])
+                except Exception as e:
+                    if str(traceback.format_exc()) not in self.error_cache:
+                        self.error_cache.append(str(traceback.format_exc()))
+                    m = []
 
                 if not "." in i:
                     if len(u) > 0 and u.get(i):  # INSERT DETAILS FOR BROADCASTS WITH IDENTICAL DATA
@@ -496,6 +503,10 @@ class ProviderManager():
         self.epg_db.confirm_update()
         del final_list
         self.epg_cache = {}
+        
+        if len(self.error_cache) > 0:
+            print(f"\n{provider_name}: Advanced grabber error(s) occured: \n\n" + str('\n'.join(self.error_cache)))
+        self.error_cache = []
 
         self.status_ext = None
         self.pr_pr = self.pr_pr + 1
