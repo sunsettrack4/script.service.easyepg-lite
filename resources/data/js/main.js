@@ -778,6 +778,10 @@ function grabberCheckAutoUpdate() {
             });
         })
         .catch(error => {
+            dlStatusText.innerText = "Failed to fetch the status. Please reload the page.";
+            dlProgress.value = 0;
+            startGrabber.style.display = "none";
+            stopGrabber.style.display = "none";
             clearInterval(interval);
             console.log(error);
             showNotiMessage("An error occurred while serving the request.", "error");
