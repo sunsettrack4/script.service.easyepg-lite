@@ -213,7 +213,7 @@ class ProviderManager():
                 with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
                     log.write(f"--- {provider.upper()} WARNING LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
                     for i in self.error_cache:
-                        log.write(i)
+                        log.write(i+"\n")
                     log.write(f"--- {provider.upper()} WARNING LOG END ---\n\n")
         except:
             pass
@@ -406,7 +406,7 @@ class ProviderManager():
                     return provider_name, "", item.get("c"), name
         
         if str(r.status_code)[0] in ["4", "5"]:  
-            self.error_cache.append(f"{provider_name}: HTTP error for {str(r.url)} - {str(r.content)}")
+            self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
             return provider_name, "", item.get("c"), name
         
         return provider_name, r.content, item.get("c"), name

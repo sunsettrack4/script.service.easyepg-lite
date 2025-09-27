@@ -24,7 +24,7 @@ general_headers = \
 def channels(data, session, headers={}):
     chlist = {}
 
-    channel_url = f'https://tv-{data["country"]}-prod.yo-digital.com/{data["country"]}-bifrost/epg/channel?channelMap_id=&includeVirtualChannels=true&natco_key={data["natco_key"]}&app_language={data.get("language", data["country"])}&natco_code={data["country"]}'
+    channel_url = f'https://tv-{data["country"]}-prod.yo-digital.com/{(data["country"]+"-") if not data.get("no_cc") else ""}bifrost/epg/channel?channelMap_id=&includeVirtualChannels=true&natco_key={data["natco_key"]}&app_language={data.get("language", data["country"])}&natco_code={data["country"]}'
 
     headers.update(general_headers)
     headers.update(
@@ -72,7 +72,7 @@ def epg_main_links(data, channels, settings, session, headers):
         for offset in range(0, 24, 3):
             time_start = ((datetime(today.year, today.month, today.day, 6, 0, 0).replace(tzinfo=timezone.utc)
                             + timedelta(days=day))).strftime("%Y-%m-%d")
-            guide_url = f"https://tv-{data['country']}-prod.yo-digital.com/{data['country']}-bifrost/epg/channel/schedules?date={time_start}&hour_offset={str(offset)}&hour_range=3&channelMap_id=&filler=true&app_language={data.get('language', data['country'])}&natco_code={data['country']}"
+            guide_url = f"https://tv-{data['country']}-prod.yo-digital.com/{(data['country']+'-') if not data.get('no_cc') else ''}bifrost/epg/channel/schedules?date={time_start}&hour_offset={str(offset)}&hour_range=3&channelMap_id=&filler=true&app_language={data.get('language', data['country'])}&natco_code={data['country']}"
             url_list.append({"url": guide_url, "h": headers})
     
     return url_list
@@ -84,7 +84,7 @@ def epg_main_converter(data, channels, settings, ch_id=None, genres={}):
     airings = []
 
     def get_time(string_item):
-        return str(datetime(*(time.strptime(string_item.split(".")[0], "%Y-%m-%dT%H:%M:%S")[0:6])).timestamp()).split(".")[0]
+        return str(datetime(*(time.strptime(string_item.replace(".000", "").replace(".00", ""), f"%Y-%m-%dT%H:%M:%SZ")[0:6])).timestamp()).split(".")[0]
 
     for channel_id in item["channels"].keys():
         if channel_id in channels:
@@ -131,7 +131,7 @@ def epg_advanced_links(data, session, settings, programmes, headers={}):
         if i is None:
             continue
         url_list.append(
-            {"url": f"https://tv-{data['country']}-prod.yo-digital.com/{data['country']}-bifrost/details/series/{i.split('_')[0]}?natco_key={data['natco_key']}&interacted_with_nPVR=false&app_language={data.get('language', data['country'])}&natco_code={data['country']}", 
+            {"url": f"https://tv-{data['country']}-prod.yo-digital.com/{(data['country']+'-') if not data.get('no_cc') else ''}bifrost/details/program/{i.split('_')[0]}?natco_key={data['natco_key']}&interacted_with_nPVR=false&app_language={data.get('language', data['country'])}&natco_code={data['country']}", 
              "h": headers, "uid": i.split('_')[0], "name": i})
     
     return url_list

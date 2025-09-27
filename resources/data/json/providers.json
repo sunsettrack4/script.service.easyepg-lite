@@ -239,6 +239,155 @@
 
         "adv_loader": true
     
+    },
+
+    "tkmpl":
+
+    {
+
+        "module": "tkmyo",
+
+        "name": "MagentaTV PL",
+        "country": "PL",
+
+        "data":
+
+        {
+            "app_key": "2zjAjpJ6dRfHR1nIwF47jz75g7Qf4F6z",
+            "app_version": "02.0.1300",
+            "country": "pl",
+            "language": "pl",
+            "director": ["Re\u017cyser"],
+            "actor": ["Aktor"],
+            "age_rating": "NBC-PL",
+            "natco_key": "ovINYLVrQsLj8wPDQzNYotQMkFha9PFF",
+            "max_days": 7
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+
+        "duplicate_check_req": true,
+
+        "adv_loader": true
+    
+    },
+
+    "tkmhu":
+
+    {
+
+        "module": "tkmyo",
+
+        "name": "Telekom TV GO",
+        "country": "HU",
+
+        "data":
+
+        {
+            "app_key": "exSJHBiSAN6wAAeqdWLdTUfdTi2PNark",
+            "app_version": "02.0.1290",
+            "country": "hu",
+            "language": "hu",
+            "director": ["Rendez\u0151"],
+            "actor": ["Sz\u00edn\u00e9sz"],
+            "age_rating": "NMHH",
+            "natco_key": "Tydx7H7fJO6HxgjvJok0ZhVWFmX3om0P",
+            "max_days": 7,
+            "no_cc": true
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+
+        "duplicate_check_req": true,
+
+        "adv_loader": true
+    
+    },
+
+    "tkmhr":
+
+    {
+
+        "module": "tkmyo",
+
+        "name": "MaxTV HR",
+        "country": "HR",
+
+        "data":
+
+        {
+            "app_key": "GWaBW4RTloLwpUgYVzOiW5zUxFLmoMj5",
+            "app_version": "02.0.1300",
+            "country": "hr",
+            "language": "hr",
+            "director": ["RE\u017dIJA"],
+            "actor": ["GLUMI"],
+            "age_rating": "Age rating",
+            "natco_key": "l2lyvGVbUm2EKJE96ImQgcc8PKMZWtbE",
+            "max_days": 7
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+
+        "duplicate_check_req": true,
+
+        "adv_loader": true
+    
+    },
+
+    "tkmme":
+
+    {
+
+        "module": "tkmyo",
+
+        "name": "MagentaTV ME",
+        "country": "ME",
+
+        "data":
+
+        {
+            "app_key": "erYJuNj5fnVXtRgjkr4scxbr3oEkM4I4",
+            "app_version": "02.0.1300",
+            "country": "me",
+            "language": "me",
+            "director": ["Re\u017eija"],
+            "actor": ["Glumi"],
+            "age_rating": "Age rating",
+            "natco_key": "ANKB5xVVywklLUd9WtEOh8eyLnlAypTM",
+            "max_days": 7
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+
+        "duplicate_check_req": true,
+
+        "adv_loader": true
+    
     }
 
 }
