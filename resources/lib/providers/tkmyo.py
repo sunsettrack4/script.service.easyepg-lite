@@ -92,7 +92,10 @@ def epg_main_converter(data, channels, settings, ch_id=None, genres={}):
                 g = dict()
 
                 g["c_id"] = channel_id
-                g["b_id"] = programme["program_id"] + "_" + get_time(programme["start_time"])
+                if programme["program_id"]:
+                    g["b_id"] = programme["program_id"] + "_" + get_time(programme["start_time"])
+                else:
+                    g["b_id"] = None
                 g["start"] = get_time(programme["start_time"])
                 g["end"] = get_time(programme["end_time"])
                 g["title"] = programme.get("description", "No title available")
