@@ -128,7 +128,7 @@ def epg_advanced_links(data, session, settings, programmes, headers={}):
         if i is None:
             continue
         url_list.append(
-            {"url": f"https://tv-{data['country']}-prod.yo-digital.com/{data['country']}-bifrost/details/series/{i.split('_')[0]}?natco_key={data['natco_key']}&interacted_with_nPVR=false&app_language=xxxxxxx&natco_code={data['country']}", 
+            {"url": f"https://tv-{data['country']}-prod.yo-digital.com/{data['country']}-bifrost/details/series/{i.split('_')[0]}?natco_key={data['natco_key']}&interacted_with_nPVR=false&app_language={data.get('language', data['country'])}&natco_code={data['country']}", 
              "h": headers, "uid": i.split('_')[0], "name": i})
     
     return url_list
