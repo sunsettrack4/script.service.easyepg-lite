@@ -1,10 +1,15 @@
 from datetime import datetime
 from importlib import util
 from time import sleep
-import concurrent.futures, json, os, requests, sqlite3, sys, traceback
+import concurrent.futures, json, os, sqlite3, sys, traceback
+
+try: 
+    from curl_cffi import requests
+except:
+    import requests
 
 general_header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                                'Chrome/81.0.4044.138 Safari/537.36'}
+                                'Chrome/140.0.0.0 Safari/537.36'}
 
 class UserData():
     def __init__(self, file_paths):
