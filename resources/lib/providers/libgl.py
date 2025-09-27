@@ -13,10 +13,11 @@ def channels(data, session, headers={}):
     channel_content = channel_page.json()
 
     for channel in channel_content:
-        channel_name = channel["name"]
-        channel_id = channel["id"]
-        channel_logo = channel.get("logo", {}).get("focused", "")
-        chlist[channel_id] = {"name": channel_name, "icon": channel_logo}
+        if not channel.get("isHidden"):
+            channel_name = channel["name"]
+            channel_id = channel["id"]
+            channel_logo = channel.get("logo", {}).get("focused", "")
+            chlist[channel_id] = {"name": channel_name, "icon": channel_logo}
     
     return chlist
 
