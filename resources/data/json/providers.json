@@ -49,6 +49,157 @@
 
     },
 
+    "tkmat":
+
+    {
+
+        "module": "tkmyo",
+
+        "name": "MagentaTV AT",
+        "country": "AT",
+
+        "data":
+
+        {
+            "app_key": "CTnKA63ruKM0JM1doxAXwwyQLLmQiEiy",
+            "app_version": "02.0.1300",
+            "country": "at",
+            "language": "de",
+            "director": ["Drehbuch", "Regie"],
+            "actor": ["Besetzung"],
+            "age_rating": "FSK",
+            "natco_key": "NZu7aIg1vFTNLwHcb0Kjhqk54ql9RJj5",
+            "max_days": 7
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+
+        "duplicate_check_req": true,
+
+        "adv_loader": true
+    
+    },
+
+    "zttat":
+
+    {
+
+        "module": "zttch",
+        
+        "name": "Zattoo AT",
+        "country": "AT",
+
+        "data": {
+            "domain": "zattoo.com",
+            "country": "AT"
+        },
+
+        "login_req": true,
+        "auth_req": true,
+        "exp": 1800,
+        "is_utc": true,
+
+        "main_loader": true,
+        "main_threads": 1,
+        "max_dl_num": 50,
+        "max_dl_threads": 5,
+        "dl_delay": 1,
+
+        "adv_loader": true,
+        "advanced_download_threads": 1
+
+    },
+
+    "chsun":
+
+    {
+
+        "module": "libgl",
+
+        "name": "Sunrise TV",
+        "country": "CH",
+
+        "data":
+
+        {
+            "country": "ch",
+            "domain": "sunrisetv.ch",
+            "lang_code": "eng",
+            "lang": "de",
+            "city_id": "100"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
+
+        "adv_loader": true
+    
+    },
+
+    "swcch":
+
+    {
+
+        "module": "swcch",
+        
+        "name": "Swisscom blue TV",
+        "country": "CH",
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "main_custom_genres": true,
+
+        "adv_loader": false
+
+    },
+
+    "zttch":
+
+    {
+
+        "module": "zttch",
+        
+        "name": "Zattoo CH",
+        "country": "CH",
+
+        "data": {
+            "domain": "zattoo.com",
+            "country": "CH"
+        },
+
+        "login_req": true,
+        "auth_req": true,
+        "exp": 1800,
+        "is_utc": true,
+
+        "main_loader": true,
+        "main_threads": 1,
+        "max_dl_num": 50,
+        "max_dl_threads": 5,
+        "dl_delay": 1,
+
+        "adv_loader": true,
+        "advanced_download_threads": 1
+
+    },
+
     "tkmde":
 
     {
@@ -92,28 +243,6 @@
 
     },
 
-    "swcch":
-
-    {
-
-        "module": "swcch",
-        
-        "name": "Swisscom blue TV",
-        "country": "CH",
-
-        "login_req": false,
-        "auth_req": false,
-
-        "main_loader": true,
-        "main_threads": 4,
-        "max_dl_num": 7,
-        "max_dl_threads": 7,
-        "main_custom_genres": true,
-
-        "adv_loader": false
-
-    },
-
     "zttde":
 
     {
@@ -141,135 +270,6 @@
 
         "adv_loader": true,
         "advanced_download_threads": 1
-
-    },
-
-    "zttat":
-
-    {
-
-        "module": "zttch",
-        
-        "name": "Zattoo AT",
-        "country": "AT",
-
-        "data": {
-            "domain": "zattoo.com",
-            "country": "AT"
-        },
-
-        "login_req": true,
-        "auth_req": true,
-        "exp": 1800,
-        "is_utc": true,
-
-        "main_loader": true,
-        "main_threads": 1,
-        "max_dl_num": 50,
-        "max_dl_threads": 5,
-        "dl_delay": 1,
-
-        "adv_loader": true,
-        "advanced_download_threads": 1
-
-    },
-
-    "zttch":
-
-    {
-
-        "module": "zttch",
-        
-        "name": "Zattoo CH",
-        "country": "CH",
-
-        "data": {
-            "domain": "zattoo.com",
-            "country": "CH"
-        },
-
-        "login_req": true,
-        "auth_req": true,
-        "exp": 1800,
-        "is_utc": true,
-
-        "main_loader": true,
-        "main_threads": 1,
-        "max_dl_num": 50,
-        "max_dl_threads": 5,
-        "dl_delay": 1,
-
-        "adv_loader": true,
-        "advanced_download_threads": 1
-
-    },
-
-    "tkmat":
-
-    {
-
-        "module": "tkmyo",
-
-        "name": "MagentaTV AT",
-        "country": "AT",
-
-        "data":
-
-        {
-            "app_key": "CTnKA63ruKM0JM1doxAXwwyQLLmQiEiy",
-            "app_version": "02.0.1300",
-            "country": "at",
-            "language": "de",
-            "director": ["Drehbuch", "Regie"],
-            "actor": ["Besetzung"],
-            "age_rating": "FSK",
-            "natco_key": "NZu7aIg1vFTNLwHcb0Kjhqk54ql9RJj5",
-            "max_days": 7
-        },
-
-        "login_req": false,
-        "auth_req": false,
-
-        "main_loader": true,
-        "main_threads": 4,
-        "max_dl_num": 7,
-        "max_dl_threads": 7,
-
-        "duplicate_check_req": true,
-
-        "adv_loader": true
-    
-    },
-
-    "chsun":
-
-    {
-
-        "module": "libgl",
-
-        "name": "Sunrise TV",
-        "country": "CH",
-
-        "data":
-
-        {
-            "country": "ch",
-            "domain": "sunrisetv.ch",
-            "lang_code": "eng",
-            "lang": "de",
-            "city_id": "100"
-        },
-
-        "login_req": false,
-        "auth_req": false,
-
-        "main_loader": true,
-        "main_threads": 4,
-        "max_dl_num": 7,
-        "max_dl_threads": 7,
-        "is_utc": true,
-
-        "adv_loader": true
     
     },
 
@@ -305,122 +305,26 @@
     
     },
 
-    "ievgm":
-
-    {
-
-        "module": "libgl",
-
-        "name": "Virgin TV Anywhere",
-        "country": "IE",
-
-        "data":
-
-        {
-            "country": "ie",
-            "domain": "virginmediatv.ie",
-            "lang_code": "eng",
-            "lang": "en",
-            "city_id": "131"
-        },
-
-        "login_req": false,
-        "auth_req": false,
-
-        "main_loader": true,
-        "main_threads": 4,
-        "max_dl_num": 7,
-        "max_dl_threads": 7,
-        "is_utc": true,
-
-        "adv_loader": true
-    
-    },
-
-    "nlzgg":
-
-    {
-
-        "module": "libgl",
-
-        "name": "Ziggo GO",
-        "country": "NL",
-
-        "data":
-
-        {
-            "country": "nl",
-            "domain": "ziggogo.tv",
-            "lang_code": "nld",
-            "lang": "nl",
-            "city_id": "65535"
-        },
-
-        "login_req": false,
-        "auth_req": false,
-
-        "main_loader": true,
-        "main_threads": 4,
-        "max_dl_num": 7,
-        "max_dl_threads": 7,
-        "is_utc": true,
-
-        "adv_loader": true
-    
-    },
-
-    "skupc":
-
-    {
-
-        "module": "libgl",
-
-        "name": "UPC TV SK",
-        "country": "SK",
-
-        "data":
-
-        {
-            "country": "sk",
-            "domain": "upctv.sk",
-            "lang_code": "slk",
-            "lang": "sk",
-            "city_id": "5"
-        },
-
-        "login_req": false,
-        "auth_req": false,
-
-        "main_loader": true,
-        "main_threads": 4,
-        "max_dl_num": 7,
-        "max_dl_threads": 7,
-        "is_utc": true,
-
-        "adv_loader": true
-    
-    },
-
-    "tkmpl":
+    "tkmhr":
 
     {
 
         "module": "tkmyo",
 
-        "name": "MagentaTV PL",
-        "country": "PL",
+        "name": "MaxTV HR",
+        "country": "HR",
 
         "data":
 
         {
-            "app_key": "2zjAjpJ6dRfHR1nIwF47jz75g7Qf4F6z",
+            "app_key": "GWaBW4RTloLwpUgYVzOiW5zUxFLmoMj5",
             "app_version": "02.0.1300",
-            "country": "pl",
-            "language": "pl",
-            "director": ["Re\u017cyser"],
-            "actor": ["Aktor"],
-            "age_rating": "NBC-PL",
-            "natco_key": "ovINYLVrQsLj8wPDQzNYotQMkFha9PFF",
+            "country": "hr",
+            "language": "hr",
+            "director": ["RE\u017dIJA"],
+            "actor": ["GLUMI"],
+            "age_rating": "Age rating",
+            "natco_key": "l2lyvGVbUm2EKJE96ImQgcc8PKMZWtbE",
             "max_days": 7
         },
 
@@ -476,27 +380,23 @@
     
     },
 
-    "tkmhr":
+    "ievgm":
 
     {
 
-        "module": "tkmyo",
+        "module": "libgl",
 
-        "name": "MaxTV HR",
-        "country": "HR",
+        "name": "Virgin TV Anywhere",
+        "country": "IE",
 
         "data":
 
         {
-            "app_key": "GWaBW4RTloLwpUgYVzOiW5zUxFLmoMj5",
-            "app_version": "02.0.1300",
-            "country": "hr",
-            "language": "hr",
-            "director": ["RE\u017dIJA"],
-            "actor": ["GLUMI"],
-            "age_rating": "Age rating",
-            "natco_key": "l2lyvGVbUm2EKJE96ImQgcc8PKMZWtbE",
-            "max_days": 7
+            "country": "ie",
+            "domain": "virginmediatv.ie",
+            "lang_code": "eng",
+            "lang": "en",
+            "city_id": "131"
         },
 
         "login_req": false,
@@ -506,8 +406,7 @@
         "main_threads": 4,
         "max_dl_num": 7,
         "max_dl_threads": 7,
-
-        "duplicate_check_req": true,
+        "is_utc": true,
 
         "adv_loader": true
     
@@ -545,6 +444,107 @@
         "max_dl_threads": 7,
 
         "duplicate_check_req": true,
+
+        "adv_loader": true
+    
+    },
+
+    "nlzgg":
+
+    {
+
+        "module": "libgl",
+
+        "name": "Ziggo GO",
+        "country": "NL",
+
+        "data":
+
+        {
+            "country": "nl",
+            "domain": "ziggogo.tv",
+            "lang_code": "nld",
+            "lang": "nl",
+            "city_id": "65535"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
+
+        "adv_loader": true
+    
+    },
+
+    "tkmpl":
+
+    {
+
+        "module": "tkmyo",
+
+        "name": "MagentaTV PL",
+        "country": "PL",
+
+        "data":
+
+        {
+            "app_key": "2zjAjpJ6dRfHR1nIwF47jz75g7Qf4F6z",
+            "app_version": "02.0.1300",
+            "country": "pl",
+            "language": "pl",
+            "director": ["Re\u017cyser"],
+            "actor": ["Aktor"],
+            "age_rating": "NBC-PL",
+            "natco_key": "ovINYLVrQsLj8wPDQzNYotQMkFha9PFF",
+            "max_days": 7
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+
+        "duplicate_check_req": true,
+
+        "adv_loader": true
+    
+    },
+
+    "skupc":
+
+    {
+
+        "module": "libgl",
+
+        "name": "UPC TV SK",
+        "country": "SK",
+
+        "data":
+
+        {
+            "country": "sk",
+            "domain": "upctv.sk",
+            "lang_code": "slk",
+            "lang": "sk",
+            "city_id": "5"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
 
         "adv_loader": true
     
