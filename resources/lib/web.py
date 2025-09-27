@@ -324,9 +324,9 @@ def provide_js(file_name, date):
 def provide_img(file_name):
     return static_file(file_name, root=f"{f['included']}resources/data/img")
 
-@route("/app/data/json/<file_name>")
-def provide_json(file_name):
-    return static_file(file_name, root=f"{f['included']}resources/data/json")
+@route("/app/data/json/<file_name>-<ver>.json")
+def provide_json(file_name, ver):
+    return static_file(f"{file_name}.json", root=f"{f['included']}resources/data/json")
 
 
 #

@@ -273,6 +273,10 @@ removeXmlBtn.addEventListener("click", function() {
     retrieveXmlSources();
 });
 
+function randomInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function retrieveWebSources() {
     var i, L = webSelection.options.length - 1;
     for(i = L; i >= 1; i--) {
@@ -285,7 +289,7 @@ function retrieveWebSources() {
     webSelection.disabled = true;
     openSearchWindow.disabled = true;
     openXmlWindow.disabled = true;
-    fetch("app/data/json/providers.json", {
+    fetch("app/data/json/providers-"+randomInteger(0,9999999999999)+".json", {
         method: "GET"
     })
     .then(response => {
