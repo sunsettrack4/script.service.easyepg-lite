@@ -199,6 +199,20 @@ class ProviderManager():
         self.import_data()
         self.epg_db = SQLiteManager(self.providers, file_paths["storage"])
         self.import_provider_modules()
+        self.error_cache = []
+
+    # ERROR LOG
+    def print_error_cache(self, provider):
+        try:
+            if len(self.error_cache) > 0:
+                with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
+                    log.write(f"--- {provider.upper()} WARNING LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+                    for i in self.error_cache:
+                        log.write(i)
+                    log.write(f"--- {provider.upper()} WARNING LOG END ---\n\n")
+        except:
+            pass
+        self.error_cache = []
 
     # PROVIDER CONFIG
     def import_data(self):
@@ -224,7 +238,7 @@ class ProviderManager():
         auth_data = {}
 
         if not self.providers[provider_name].get("login_req"):
-            return
+            return True
         if self.providers[provider_name].get("auth_req"):
             auth_data = {"key": self.user_db.main["settings"].get("api_key")} if provider_name == "gntms" \
                 else self.user_db.main["auth_data"].get(provider_name)
@@ -246,7 +260,7 @@ class ProviderManager():
             self.user_db.save_settings()
             return True
         except Exception as e:
-            print(traceback.format_exc())
+            self.error_cache.append(f"{provider_name}: Login module error - {str(traceback.format_exc())}")
             return False, "Login module error"
         
     # LOAD CHLIST
@@ -289,7 +303,9 @@ class ProviderManager():
         
         # RETRIEVE SESSION
         if not xmltv:
-            self.login(provider_name)
+            if not self.login(provider_name):
+                self.print_error_cache(provider_name)
+                return []
 
         # URL/HEADERS/DATA LIST
         url_list = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_main_links(
@@ -335,9 +351,10 @@ class ProviderManager():
                 gen = sys.modules[self.providers[provider_name].get("module", provider_name)].genres()
 
             for i in self.epg_cache.keys():
-                m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_main_converter(
-                    self.epg_cache[i][0], channels, self.user_db.main["settings"], self.epg_cache[i][1], gen)
-                if not "." in i:
+                if not "###" in i:
+                    m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_main_converter(
+                        self.epg_cache[i][0], channels, self.user_db.main["settings"], self.epg_cache[i][1], gen)
+                
                     self.epg_db.write_epg_db_items(provider  if not xmltv else data["id"],
                         [(i["c_id"], i["b_id"], i["start"], i["end"], i["title"], 
                           i.get("subtitle", ""), i.get("desc", ""), i.get("image", ""), 
@@ -358,6 +375,7 @@ class ProviderManager():
         self.epg_db.create_epg_db(provider if not xmltv else data["id"], False)
         self.status_ext = None
         self.pr_pr = self.pr_pr + 1
+        self.print_error_cache(provider_name)
         return self.epg_db.simple_epg_db_update(provider if not xmltv else data["id"])
 
     def load_main(self, provider_name, item, name):
@@ -374,16 +392,16 @@ class ProviderManager():
                 break
             except:
                 x = x + 1
-                print(f"{provider_name}: Connection error - retry... [{str(x)}/3]")
+                self.error_cache.append(f"{provider_name}: Connection error - retry... [{str(x)}/3]")
                 if x < 3:
                     sleep(3)
                     continue
                 else:
-                    print(f"{provider_name}: Connection error - closed.")
+                    self.error_cache.append(f"{provider_name}: Connection error - closed.")
                     return provider_name, "", item.get("c"), name
         
         if str(r.status_code)[0] in ["4", "5"]:  
-            print(f"{provider_name}: HTTP error - {str(r.content)}")              
+            self.error_cache.append(f"{provider_name}: HTTP error for {str(r.url)} - {str(r.content)}")
             return provider_name, "", item.get("c"), name
         
         return provider_name, r.content, item.get("c"), name
@@ -391,7 +409,7 @@ class ProviderManager():
     def url_threads_handler(self, item):
         if self.exit or self.cancellation:
             return
-        self.epg_cache[f"{'.' if item.result()[1] == '' else ''}{item.result()[3]}"] = item.result()[1], item.result()[2]
+        self.epg_cache[f"{'###' if item.result()[1] == '' else ''}{item.result()[3]}"] = item.result()[1], item.result()[2]
         self.l_pr = self.l_pr + 1
         self.progress = ((((self.l_pr / self.l_num) * 100) / self.fl_num / 2) + (self.fl_pr / self.fl_num) * 100 / 2) / self.pr_num + (self.pr_pr / self.pr_num * 100 / 2)
         return
@@ -401,12 +419,13 @@ class ProviderManager():
         if len(programmes) == 0:
             return True
         
-        self.error_cache = []
-        
         data = self.providers[provider_name].get("data") if not data else data
         
         # RETRIEVE SESSION
-        self.login(provider_name, data)
+        if not self.login(provider_name, data):
+            self.print_error_cache(provider_name)
+            return False
+        
         session = self.user_db.main["sessions"].get(provider_name)
 
         url_params = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_advanced_links(
@@ -458,28 +477,23 @@ class ProviderManager():
 
             executor = concurrent.futures.ThreadPoolExecutor(
                 max_workers=max_workers)
-            {executor.submit(self.load_main, provider_name, item, item.get("n", str(index))).add_done_callback(self.url_threads_handler) for index, item in enumerate(grabber_param)}
+            {executor.submit(self.load_main, provider_name, item, item.get("name", str(index))).add_done_callback(self.url_threads_handler) for index, item in enumerate(grabber_param)}
             executor.shutdown(wait=True)
             del executor
 
             def duplicator(dup_ids, broadcast_list):
                 x = list(broadcast_list[0])  # BROADCAST LIST CONTAINS 1 ELEMENT ONLY
                 for item in dup_ids:
-                    x[1] = item
+                    x[-1] = item
                     broadcast_list.append(tuple(x))
                 return broadcast_list
 
             for i in self.epg_cache.keys():
-                try:
+                if not "###" in i:
                     m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_advanced_converter(
                         i, self.epg_db.config[provider_name].get("data"), self.epg_cache[i],
                         self.user_db.main["settings"])
-                except Exception as e:
-                    if str(traceback.format_exc()) not in self.error_cache:
-                        self.error_cache.append(str(traceback.format_exc()))
-                    m = []
 
-                if not "." in i:
                     if len(u) > 0 and u.get(i):  # INSERT DETAILS FOR BROADCASTS WITH IDENTICAL DATA
                         self.epg_db.update_epg_db_items(provider_name, duplicator(u[i], 
                             [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
@@ -503,11 +517,9 @@ class ProviderManager():
         self.epg_db.confirm_update()
         del final_list
         self.epg_cache = {}
-        
-        if len(self.error_cache) > 0:
-            print(f"\n{provider_name}: Advanced grabber error(s) occured: \n\n" + str('\n'.join(self.error_cache)))
-        self.error_cache = []
 
         self.status_ext = None
         self.pr_pr = self.pr_pr + 1
+        self.print_error_cache(provider_name)
         return True
+

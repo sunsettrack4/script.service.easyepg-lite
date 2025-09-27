@@ -202,6 +202,43 @@
         "adv_loader": true,
         "advanced_download_threads": 1
 
+    },
+
+    "tkmat":
+
+    {
+
+        "module": "tkmyo",
+
+        "name": "MagentaTV AT",
+        "country": "AT",
+
+        "data":
+
+        {
+            "app_key": "CTnKA63ruKM0JM1doxAXwwyQLLmQiEiy",
+            "app_version": "02.0.1300",
+            "country": "at",
+            "language": "de",
+            "director": ["Drehbuch", "Regie"],
+            "actor": ["Besetzung"],
+            "age_rating": "FSK",
+            "natco_key": "NZu7aIg1vFTNLwHcb0Kjhqk54ql9RJj5",
+            "max_days": 7
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+
+        "duplicate_check_req": true,
+
+        "adv_loader": true
+    
     }
 
 }

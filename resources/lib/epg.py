@@ -16,11 +16,6 @@ class Grabber():
         self.status = "Idle"
         self.pr.progress = 100
 
-        if os.path.exists(f"{self.file_paths['storage']}grabber_error_log_old.txt"):
-            os.remove(f"{self.file_paths['storage']}grabber_error_log_old.txt")
-        if os.path.exists(f"{self.file_paths['storage']}grabber_error_log.txt"):
-            os.rename(f"{self.file_paths['storage']}grabber_error_log.txt", f"{self.file_paths['storage']}grabber_error_log_old.txt")
-
         self.file_available = False
         self.file_created = "Never"
 
@@ -87,6 +82,11 @@ class Grabber():
             if os.path.exists(f"{self.file_paths['storage']}xml/test.xml"):
                 os.remove(f"{self.file_paths['storage']}xml/test.xml")
 
+            if os.path.exists(f"{self.file_paths['storage']}grabber_error_log_old.txt"):
+                os.remove(f"{self.file_paths['storage']}grabber_error_log_old.txt")
+            if os.path.exists(f"{self.file_paths['storage']}grabber_error_log.txt"):
+                os.rename(f"{self.file_paths['storage']}grabber_error_log.txt", f"{self.file_paths['storage']}grabber_error_log_old.txt")
+
             # DOWNLOAD FILES
             self.status = "Downloading EPG data..."
 
@@ -129,6 +129,8 @@ class Grabber():
                         self.pr.advanced_downloader(provider, self.pr.main_downloader(provider))
                     else:
                         self.pr.main_downloader(provider)
+                    if os.path.exists(f"{self.file_paths['storage']}grabber_error_log.txt"):
+                        self.warning = True
                 except Exception as e:
                     try:
                         with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
