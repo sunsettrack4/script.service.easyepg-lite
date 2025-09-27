@@ -241,6 +241,166 @@
     
     },
 
+    "chsun":
+
+    {
+
+        "module": "libgl",
+
+        "name": "Sunrise TV",
+        "country": "CH",
+
+        "data":
+
+        {
+            "country": "ch",
+            "domain": "sunrisetv.ch",
+            "lang_code": "eng",
+            "lang": "de",
+            "city_id": "100"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
+
+        "adv_loader": true
+    
+    },
+
+    "gbvgm":
+
+    {
+
+        "module": "libgl",
+
+        "name": "Virgin TV GO",
+        "country": "GB",
+
+        "data":
+
+        {
+            "country": "gb",
+            "domain": "virgintvgo.virginmedia.com",
+            "lang_code": "eng",
+            "lang": "en",
+            "city_id": "40980"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
+
+        "adv_loader": true
+    
+    },
+
+    "ievgm":
+
+    {
+
+        "module": "libgl",
+
+        "name": "Virgin TV Anywhere",
+        "country": "IE",
+
+        "data":
+
+        {
+            "country": "ie",
+            "domain": "virginmediatv.ie",
+            "lang_code": "eng",
+            "lang": "en",
+            "city_id": "131"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
+
+        "adv_loader": true
+    
+    },
+
+    "nlzgg":
+
+    {
+
+        "module": "libgl",
+
+        "name": "Ziggo GO",
+        "country": "NL",
+
+        "data":
+
+        {
+            "country": "nl",
+            "domain": "ziggogo.tv",
+            "lang_code": "nld",
+            "lang": "nl",
+            "city_id": "65535"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
+
+        "adv_loader": true
+    
+    },
+
+    "skupc":
+
+    {
+
+        "module": "libgl",
+
+        "name": "UPC TV SK",
+        "country": "SK",
+
+        "data":
+
+        {
+            "country": "sk",
+            "domain": "upctv.sk",
+            "lang_code": "slk",
+            "lang": "sk",
+            "city_id": "5"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
+
+        "adv_loader": true
+    
+    },
+
     "tkmpl":
 
     {
