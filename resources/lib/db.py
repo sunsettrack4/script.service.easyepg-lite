@@ -265,7 +265,8 @@ class ProviderManager():
             self.user_db.save_settings()
             return True
         except Exception as e:
-            self.error_cache.append(f"{provider_name}: Login module error - {str(traceback.format_exc())}")
+            if len(self.error_cache) <= 50:
+                self.error_cache.append(f"{provider_name}: Login module error - {str(traceback.format_exc())}")
             return False, "Login module error"
         
     # LOAD CHLIST
@@ -397,16 +398,19 @@ class ProviderManager():
                 break
             except:
                 x = x + 1
-                self.error_cache.append(f"{provider_name}: Connection error - retry... [{str(x)}/3]")
+                if len(self.error_cache) <= 50:
+                    self.error_cache.append(f"{provider_name}: Connection error - retry... [{str(x)}/3]")
                 if x < 3:
                     sleep(3)
                     continue
                 else:
-                    self.error_cache.append(f"{provider_name}: Connection error - closed.")
+                    if len(self.error_cache) <= 50:
+                        self.error_cache.append(f"{provider_name}: Connection error - closed.")
                     return provider_name, "", item.get("c"), name
         
-        if str(r.status_code)[0] in ["4", "5"]:  
-            self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
+        if str(r.status_code)[0] in ["4", "5"]:
+            if len(self.error_cache) <= 50:
+                self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
             return provider_name, "", item.get("c"), name
         
         return provider_name, r.content, item.get("c"), name
