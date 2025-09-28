@@ -355,6 +355,7 @@ class Grabber():
                             # CATEGORIES
                             genres = []
                             mapped_genres = []
+                            categories = [] if not categories else categories
                             if len(categories) > 0:
                                 program["category"] = []
                             for i in categories:
