@@ -60,7 +60,6 @@ def epg_main_converter(data, channels, settings, ch_id=None, genres={}):
 
 def epg_advanced_links(data, session, settings, programmes, headers={}):
     url_list = []
-    today = datetime.today()
     
     for i in programmes:
         url_list.append(

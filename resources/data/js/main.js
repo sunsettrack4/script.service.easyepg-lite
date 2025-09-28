@@ -752,7 +752,11 @@ function grabberCheckAutoUpdate() {
             response.json().then(function(i) {
                 if( i["success"] === true ) {
                     var r = i["result"];
-                    dlStatusText.innerText = r["status"];
+                    if( r["status"].includes("Downloading") ) {
+                        dlStatusText.innerText = r["status"]+ " ("+r["progress"]*2+"%)";
+                    } else {
+                        dlStatusText.innerText = r["status"]
+                    };
                     dlProgress.value = r["progress"];
                     if( r["file_available"] === true ) {
                         dlFileCopyURL.disabled = false;

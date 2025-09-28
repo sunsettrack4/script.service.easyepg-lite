@@ -502,6 +502,10 @@ class ProviderManager():
                     m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_advanced_converter(
                         i, self.epg_db.config[provider_name].get("data"), self.epg_cache[i],
                         self.user_db.main["settings"])
+                    
+                    if self.providers[provider_name].get("multi_update"):
+                        for j in m:
+                            j["b_id"] = j["b_id"].split("|+|")[0]
 
                     if len(u) > 0 and u.get(i):  # INSERT DETAILS FOR BROADCASTS WITH IDENTICAL DATA
                         self.epg_db.update_epg_db_items(provider_name, duplicator(u[i], 

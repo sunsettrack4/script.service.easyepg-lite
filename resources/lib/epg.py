@@ -44,7 +44,7 @@ class Grabber():
         self.thread.start()
 
     def grabber_status(self):
-        return {"grabbing": self.grabbing, "status": self.status, "progress": self.pr.progress, "file_available": self.file_available, "file_created": self.file_created}
+        return {"grabbing": self.grabbing, "status": self.status, "progress": round(self.pr.progress, 2), "file_available": self.file_available, "file_created": self.file_created}
 
     def epg_process(self, start_up, start_dt):
         if start_up:

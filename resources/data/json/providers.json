@@ -206,7 +206,7 @@
 
         "module": "tkmde",
         
-        "name": "Telekom Magenta TV",
+        "name": "Telekom Magenta TV 1.0",
         "country": "DE",
 
         "login_req": true,
@@ -219,6 +219,35 @@
         "max_dl_threads": 7,
 
         "adv_loader": false
+
+    },
+
+    "tkmd2":
+
+    {
+
+        "module": "tkmd2",
+        
+        "name": "Telekom Magenta TV 2.0",
+        "country": "DE",
+
+        "data": {
+            "location_id": "http://data.entertainment.tv.theplatform.eu/entertainment/data/Location/245991976396"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
+
+        "adv_loader": true,
+        "advanced_download_threads": 3,
+        "dl_delay": 0.2,
+        "multi_update": true
 
     },
 
