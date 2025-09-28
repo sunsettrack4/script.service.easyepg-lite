@@ -211,7 +211,7 @@
 
         "login_req": true,
         "auth_req": false,
-        "exp": 1800,
+        "exp": 0,
 
         "main_loader": true,
         "main_threads": 4,
