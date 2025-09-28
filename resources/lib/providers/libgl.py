@@ -97,5 +97,8 @@ def epg_advanced_converter(item, data, cache, settings):
             g["credits"]["actor"] = p["actors"]
         else:
             g["credits"] = {"actor": p["actors"]}
+
+    if p.get("minimumAge"):
+        g["rating"] = {"system": "FSK", "value": p["minimumAge"]}
     
     return [g]
