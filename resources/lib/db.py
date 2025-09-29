@@ -29,7 +29,7 @@ class UserData():
             self.main = dict()
 
         try:
-            with open(f"{self.file_paths['included']}resources/data/json/genres.json", "r") as f:
+            with open(f"{self.file_paths['included']}resources/data/json/genres.json", "r", encoding="UTF-8") as f:
                 self.genres = json.load(f)
         except:
             self.genres = dict()
@@ -221,7 +221,7 @@ class ProviderManager():
 
     # PROVIDER CONFIG
     def import_data(self):
-        with open(f"{self.file_paths['included']}resources/data/json/providers.json", "r") as f:
+        with open(f"{self.file_paths['included']}resources/data/json/providers.json", "r", encoding="UTF-8") as f:
             self.providers = json.load(f)
         return
 
