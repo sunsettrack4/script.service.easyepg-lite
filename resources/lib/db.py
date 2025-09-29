@@ -272,7 +272,7 @@ class ProviderManager():
     # LOAD CHLIST
     def ch_loader(self, provider_name, data={}):
         try:
-            with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "r", encoding="UTF-8") as file:
+            with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "r") as file:
                 f = json.load(file)
             if f["date"] == datetime.today().strftime("%Y%m%d"):
                 return True, f["ch_list"]
