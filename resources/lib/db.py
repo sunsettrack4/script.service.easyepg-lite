@@ -271,6 +271,13 @@ class ProviderManager():
         
     # LOAD CHLIST
     def ch_loader(self, provider_name, data={}):
+        try:
+            with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "r", encoding="UTF-8") as file:
+                f = json.load(file)
+            if f["date"] == datetime.today().strftime("%Y%m%d"):
+                return True, f["ch_list"]
+        except:
+            pass
         data = self.providers[provider_name].get("data") if not data else data
         
         # RETRIEVE SESSION
@@ -284,6 +291,11 @@ class ProviderManager():
             ch_list = sys.modules[self.providers[provider_name].get("module", provider_name)].channels(
                 data, session, general_header
             )
+            try:
+                with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "w") as file:
+                    json.dump({"date": datetime.today().strftime("%Y%m%d"), "ch_list": ch_list}, file)
+            except:
+                pass
             return True, ch_list
         except Exception as e:
             return False, str(e)
