@@ -5,19 +5,22 @@ import json, requests
 
 def channels(data, session, headers={}):
     chlist = {}
+    ch_nums = []
 
-    channel_url = 'https://feed.entertainment.tv.theplatform.eu/f/mdeprod/mdeprod-channel-stations-main?range=1-500'
+    channel_url = 'https://feed.entertainment.tv.theplatform.eu/f/mdeprod/mdeprod-channel-stations-main?range=1-500&lang=short-de'
 
     channel_page = requests.post(channel_url)
 
     channel_content = channel_page.json()
 
     for channel in channel_content["entries"]:
-        stations_link = list(channel["stations"].keys())[0]
-        channel_name = channel["stations"][stations_link]["title"]
-        channel_id = channel["id"].split("/")[-1]
-        channel_logo = f'https://ngiss.t-online.de/iss?client=ftp22&out=webp&x=180&y=72&ar=keep&src={quote(channel["stations"][stations_link]["thumbnails"]["stationLogo"]["url"])}'
-        chlist[channel_id] = {"name": channel_name, "icon": channel_logo}
+        if channel["dt$displayChannelNumber"] not in ch_nums:
+            ch_nums.append(channel["dt$displayChannelNumber"])
+            stations_link = list(channel["stations"].keys())[0]
+            channel_name = channel["stations"][stations_link]["title"]
+            channel_id = channel["id"].split("/")[-1]
+            channel_logo = f'https://ngiss.t-online.de/iss?client=ftp22&out=webp&x=180&y=72&ar=keep&src={quote(channel["stations"][stations_link]["thumbnails"]["stationLogo"]["url"])}'
+            chlist[channel_id] = {"name": channel_name, "icon": channel_logo}
 
     return chlist
 
