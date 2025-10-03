@@ -200,6 +200,35 @@
 
     },
 
+    "tkmcz":
+
+    {
+
+        "module": "magio",
+
+        "name": "Magenta TV CZ",
+        "country": "CZ",
+
+        "data":
+
+        {
+            "country": "cz"
+        },
+
+        "login_req": true,
+        "auth_req": false,
+        "exp": 9000,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
+
+        "adv_loader": true
+    
+    },
+
     "zt1u1":
 
     {
@@ -570,6 +599,35 @@
         "max_dl_threads": 7,
 
         "duplicate_check_req": true,
+
+        "adv_loader": true
+    
+    },
+
+    "tkmsk":
+
+    {
+
+        "module": "magio",
+
+        "name": "Magio TV SK",
+        "country": "SK",
+
+        "data":
+
+        {
+            "country": "sk"
+        },
+
+        "login_req": true,
+        "auth_req": false,
+        "exp": 9000,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
 
         "adv_loader": true
     
