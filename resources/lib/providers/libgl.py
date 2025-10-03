@@ -45,16 +45,17 @@ def epg_main_converter(data, channels, settings, ch_id=None, genres={}):
 
     for entry in item["entries"]:
         if entry["channelId"] in channels:
-            for programme in entry["events"]:
-                g = dict()
+            if entry.get("events"):
+                for programme in entry["events"]:
+                    g = dict()
 
-                g["c_id"] = entry["channelId"]
-                g["b_id"] = programme["id"]
-                g["start"] = programme["startTime"]
-                g["end"] = programme["endTime"]
-                g["title"] = programme["title"]
+                    g["c_id"] = entry["channelId"]
+                    g["b_id"] = programme["id"]
+                    g["start"] = programme["startTime"]
+                    g["end"] = programme["endTime"]
+                    g["title"] = programme["title"]
 
-                airings.append(g)
+                    airings.append(g)
     
     return airings
 
