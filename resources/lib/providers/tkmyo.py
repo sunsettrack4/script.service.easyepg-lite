@@ -78,8 +78,8 @@ def epg_main_links(data, channels, settings, session, headers):
     return url_list
 
 
-def epg_main_converter(data, channels, settings, ch_id=None, genres={}):
-    item = json.loads(data)
+def epg_main_converter(item, data, channels, settings, ch_id=None, genres={}):
+    item = json.loads(item)
 
     airings = []
 

@@ -371,7 +371,7 @@ class ProviderManager():
             for i in self.epg_cache.keys():
                 if not "###" in i:
                     m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_main_converter(
-                        self.epg_cache[i][0], channels, self.user_db.main["settings"], self.epg_cache[i][1], gen)
+                        self.epg_cache[i][0], data, channels, self.user_db.main["settings"], self.epg_cache[i][1], gen)
                 
                     self.epg_db.write_epg_db_items(provider  if not xmltv else data["id"],
                         [(i["c_id"], i["b_id"], i["start"], i["end"], i["title"], 

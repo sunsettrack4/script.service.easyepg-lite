@@ -359,6 +359,43 @@
     
     },
 
+    "capfr":
+
+    {
+
+        "module": "canal",
+
+        "name": "Canal+ FR",
+        "country": "FR",
+
+        "data":
+
+        {
+            "grid_id": "6032ba1a32e611d66f832d41d41db4d2",
+            "myc": "mycanal",
+            "age_rating": "CSA",
+            "age_rating_values": {"2": "-10", "3": "-12", "4": "-16", "5": "-18"},
+            "director": "De :",
+            "actor": "Avec :",
+            "season": "Saison",
+            "episode": "Episode"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 50,
+        "max_dl_threads": 10,
+        "is_utc": true,
+
+        "duplicate_check_req": true,
+
+        "adv_loader": true
+    
+    },
+
     "gbvgm":
 
     {
@@ -562,6 +599,43 @@
         "max_dl_num": 7,
         "max_dl_threads": 7,
         "is_utc": true,
+
+        "adv_loader": true
+    
+    },
+
+    "cappl":
+
+    {
+
+        "module": "canal",
+
+        "name": "Canal+ PL",
+        "country": "PL",
+
+        "data":
+
+        {
+            "grid_id": "d51cbaf413c54654d5a89ea01ba95f65",
+            "myc": "mycanalint",
+            "age_rating": "KRRIT",
+            "age_rating_values": {"2": "7", "3": "12", "4": "16", "5": "18"},
+            "director": "Reżyseria :",
+            "actor": "Obsada :",
+            "season": "Sezon",
+            "episode": "Odcinek"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 50,
+        "max_dl_threads": 10,
+        "is_utc": true,
+
+        "duplicate_check_req": true,
 
         "adv_loader": true
     
