@@ -144,8 +144,19 @@ const webUser = document.getElementById("web_user");
 const webPw = document.getElementById("web_pw");
 const webSendCredentials = document.getElementById("web_send_credentials");
 
+const providerFilter = document.getElementById("provider-filter");
+
 var url_expression = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 var url_regex = new RegExp(url_expression);
+
+providerFilter.addEventListener("change", function() {
+    var prov_id = providerFilter.options[providerFilter.selectedIndex].getAttribute("id");
+    if( prov_id == "provider-filter-default") {
+        loadChannelList();
+    } else {
+        loadChannelList(prov_id);
+    };
+});
 
 webUser.addEventListener("input", function() {
     if( webUser.value.length > 3 && webPw.value.length > 3 ) {
@@ -571,7 +582,7 @@ applyUploadStation.addEventListener("click", function() {
         response.json().then(function(e) {
             if( e["success"] === true ) {
                 showNotiMessage("The channel has been added!", "success");
-                loadChannelList();
+                loadChannelList(null, true);
             } else {
                 showNotiMessage("Upload failed. Please use station config files only.", "error");
             };
@@ -991,7 +1002,11 @@ chRemoveAll.addEventListener("click", function() {
         response.json().then(function(i) {
             if( i["success"] === true ) {
                 showNotiMessage(toBeRemovedList.length + " channel(s) removed successfully!", "success");
-                loadChannelList();
+                if( document.getElementsByClassName("ch_row").length == document.getElementsByClassName("ch_selected").length ) {
+                    loadChannelList(null, true);
+                } else {
+                    loadChannelList();
+                };
                 loadSettings(0);
                 chMultiSelectBtnGroup.style.display = "none";
                 mainBtnGroup.style.display = "inline";
@@ -1431,7 +1446,11 @@ chRemove.addEventListener("click", function() {
         response.json().then(function(d) {
             if( d["success"] === true ) {
                 showNotiMessage("'" + chInfoChName.value + "' has been removed!", "success");                
-                loadChannelList();
+                if( document.getElementsByClassName("ch_row").length == 1 ) {
+                    loadChannelList(null, true);
+                } else {
+                    loadChannelList();
+                };
                 chInfoWindow.classList.add("nav-bar-move");
                 blockPage.style.display = "none";
                 mainBtnGroup.style.display = "inline";
@@ -1510,7 +1529,7 @@ allLineups.addEventListener("change", function() {
         setTimeout(function() {
             tableSection.style.display = "none";
             tableSection.classList.remove("hide-window");
-            loadChannelList();
+            loadChannelList(null, true);
         }, 200);
     };
 });
@@ -1542,7 +1561,7 @@ closeResultsWindow.addEventListener('click', function() {
         searchTable.innerHTML = ""; // TO BE IMPROVED!!!
         tableSection.style.display = "none";
         tableSection.classList.remove("hide-window");
-        loadChannelList();
+        loadChannelList(null, true);
         loadSettings(channelTable.getElementsByTagName("tbody")[0].scrollTop);
     }, 200);
     // loadChannelList();
@@ -1553,7 +1572,7 @@ chSearch.addEventListener('search', function() {
     setTimeout(function() {
         tableSection.style.display = "none";
         tableSection.classList.remove("hide-window");
-        loadChannelList();
+        loadChannelList(null, true);
     }, 200);
     // loadChannelList();
 });
@@ -1598,7 +1617,7 @@ function doneTyping() {
                     setTimeout(function() {
                         tableSection.style.display = "none";
                         tableSection.classList.remove("hide-window");
-                        loadChannelList();
+                        loadChannelList(null, true);
                         loadSettings(channelTable.getElementsByTagName("tbody")[0].scrollTop);
                     }, 200);
                 } else {
@@ -1738,7 +1757,7 @@ function loadExtLineupChannels(value) {
                     setTimeout(function() {
                          tableSection.style.display = "none";
                          tableSection.classList.remove("hide-window");
-                         loadChannelList();
+                         loadChannelList(null, true);
                      }, 200);
                  } else {
                      // HEADER
@@ -1862,7 +1881,7 @@ function loadLineupChannels(value) {
                    setTimeout(function() {
                         tableSection.style.display = "none";
                         tableSection.classList.remove("hide-window");
-                        loadChannelList();
+                        loadChannelList(null, true);
                     }, 200);
                 } else {
                     // HEADER
@@ -1994,12 +2013,40 @@ function addNewChannel(value, lineup) {
     });
 };
 
-function loadChannelList() {
-    fetch("api/listings" ,{
+function loadChannelList(prov, reset) {
+    var list_url = "api/listings"
+
+    var sel_pr = providerFilter.options[providerFilter.selectedIndex].getAttribute("id");
+
+    if( sel_pr != "provider-filter-default" && reset != true ) {
+        prov = sel_pr;
+    };
+
+    if( prov != null ) {
+        list_url = list_url + "?filter_by=" + prov;
+    };
+
+    fetch(list_url ,{
         method: "GET"
     })
     .then(response => {
-        response.json().then(function(data) {
+        response.json().then(function(item) {
+            var data = item.channels;
+            
+            if( prov == null ) {
+                var pr_data = item.providers;
+                var i, L = providerFilter.options.length - 1;
+                for(i = L; i >= 1; i--) {
+                    providerFilter.remove(i);
+                };
+                for( i in pr_data ) {
+                    var opt = document.createElement('option');
+                    opt.id = i;
+                    opt.innerHTML = pr_data[i];
+                    providerFilter.appendChild(opt);
+                };
+            };
+
             var j = [];
             for( k in data ) {
                 j.push(data[k]["name"] + "|" + k);
@@ -2018,6 +2065,11 @@ function loadChannelList() {
             if( j.length === 0 ) {
                 for( let i = 0; i < chInSetup.length; i++ ) {
                     chInSetup[i].style.display = "none";
+                };
+                if( providerFilter.options[providerFilter.selectedIndex].getAttribute("id") != "provider-filter-default" ) {
+                    loadChannelList(null, true);
+                    showNotiMessage("No results found for selected provider.");
+                    return;
                 };
                 noChInSetup.style.display = "block";
             } else {

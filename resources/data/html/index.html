@@ -24,7 +24,12 @@
     <section id="channel-results" class="search-results">
         <p class="channels-in-setup">Your channel list</p>
         <p id="no-channels-in-setup">Please add your channels to the list.</p>
-        <input id="channel-search" class="channels-in-setup" type="search" placeholder="Jump to channel...">
+        <div>
+            <input id="channel-search" class="channels-in-setup" type="search" placeholder="Jump to channel...">
+            <select id="provider-filter" class="channels-in-setup">
+                <option id="provider-filter-default" selected>All providers</option>
+            </select>
+        </div>
         <table id="channel-table">
             <tbody></tbody>
         </table>
@@ -266,7 +271,8 @@
                 <option id="rm_add-info-cast">Add additional info + cast to desc.</option>
             </select>
         </div>
-
+        
+        <!--
         <label for="image_type">Image Size/Aspect TV</label>
         <div>
             <select id="image_size">
@@ -290,6 +296,7 @@
                 <option id="at_usa">USA Parental Rating</option>
             </select>
         </div>
+        -->
 
         <label for="scheduler">Scheduler (update rate/time/auto-start)</label>
         <div>
@@ -427,5 +434,5 @@
         </div>
     </nav>
 </body>
-<script src="/app/data/js/main-20250930.js"></script>
+<script src="/app/data/js/main-20251005.js"></script>
 </html>

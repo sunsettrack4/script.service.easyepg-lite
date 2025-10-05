@@ -1,8 +1,8 @@
 from resources.lib import tools
-from bottle import  request, route, run, static_file
+from bottle import request, route, run, static_file
 from datetime import datetime
 from threading import Event
-import json, os, requests, signal, traceback
+import json, os, re, requests, signal, traceback
 
 
 stopFlag = Event()
@@ -66,7 +66,25 @@ def key_check():
 
 @route("/api/listings", method="GET")
 def listings():
-    return g.user_db.main["channels"]
+    p = dict()
+    
+    filter_by = request.query.get("filter_by", "")
+    if filter_by != "":
+        if filter_by != "gntms":
+            filtered_chs = {j: g.user_db.main["channels"][j] for j in g.user_db.main["channels"].keys() if j.split("_")[0] == filter_by}
+        else:
+            filtered_chs = {j: g.user_db.main["channels"][j] for j in g.user_db.main["channels"].keys() if "_" not in j}
+    
+    for i in g.user_db.main["channels"].keys():
+        p_key = i.split("_")[0]
+        if re.match(r"^xml\d{10}", p_key) and g.user_db.main["xmltv"].get(p_key):
+            p[p_key] = g.user_db.main["xmltv"][p_key]["name"]
+        elif "_" in i:
+            p[p_key] = g.pr.providers[p_key]["name"]
+        elif "_" not in i:
+            p["gntms"] = "Gracenote TMS"
+    return {"channels": filtered_chs if filter_by != "" else g.user_db.main["channels"], 
+            "providers": dict(sorted(p.items(), key=lambda item: item[1]))}
 
 @route("/api/settings", method="GET")
 def get_settings():
