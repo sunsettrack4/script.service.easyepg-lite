@@ -386,9 +386,9 @@ class Grabber():
                             # AGE RATING
                             if rating is not None and rating != "":
                                 if rating_type is not None and rating_type != "":
-                                    program["rating"] = {"@system": rating_type, "value": {"#text": rating}}
+                                    program["rating"] = {"@system": rating_type, "value": {"#text": str(rating)}}
                                 else:
-                                    program["rating"] = {"value": {"#text": rating}}
+                                    program["rating"] = {"value": {"#text": str(rating)}}
 
                             # STAR RATING
                             if star_value is not None and star_value != "":

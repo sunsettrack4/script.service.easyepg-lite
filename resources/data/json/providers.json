@@ -49,6 +49,35 @@
 
     },
 
+    "capat":
+
+    {
+
+        "module": "cpsol",
+
+        "name": "Canal+ AT",
+        "country": "AT",
+
+        "data":
+
+        {
+            "country": "AT",
+            "age_rating": "FSK"
+        },
+
+        "login_req": true,
+        "auth_req": false,
+        "exp": 300,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+
+        "adv_loader": true
+    
+    },
+
     "tkmat":
 
     {
@@ -567,6 +596,35 @@
         "max_dl_threads": 7,
 
         "duplicate_check_req": true,
+
+        "adv_loader": true
+    
+    },
+
+    "capnl":
+
+    {
+
+        "module": "cpsol",
+
+        "name": "Canal+ NL",
+        "country": "NL",
+
+        "data":
+
+        {
+            "country": "NL",
+            "age_rating": "Kijkwijzer"
+        },
+
+        "login_req": true,
+        "auth_req": false,
+        "exp": 300,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
 
         "adv_loader": true
     
