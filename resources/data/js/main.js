@@ -145,6 +145,76 @@ const webPw = document.getElementById("web_pw");
 const webSendCredentials = document.getElementById("web_send_credentials");
 
 const providerFilter = document.getElementById("provider-filter");
+const providerGrabSelection = document.getElementById("prov-grab-selection");
+
+const providerGrabSetSelection = document.getElementById("prov-grab-selection");
+const advDays = document.getElementById("adv_days");
+const advDaysNumber = document.getElementById("adv_days_number");
+const advThreads = document.getElementById("adv_threads");
+const advFiles = document.getElementById("max_adv_files");
+const advDuration = document.getElementById("update_duration");
+
+
+providerGrabSetSelection.addEventListener("change", function() {
+    var prov_id = providerGrabSetSelection.options[providerGrabSetSelection.selectedIndex].getAttribute("id");
+    var v = document.getElementsByClassName("adv-settings");
+    if( prov_id != "prov-grab-selection-default" ) {
+        fetch("api/provider-settings?id="+prov_id, {
+            method: "GET"
+        })
+        .then(response => {
+            response.json().then(function(i) {
+                if( i.success === true ) {
+                    i = i.data;  
+                    daySlider.value = i.days;
+                    daySlider.disabled = false;
+                    dayNumber.textContent = i.days;
+                    if( i.hasOwnProperty("adv") ) {
+                        for(var j=0;j<v.length;j++){
+                            v[j].disabled = false;
+                        };
+                        advDays.value = i.adv.days;
+                        advDaysNumber.textContent = i.adv.days;
+                        advThreads.value = i.adv.threads;
+                        advThreads.max = i.adv.allowed_threads;
+                        advFiles.value = i.adv.files;
+                        advDuration.value = i.adv.duration;
+                    } else {
+                        for(var j=0;j<v.length;j++){
+                            v[j].disabled = true;
+                        };
+                        advDays.value = 0;
+                        advDaysNumber.textContent = 0;
+                        advThreads.value = null;
+                        advThreads.max = 10;
+                        advFiles.value = null;
+                        advDuration.value = null;
+                    }
+                } else {
+                    console.log(i.message);
+                    showNotiMessage("An error occurred:" + i.message, "error");
+                };
+            });
+        })
+        .catch(error => {
+            console.log(error);
+            showNotiMessage("An error occurred while serving the request.", "error");
+        });
+    } else {
+        daySlider.value = 7;
+        daySlider.disabled = true;
+        dayNumber.textContent = 7;
+        for(var j=0;j<v.length;j++){
+            v[j].disabled = true;
+        };
+        advDays.value = 7;
+        advDaysNumber.textContent = 7;
+        advThreads.value = null;
+        advThreads.max = 10;
+        advFiles.value = null;
+        advDuration.value = null;
+    };
+});
 
 var url_expression = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 var url_regex = new RegExp(url_expression);
@@ -872,9 +942,14 @@ function saveSettings () {
     if( updateTime.value == "" || updateTime.value == "--:--" ) {
         updateTime.value = "04:00";
     };
+    var prov_id = providerGrabSetSelection.options[providerGrabSetSelection.selectedIndex].getAttribute("id");
+    var s = {"days": daySlider.value, "rm": ratingMapper.options[ratingMapper.selectedIndex].getAttribute("id").replace("rm_", ""), "it": imageType.options[imageType.selectedIndex].getAttribute("id").replace("it_", ""), "is": imageSize.options[imageSize.selectedIndex].getAttribute("id").replace("is_", ""), "at": ageType.options[ageType.selectedIndex].getAttribute("id").replace("at_", ""), "rate": schedulerRate.options[schedulerRate.selectedIndex].getAttribute("id").replace("rate_", ""), "ut": updateTime.value, "ag": autoGrab.options[autoGrab.selectedIndex].getAttribute("id").replace("ag_", "")}
+    if( prov_id != "prov-grab-selection-default" ) {
+        s = Object.assign({}, s, {"provider": {"id": prov_id, "days": daySlider.value, "adv_days": advDays.value, "adv_threads": advThreads.value, "adv_files": advFiles.value, "adv_duration": advDuration.value}});
+    };
     fetch("api/save_settings", {
         method: "POST",
-        body: JSON.stringify({"days": daySlider.value, "rm": ratingMapper.options[ratingMapper.selectedIndex].getAttribute("id").replace("rm_", ""), "it": imageType.options[imageType.selectedIndex].getAttribute("id").replace("it_", ""), "is": imageSize.options[imageSize.selectedIndex].getAttribute("id").replace("is_", ""), "at": ageType.options[ageType.selectedIndex].getAttribute("id").replace("at_", ""), "rate": schedulerRate.options[schedulerRate.selectedIndex].getAttribute("id").replace("rate_", ""), "ut": updateTime.value, "ag": autoGrab.options[autoGrab.selectedIndex].getAttribute("id").replace("ag_", "")})
+        body: JSON.stringify(s)
     })
     .then(response => {
         response.json().then(function(i) {
@@ -905,6 +980,36 @@ keyInput.addEventListener("keyup", function() {
 
 daySlider.addEventListener("input", function() {
     dayNumber.textContent = daySlider.value;
+    if( parseInt(daySlider.value) < parseInt(advDays.value) ) {
+        advDays.value = daySlider.value;
+        advDaysNumber.textContent = advDays.value;
+    };
+});
+
+advDays.addEventListener("input", function() {
+    advDaysNumber.textContent = advDays.value;
+    if( parseInt(daySlider.value) < parseInt(advDays.value) ) {
+        advDays.value = daySlider.value;
+        advDaysNumber.textContent = advDays.value;
+    };
+});
+
+advThreads.addEventListener("input", function() {
+    if( parseInt(advThreads.value) < 1 ) {
+        advThreads.value = 1;
+    };
+    if( parseInt(advThreads.value) > parseInt(advThreads.max) ) {
+        advThreads.value = advThreads.max;
+    };
+});
+
+advDuration.addEventListener("input", function() {
+    if( parseInt(advDuration.value) < 1 ) {
+        advDuration.value = null;
+    };
+    if( parseInt(advDuration.value) > 1440 ) {
+        advDuration.value = 1440;
+    };
 });
 
 chInfoChIdInput.addEventListener("keyup", function() {
@@ -2034,16 +2139,36 @@ function loadChannelList(prov, reset) {
             var data = item.channels;
             
             if( prov == null ) {
+                daySlider.value = 7;
+                daySlider.disabled = true;
+                dayNumber.textContent = 7;
+                advDaysNumber.textContent = 7;
+                var v = document.getElementsByClassName("adv-settings");
+                for(var j=0;j<v.length;j++){
+                    v[j].disabled = true;
+                };
+                advDays.value = 7;
+                advThreads.value = null;
+                advFiles.value = null;
+                advDuration.value = null;
                 var pr_data = item.providers;
                 var i, L = providerFilter.options.length - 1;
                 for(i = L; i >= 1; i--) {
                     providerFilter.remove(i);
+                };
+                var i, L = providerGrabSelection.options.length - 1;
+                for(i = L; i >= 1; i--) {
+                    providerGrabSelection.remove(i);
                 };
                 for( i in pr_data ) {
                     var opt = document.createElement('option');
                     opt.id = i;
                     opt.innerHTML = pr_data[i];
                     providerFilter.appendChild(opt);
+                    var opt2 = document.createElement('option');
+                    opt2.id = i;
+                    opt2.innerHTML = pr_data[i];
+                    providerGrabSelection.appendChild(opt2);
                 };
             };
 

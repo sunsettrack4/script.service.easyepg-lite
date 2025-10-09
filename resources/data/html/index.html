@@ -257,12 +257,32 @@
         
         <p>Grabber Settings</p>
 
-        <label for="days">Number of days to grab (<b id="days_number">7</b>)</label>
+        <select id="prov-grab-selection">
+            <option id="prov-grab-selection-default">Please select the provider...</option>
+        </select>
+        
+        <p></p>
+
+        <label for="days"><b>Basic data: </b>Number of days to grab (<b id="days_number">7</b>)</label>
         <div>
-            <input id="days" type="range" min="0" max="14" step="1.0" value="7">
+            <input disabled id="days" type="range" min="0" max="14" step="1.0" value="7">
         </div>
 
-        <label for="rating_mapper">Rating Mapper for broadcast descriptions</label>
+        <label for="adv_days"><b>Advanced data: </b>Number of days to grab (<b id="adv_days_number">7</b>)</label>
+        <div>
+            <input disabled class="adv-settings" id="adv_days" type="range" min="0" max="14" step="1.0" value="7">
+        </div>
+
+        <label for="adv_threads"><b>Download control for advanced data</b><br>
+(number of threads/number of files/grab duration)</label>
+        <div>
+            <input disabled class="adv-settings" id="adv_threads" type="number" min="1" max="10" value="1">
+            <input disabled class="adv-settings" id="max_adv_files" type="number" min="0" value="">
+            <input disabled class="adv-settings" id="update_duration" type="number" min="0" max="1440" value="">
+        </div>
+        <p>___________________________</p>
+
+        <label for="rating_mapper"><b>Rating Mapper</b> for broadcast descriptions</label>
         <div>
             <select id="rating_mapper">
                 <option id="rm_none">Show default description</option>
@@ -296,7 +316,7 @@
             </select>
         </div>
 
-        <label for="scheduler">Scheduler (update rate/time/auto-start)</label>
+        <label for="scheduler"><b>Scheduler</b> (update rate/time/auto-start)</label>
         <div>
             <select id="scheduler_rate">
                 <option id="rate_0">Never</option>
@@ -432,5 +452,5 @@
         </div>
     </nav>
 </body>
-<script src="/app/data/js/main-20251005.js"></script>
+<script src="/app/data/js/main-20251009.js"></script>
 </html>

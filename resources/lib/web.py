@@ -64,6 +64,29 @@ def key_check():
     else:
         return json.dumps({"success": False})
 
+@route("/api/provider-settings", method="GET")
+def get_provider_settings():
+    p = dict()
+
+    filter_by = request.query.get("id", "")
+    try:
+        if filter_by != "":
+            p["days"]  = g.user_db.main["provider_settings"].get(filter_by, {}).get("basic_days", g.user_db.main["settings"]["days"])
+
+            if g.pr.providers.get(filter_by, {}).get("adv_loader"):
+                p["adv"] = {}
+                p["adv"]["days"]    = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_days", g.user_db.main["settings"]["days"])
+                p["adv"]["threads"] = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_threads", int(g.pr.providers[filter_by].get("advanced_download_threads", 1)))
+                p["adv"]["allowed_threads"] = int(g.pr.providers[filter_by].get("advanced_download_threads", 10))
+                p["adv"]["files"]   = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_files")
+                p["adv"]["duration"]    = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_duration")
+
+        return {"success": True, "data": p}
+    except Exception as e:
+        print_error(traceback.format_exc())
+        return json.dumps({"success": False, "message": f"Failed to load provider settings: {e}"})
+
+
 @route("/api/listings", method="GET")
 def listings():
     p = dict()
@@ -97,7 +120,18 @@ def save_settings():
     try:
         i = json.loads(request.body.read())
         for item in i.keys():
-            g.user_db.main["settings"][item] = i[item]
+            if item == "provider":
+                g.user_db.main["provider_settings"][i[item]["id"]] = {"days": int(i[item]["days"]) if int(i[item]["days"]) <= 14 else 14,
+                                                                      "adv_days": int(i[item]["adv_days"]) if ((int(i[item]["adv_days"]) <= 14) and int(i[item]["adv_days"]) <= int(i[item]["days"])) else int(i[item]["days"]) if int(i[item]["days"]) <= 14 else 14}
+                if g.pr.providers.get(i[item]["id"], {}).get("adv_loader"):
+                    if int(i[item]["adv_threads"]) <= int(g.pr.providers[i[item]["id"]].get("advanced_download_threads", 10)):
+                        g.user_db.main["provider_settings"][i[item]["id"]]["adv_threads"] = int(i[item]["adv_threads"])
+                    else:
+                        g.user_db.main["provider_settings"][i[item]["id"]]["adv_threads"] = int(g.pr.providers[i[item]["id"]].get("advanced_download_threads", 10))
+                    g.user_db.main["provider_settings"][i[item]["id"]]["adv_files"] = int(i[item]["adv_files"]) if i[item]["adv_files"] else None
+                    g.user_db.main["provider_settings"][i[item]["id"]]["adv_duration"] = int(i[item]["adv_duration"]) if i[item]["adv_duration"] and int(i[item]["adv_duration"]) <= 1440 else None
+            else:
+                g.user_db.main["settings"][item] = i[item]
         g.user_db.save_settings()
         return json.dumps({"success": True})
     except Exception as e:

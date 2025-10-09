@@ -567,7 +567,7 @@ section #settings {
   padding-right: 0.5rem;
   margin-right: 3px;
 }
-.nav-bar #days {
+.nav-bar #days, .nav-bar #adv_days {
   padding-left: 0;
   padding-right: 0;
 }

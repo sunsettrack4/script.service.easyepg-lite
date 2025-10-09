@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from importlib import util
 from time import sleep
 import concurrent.futures, json, os, sqlite3, sys, traceback
@@ -45,6 +45,8 @@ class UserData():
             self.main["sessions"] = {}
         if "xmltv" not in self.main:
             self.main["xmltv"] = {}
+        if "provider_settings" not in self.main:
+            self.main["provider_settings"] = {}
         
         # Check settings / insert default values (if needed)
         if self.main["settings"].get("ut", "") == "":
@@ -127,7 +129,7 @@ class SQLiteManager():
             credits, season_episode_num, genres, qualifiers, broadcast_id in to_be_updated]
         return
 
-    def simple_epg_db_update(self, provider):
+    def simple_epg_db_update(self, provider, days):
         self.c.execute("""SELECT channel_id from {}""".format(f"pre_{provider}"))
         new_channels = [item[0] for item in self.c.fetchall()]
 
@@ -183,7 +185,9 @@ class SQLiteManager():
             self.write_epg_db_items(provider, [item for item in new_broadcasts_items if item[1] not in old_set], False)
             del old_set
 
-            advanced_to_be_loaded.extend([item[1] for item in new_broadcasts_items if item[1] not in old_advanced_set])
+            today = datetime.today()
+            max_time = int((datetime(today.year, today.month, today.day, 6, 0, 0) + timedelta(days=days)).timestamp())
+            advanced_to_be_loaded.extend([item[1] for item in new_broadcasts_items if item[1] not in old_advanced_set and item[2] <= max_time] if days > 0 else [])
             del new_broadcasts_items, old_advanced_set
 
         self.confirm_update()
@@ -304,6 +308,7 @@ class ProviderManager():
     def main_downloader(self, provider_name, data=None):
         data = self.providers[provider_name].get("data") if not data else data
         provider = "gntms" if provider_name == "tvtms" else provider_name
+        settings = self.user_db.main["settings"] | self.user_db.main["provider_settings"].get(provider_name, {})
 
         # RETRIEVE CHANNELS AND PROVIDER TYPE
         if type(data) == dict and data.get("id") and "xml" in data["id"]:
@@ -327,7 +332,7 @@ class ProviderManager():
 
         # URL/HEADERS/DATA LIST
         url_list = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_main_links(
-            data, channels, self.user_db.main["settings"],
+            data, channels, settings,
             self.user_db.main["sessions"].get(provider_name), general_header)
         
         # MAX NUMBER OF DOWNLOADS/CONVERSIONS PER BLOCK
@@ -349,8 +354,8 @@ class ProviderManager():
         if os.name != "nt":
             max_workers = 1
         elif not self.providers[provider_name].get("max_dl_threads") or \
-                self.providers[provider_name]["max_dl_threads"] <= self.user_db.main["settings"]["dl_threads"]:
-            max_workers = self.user_db.main["settings"]["dl_threads"] 
+                self.providers[provider_name]["max_dl_threads"] <= settings["dl_threads"]:
+            max_workers = settings["dl_threads"] 
         else:
             max_workers = self.providers[provider_name]["max_dl_threads"]
         
@@ -371,7 +376,7 @@ class ProviderManager():
             for i in self.epg_cache.keys():
                 if not "###" in i:
                     m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_main_converter(
-                        self.epg_cache[i][0], data, channels, self.user_db.main["settings"], self.epg_cache[i][1], gen)
+                        self.epg_cache[i][0], data, channels, settings, self.epg_cache[i][1], gen)
                 
                     self.epg_db.write_epg_db_items(provider  if not xmltv else data["id"],
                         [(i["c_id"], i["b_id"], i["start"], i["end"], i["title"], 
@@ -394,7 +399,7 @@ class ProviderManager():
         self.status_ext = None
         self.pr_pr = self.pr_pr + 1
         self.print_error_cache(provider_name)
-        return self.epg_db.simple_epg_db_update(provider if not xmltv else data["id"])
+        return self.epg_db.simple_epg_db_update(provider if not xmltv else data["id"], settings.get("adv_days", 14))
 
     def load_main(self, provider_name, item, name):
         if self.exit or self.cancellation:
@@ -441,6 +446,7 @@ class ProviderManager():
             return True
         
         data = self.providers[provider_name].get("data") if not data else data
+        settings = self.user_db.main["settings"] | self.user_db.main["provider_settings"].get(provider_name, {})
         
         # RETRIEVE SESSION
         if not self.login(provider_name, data):
@@ -450,7 +456,14 @@ class ProviderManager():
         session = self.user_db.main["sessions"].get(provider_name)
 
         url_params = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_advanced_links(
-            data, session, self.user_db.main["settings"], programmes, general_header)
+            data, session, settings, programmes, general_header)
+        
+        # SET MAX NUMBER OF FILE DOWNLOADS
+        if settings.get("adv_files"):
+            try:
+                url_params = url_params[:settings["adv_files"]]
+            except:
+                pass
         
         # DUPLICATE CHECKER - REQUIRED FOR SHARED MOVIE/SERIES DATA (UNIQUE ID REQUIRED IN URL LIST)
         u = {}
@@ -483,7 +496,15 @@ class ProviderManager():
         self.fl_num = len(final_list)
         self.fl_pr = 0
 
+        # SET MAX DURATION FOR GRABBER DOWNLOAD
+        max_time = int((datetime.now() + timedelta(minutes=int(settings["adv_duration"]))).timestamp()) if settings.get("adv_duration") else None
+
         for grabber_param in final_list:
+            
+            # MAX TIME REACHED
+            if max_time and int(datetime.now().timestamp()) > max_time:
+                self.fl_pr = self.fl_pr + 1
+                continue
 
             self.l_pr = 0
             self.l_num = len(grabber_param)
@@ -492,9 +513,9 @@ class ProviderManager():
                 self.epg_cache = {}
 
             if os.name != "nt":
-                max_workers = 1
+                max_workers = settings.get("adv_threads", 1)
             else:
-                max_workers = self.providers[provider_name].get("advanced_download_threads", 10)
+                max_workers = settings.get("adv_threads", self.providers[provider_name].get("advanced_download_threads", 10))
 
             executor = concurrent.futures.ThreadPoolExecutor(
                 max_workers=max_workers)
@@ -513,7 +534,7 @@ class ProviderManager():
                 if not "###" in i:
                     m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_advanced_converter(
                         i, self.epg_db.config[provider_name].get("data"), self.epg_cache[i],
-                        self.user_db.main["settings"])
+                        settings)
                     
                     if self.providers[provider_name].get("multi_update"):
                         for j in m:
