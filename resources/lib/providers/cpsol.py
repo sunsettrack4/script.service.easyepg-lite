@@ -9,6 +9,10 @@ try:
 except:
     import requests
 
+provider_headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
+}
+
 
 def login(data, credentials, headers):
     provision_url =  "https://tvapi-hlm2.solocoo.tv/v1/provision"
@@ -31,7 +35,7 @@ def login(data, credentials, headers):
     }
 
     r = requests.Session()
-    r.headers = headers
+    r.headers = provider_headers
     
     prov_data = r.post(provision_url, json=device_info).json()["session"]["provisionData"]
 
