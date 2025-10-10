@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-import json, time
+import json, string, time
 
 try:
     from curl_cffi import requests
@@ -76,8 +76,8 @@ def epg_main_links(data, channels, settings, session, headers):
             if regional.get(channel.split("_")[0]):
                 regional_channels = channel.split("_")[0]
                 channel = channel.split("_")[0]
-            for time in [5,14,18,20,22,0]:
-                url_list.append({"url": f"https://www.{data['domain']}/tv-programm/sendungen/?order=channel&date={date}&time={time}&channel={channel}",
+            for page in range(1,3,1):
+                url_list.append({"url": f"https://www.{data['domain']}/tv-programm/sendungen/?order=channel&date={date}&page={page}&channel={channel}",
                                  "c": channel})
     
     return url_list
@@ -156,6 +156,16 @@ def epg_advanced_links(data, session, settings, programmes, headers={}):
 
 
 def epg_advanced_converter(item, data, cache, settings):
+    
+    def correct_num(string_item):
+        while True:
+            try:
+                return int(string_item), None
+            except:
+                if string_item[-1].isalpha():
+                    alphabet = string.ascii_lowercase
+                    return int(string_item[:-1]), alphabet.find(string_item[-1])+1
+    
     p = BeautifulSoup(cache[0], 'html.parser')
     
     g = dict()
@@ -187,16 +197,17 @@ def epg_advanced_converter(item, data, cache, settings):
     if series:
         s_num = None
         e_num = None
+        p_num = None
 
         se_info = series.find("span").get_text().split(", ")
         if "Staffel " in se_info[0]:
             s_num = se_info[0].replace("Staffel ", "")
         if len(se_info) == 1 and "Folge " in se_info[0]:
-            e_num = se_info[0].replace("Folge ", "")
+            e_num, p_num = correct_num(se_info[0].replace("Folge ", ""))
         elif len(se_info) > 1 and "Folge " in se_info[1]:
-            e_num = se_info[1].replace("Folge ", "").split("/")[0]
+            e_num, p_num = correct_num(se_info[1].replace("Folge ", "").split("/")[0])
 
-        g["season_episode_num"] = {"season": s_num, "episode": e_num}
+        g["season_episode_num"] = {"season": s_num, "episode": e_num, "part": p_num}
 
     directors = []
     actors = []

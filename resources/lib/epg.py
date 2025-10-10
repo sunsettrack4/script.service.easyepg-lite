@@ -216,6 +216,7 @@ class Grabber():
                             series_data = json.loads(json.loads(season_episode_num)) if type(season_episode_num) == str else {}
                             episode_num = series_data.get("episode")
                             season_num = series_data.get("season")
+                            part_num = series_data.get("part")
                             categories = json.loads(json.loads(genres)) if type(genres) == str else []
                             age_rating = json.loads(json.loads(rating)) if type(rating) == str else {}
                             rating = age_rating.get("value")
@@ -380,7 +381,7 @@ class Grabber():
                                 if episode_num is None:
                                     episode_num = 1
                                 program["episode-num"] = {"@system": "xmltv_ns", 
-                                    "#text": f"{int(season_num) - 1} . {int(episode_num) - 1} . "}
+                                    "#text": f"{int(season_num) - 1} . {int(episode_num) - 1} . {(int(part_num) - 1) if part_num else ''}"}
 
 
                             # AGE RATING
