@@ -31,6 +31,12 @@ regional =  \
                 {"name": "MDR Sachsen", "id": "MDR_Sachsen", "remove": "Sachsen: ", "exclude": ["ST: ", "TH: "]},
                 {"name": "MDR Sachsen-Anhalt", "id": "MDR_ST", "remove": "ST: ", "exclude": ["Sachsen: ", "TH: "]},
                 {"name": "MDR Thüringen", "id": "MDR_TH", "remove": "TH: ", "exclude": ["ST: ", "Sachsen: "]}
+            ],
+
+        "RBB":
+            [
+                {"name": "rbb Berlin", "id": "RBB_Berlin", "remove": "Berlin: ", "exclude": ["BB: "]},
+                {"name": "rbb Brandenburg", "id": "RBB_BB", "remove": "BB: ", "exclude": ["Berlin: "]}
             ]
     }
 
