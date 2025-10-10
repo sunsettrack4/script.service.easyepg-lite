@@ -337,6 +337,34 @@
 
     },
 
+    "tvspf":
+
+    {
+
+        "module": "tvspf",
+        
+        "name": "TV Spielfilm",
+        "country": "DE",
+
+        "data": {
+            "domain": "tvspielfilm.de"
+        },
+
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 7,
+        "max_dl_threads": 7,
+        "is_utc": true,
+        "duplicate_check_req": true,
+
+        "adv_loader": true
+
+    },
+
     "wpude":
 
     {
