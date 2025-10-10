@@ -308,7 +308,7 @@ class ProviderManager():
     def main_downloader(self, provider_name, data=None):
         data = self.providers[provider_name].get("data") if not data else data
         provider = "gntms" if provider_name == "tvtms" else provider_name
-        settings = self.user_db.main["settings"] | self.user_db.main["provider_settings"].get(provider_name, {})
+        settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider_name, {})}
 
         # RETRIEVE CHANNELS AND PROVIDER TYPE
         if type(data) == dict and data.get("id") and "xml" in data["id"]:
