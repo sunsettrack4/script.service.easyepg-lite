@@ -446,7 +446,7 @@ class ProviderManager():
             return True
         
         data = self.providers[provider_name].get("data") if not data else data
-        settings = self.user_db.main["settings"] | self.user_db.main["provider_settings"].get(provider_name, {})
+        settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider_name, {})}
         
         # RETRIEVE SESSION
         if not self.login(provider_name, data):
