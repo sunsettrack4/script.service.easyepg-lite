@@ -415,19 +415,20 @@ class ProviderManager():
                 break
             except:
                 x = x + 1
-                if len(self.error_cache) <= 50:
-                    self.error_cache.append(f"{provider_name}: Connection error - retry... [{str(x)}/3]")
-                if x < 3:
+                if x < 5:
                     sleep(3)
                     continue
                 else:
                     if len(self.error_cache) <= 50:
-                        self.error_cache.append(f"{provider_name}: Connection error - closed.")
+                        self.error_cache.append(f"{provider_name}: Connection error for {str(item['url'])} - closed.")
                     return provider_name, "", item.get("c"), name
         
         if str(r.status_code)[0] in ["4", "5"]:
             if len(self.error_cache) <= 50:
-                self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
+                if self.providers[provider_name].get("ignore_404") and r.status_code == 404:
+                    pass
+                else:
+                    self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
             return provider_name, "", item.get("c"), name
         
         return provider_name, r.content, item.get("c"), name

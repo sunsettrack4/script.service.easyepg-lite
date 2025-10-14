@@ -76,7 +76,7 @@ def get_provider_settings():
             if g.pr.providers.get(filter_by, {}).get("adv_loader"):
                 p["adv"] = {}
                 p["adv"]["days"]    = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_days", g.user_db.main["settings"]["days"])
-                p["adv"]["threads"] = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_threads", int(g.pr.providers[filter_by].get("advanced_download_threads", 1)))
+                p["adv"]["threads"] = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_threads", int(g.pr.providers[filter_by].get("advanced_download_threads", 1 if os.name != "nt" else 10)))
                 p["adv"]["allowed_threads"] = int(g.pr.providers[filter_by].get("advanced_download_threads", 10))
                 p["adv"]["files"]   = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_files")
                 p["adv"]["duration"]    = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_duration")

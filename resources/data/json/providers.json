@@ -331,6 +331,7 @@
         "max_dl_num": 7,
         "max_dl_threads": 7,
         "is_utc": true,
+        "ignore_404": true,
 
         "adv_loader": true,
         "multi_update": true
@@ -381,6 +382,7 @@
         "main_threads": 7,
         "max_dl_num": 20,
         "max_dl_threads": 10,
+        "ignore_404": true,
 
         "adv_loader": true
 
