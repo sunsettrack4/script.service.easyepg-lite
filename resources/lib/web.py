@@ -87,6 +87,30 @@ def get_provider_settings():
         return json.dumps({"success": False, "message": f"Failed to load provider settings: {e}"})
 
 
+@route("/api/web_search", method="POST")
+def web_search():
+    query = json.loads(request.body.read()).get("query", "")
+    try:
+        results = dict()
+
+        for result in g.pr.channel_db.search_channel(query):
+            results[result[0]] = json.loads(result[5])
+            results[result[0]]["provider_name"] = result[2]
+            results[result[0]]["provider_id"] = result[3]
+            results[result[0]]["country"] = result[4]
+            
+        for i in results.keys():
+            if g.user_db.main["channels"].get(i):
+                results[i]["chExists"] = True
+            else:
+                results[i]["chExists"] = False
+
+        return json.dumps({"success": True, "result": results})
+    except Exception as e:
+        print(str(e))
+        return json.dumps({"success": False, "message": f"Failed to load search results"})
+
+
 @route("/api/listings", method="GET")
 def listings():
     p = dict()
@@ -262,8 +286,16 @@ def add_channel():
     if not provider_id:
         try:
             for id in ids:
-                i = json.loads(t.get_channel_info(id, file))
+                file_2 = None
+                if not file and g.pr.channel_db.get_channel(id):
+                    try:
+                        file_2 = [json.loads(g.pr.channel_db.get_channel(id)[0][0])]
+                    except:
+                        pass
+                i = json.loads(t.get_channel_info(id, file_2 if not file else file))
                 if i["success"]:
+                    if file:
+                        g.pr.channel_db.update_channel_db("station", "gntms", file)
                     if len(i["result"]) > 0 and i["result"][0].get("stationId") == id:
                         d[id] = i["result"][0]
         except Exception as e:
@@ -280,6 +312,8 @@ def add_channel():
                     if ch_list[1].get(id.split("|")[1]):
                         d[id.replace(f"{provider_id}|", f"{provider_id}_")] = \
                             {"stationId": id.replace(f"{provider_id}|", ""), "name": ch_list[1][id.split("|")[1]]["name"], "preferredImage": {"uri": ch_list[1][id.split("|")[1]].get("icon")}}
+            else:
+                return json.dumps({"success": False, "message": f'Failed to add the channel: {ch_list[1]}'})
         except Exception as e:
             print_error(traceback.format_exc())
             return json.dumps({"success": False, "message": "The channels could not be added."})

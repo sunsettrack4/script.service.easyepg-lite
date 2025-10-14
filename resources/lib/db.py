@@ -61,7 +61,7 @@ class UserData():
             json.dump(self.main, f)
         return True
 
-class SQLiteManager():
+class SQLiteEPGManager():
     def __init__(self, config, file_path):
         self.config = config
         self.file_path = file_path
@@ -200,13 +200,79 @@ class SQLiteManager():
         self.conn.commit()
         self.c.execute("""VACUUM""")
 
+class SQLiteChannelManager():
+
+    def __init__(self, config, file_path):
+        self.ch_config = config
+        self.ch_file_path = file_path
+        self.init_ch_db()
+        # self.load_cache()
+
+    def init_ch_db(self):
+        self.ch_conn = sqlite3.connect(f"{self.ch_file_path}resources/data/db/channels.db", check_same_thread=False)
+        self.ch_c = self.ch_conn.cursor()
+        self.create_channel_db()
+        return
+    
+    def get_channel(self, station_id):
+        self.ch_c.execute("""SELECT config FROM channels WHERE channel_id = '{}'""".format(station_id))
+        return [item for item in self.ch_c.fetchall()]
+    
+    def search_channel(self, search_query):
+        self.ch_c.execute("""SELECT * FROM channels WHERE channel_name LIKE '{}%'""".format(search_query))
+        return [item for item in self.ch_c.fetchall()]
+    
+    def load_cache(self):
+        for file in os.listdir(f"{self.ch_file_path}cache"):
+            if "station_" in file or "station-" in file:
+                with open(f"{self.ch_file_path}cache/{file}", "r", encoding="UTF-8") as f:
+                    try:
+                        self.update_channel_db("station", "Gracenote TMS", json.load(f))
+                    except:
+                        pass
+    
+    def create_channel_db(self):
+        self.ch_c.execute("""CREATE TABLE IF NOT EXISTS channels"""
+                       """(channel_id TEXT PRIMARY KEY, channel_name TEXT, provider_name TEXT, provider_id TEXT, country TEXT, config TEXT)""")
+        self.confirm_ch_update()
+        return
+    
+    def update_channel_db(self, file_type, provider_name, ch_list):
+        if file_type == "lineup":
+            self.remove_channel_db_items(provider_name)
+            [ch_list[channel].update({"stationId": channel}) for channel in ch_list.keys()]
+            [self.ch_c.execute("""INSERT OR REPLACE INTO channels """
+                            """(channel_id, channel_name, provider_name, provider_id, country, config) """
+                            """VALUES (?, ?, ?, ?, ?, ?)""",
+                            (f'{provider_name}_{channel}', ch_list[channel]["name"], 
+                             self.ch_config[provider_name]["name"], provider_name,
+                             self.ch_config[provider_name]["country"], json.dumps(ch_list[channel])))
+            for channel in ch_list.keys()]
+        if file_type == "station":
+            station = ch_list[0]
+            self.ch_c.execute("""INSERT OR REPLACE INTO channels """
+                            """(channel_id, channel_name, provider_name, provider_id, country, config) """
+                            """VALUES (?, ?, ?, ?, ?, ?)""",
+                            (station["stationId"], station["name"], "Gracenote TMS", "gntms", None, json.dumps(ch_list[0])))
+        self.confirm_ch_update()
+        return
+    
+    def remove_channel_db_items(self, provider):
+        self.ch_c.execute("""DELETE FROM channels WHERE provider_id = '{}'""".format(provider))
+        return
+    
+    def confirm_ch_update(self):
+        self.ch_conn.commit()
+        self.ch_c.execute("""VACUUM""")
+
 class ProviderManager():
     
     def __init__(self, file_paths, user_db):
         self.file_paths = file_paths
         self.user_db = user_db
         self.import_data()
-        self.epg_db = SQLiteManager(self.providers, file_paths["storage"])
+        self.epg_db = SQLiteEPGManager(self.providers, file_paths["storage"])
+        self.channel_db = SQLiteChannelManager(self.providers, file_paths["storage"])
         self.import_provider_modules()
         self.error_cache = []
 
@@ -298,6 +364,7 @@ class ProviderManager():
             try:
                 with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "w") as file:
                     json.dump({"date": datetime.today().strftime("%Y%m%d"), "ch_list": ch_list}, file)
+                # self.channel_db.update_channel_db("lineup", provider_name, ch_list)
             except:
                 pass
             return True, ch_list

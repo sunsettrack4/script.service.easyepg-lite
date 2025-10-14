@@ -154,6 +154,102 @@ const advThreads = document.getElementById("adv_threads");
 const advFiles = document.getElementById("max_adv_files");
 const advDuration = document.getElementById("update_duration");
 
+const webSearch = document.getElementById("web_search");
+
+let typingTimer;
+let doneTypingInterval = 600;
+
+webSearch.addEventListener("keyup", function() {
+    clearTimeout(typingTimer);
+    if (webSearch.value) {
+        typingTimer = setTimeout(doneSearch, doneTypingInterval);
+    };
+});
+
+function doneSearch() {
+    var search_query = webSearch.value;
+    if( search_query != "" ) {
+        fetch("api/web_search", {
+            method: "POST",
+            body: JSON.stringify({"query": webSearch.value})
+        })
+        .then(response => {
+            response.json().then(function(d) {
+                if( d["success"] === true ) {
+                    searchResultsText.innerText = "Search results for '" + webSearch.value + "'";
+                    var data = d["result"]
+                    
+                    for( let i = 0; i < tableClass.length; i++ ) {
+                        tableClass[i].style.display = "none";
+                    };
+                    searchTable.innerHTML = "";
+
+                    var j = [];
+                    for( k in data ) {
+                        j.push(data[k]["name"] + "|" + k + "|" + data[k]["provider_id"] + "|" + data[k]["provider_name"] + "|" + data[k]["stationId"]);
+                    };
+                    
+                    j.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+
+                    for( var b = 0; b < j.length; b++ ) {
+                        i = j[b].split("|")[1];
+                        pr = j[b].split("|")[2];
+                        prn = j[b].split("|")[3];
+                        st = j[b].split("|")[4];
+                        var newRow = searchTable.insertRow();
+                        newRow.id = "mn|" + pr + "|" + st;
+                        newRow.classList.add("mn_row");
+                        if( data[i].hasOwnProperty("icon") ) {
+                            if( data[i]["icon"] == null || data[i]["icon"] == "" ) {
+                                var imgSrc = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16"><path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/></svg>';
+                            } else {
+                                var imgSrc = '<img src="' + data[i]["icon"] + '" alt="">';
+                            };
+                        } else if ( data[i].hasOwnProperty("preferredImage") ) {
+                            var imgSrc = '<img src="' + data[i]["preferredImage"]["uri"] + '" alt="">';
+                        } else {
+                            var imgSrc = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" fill="currentColor" class="bi bi-tv" viewBox="0 0 16 16"><path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v5.991l-.001.024a1.464 1.464 0 0 1-.143.538.758.758 0 0 1-.254.302c-.1.067-.277.145-.602.145H2.009l-.024-.001a1.464 1.464 0 0 1-.538-.143.758.758 0 0 1-.302-.254C1.078 10.502 1 10.325 1 10V4.009l.001-.024a1.46 1.46 0 0 1 .143-.538.758.758 0 0 1 .254-.302C1.498 3.078 1.675 3 2 3h11.991zM14 2H2C0 2 0 4 0 4v6c0 2 2 2 2 2h12c2 0 2-2 2-2V4c0-2-2-2-2-2z"/></svg>'
+                        };
+                        if( data[i]["chExists"] === true ) {
+                            var btnShow = '<button disabled id="' + i + '" class="added-ch"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16"><path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/><path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/></svg></button>';
+                            newRow.classList.remove("mn_row");
+                        } else {
+                            var btnShow = '<button id="' + i + '" class="add-ch"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg></button>';
+                        };
+                        if( pr === "gntms" ) {
+                            stn = " | ID: " + i;
+                        } else {
+                            stn = "";
+                        };
+                        newRow.innerHTML = '<td>' + imgSrc + '</td><td>' + data[i]["name"] + '<p>Provider: ' + prn + stn + '</p></td><td>' + btnShow + '</td>'
+                        document.getElementById(i).addEventListener("click", function() {
+                            addNewChannel(this.getAttribute("id").replace(/_/i, "|"), this.getAttribute("id").includes("_"), true);
+                        });                  
+                    };
+
+                    if( document.getElementById("search-table").rows.length === 0 ) {
+                        // HEADER
+                        showNotiMessage("No search results found")
+                        tableSection.classList.add("hide-window");
+                        setTimeout(function() {
+                            tableSection.style.display = "none";
+                            tableSection.classList.remove("hide-window");
+                            loadChannelList(null, true);
+                        }, 200);
+                    } else {
+                        // HEADER
+                        tableSection.style.display = "block";
+                    };
+                } else {
+                    showNotiMessage("An error occurred: " + d["message"], "error");
+                };
+            });
+        }).catch(error => {
+            console.log(error);
+            showNotiMessage("An error occurred while serving the request.", "error");
+        });
+    };
+};
 
 providerGrabSetSelection.addEventListener("change", function() {
     var prov_id = providerGrabSetSelection.options[providerGrabSetSelection.selectedIndex].getAttribute("id");
@@ -663,9 +759,6 @@ applyUploadStation.addEventListener("click", function() {
         showNotiMessage("An error occurred while serving the request.", "error");
     })
 });
-
-let typingTimer;
-let doneTypingInterval = 600;
 
 chSearchBar.addEventListener("keypress", function(button) {
     clearTimeout(typingTimer);
@@ -1321,6 +1414,7 @@ function closeKeyWindowEvent() {
 };
 
 openWebWindow.addEventListener("click", function() {
+    webSearch.value = "";
     if( !openWebWindow.classList.contains("selected-btn") ) {
         if( openSearchWindow.classList.contains("selected-btn") ) {
             if( keyWindow.style.display === "inline" ) {
@@ -1397,6 +1491,7 @@ function closeXmlWindowEvent() {
 };
 
 openSearch.addEventListener("click", function() {
+    webSearch.value = "";
     if( openWebWindow.classList.contains("selected-btn") ) {
         retrieveWebSources();
         webWindow.style.display = "inline";
@@ -1668,6 +1763,7 @@ closeResultsWindow.addEventListener('click', function() {
         tableSection.classList.remove("hide-window");
         loadChannelList(null, true);
         loadSettings(channelTable.getElementsByTagName("tbody")[0].scrollTop);
+        lpSearchBar.style.display = "block";
     }, 200);
     // loadChannelList();
 });
@@ -1713,7 +1809,7 @@ function doneTyping() {
                     };
                     newRow.innerHTML = '<td>' + imgSrc + '</td><td>' + data["hits"][i]["station"]["name"] + '<p>ID: ' + data["hits"][i]["station"]["stationId"] + ' | ' + data["hits"][i]["station"]["callSign"] + ' | ' + data["hits"][i]["station"]["bcastLangs"][0] + ' | ' + data["hits"][i]["station"]["type"] + '</p></td><td>' + btnShow + '</td>'
                     document.getElementById(data["hits"][i]["station"]["stationId"]).addEventListener("click", function() {
-                        addNewChannel(this.getAttribute("id"), false);
+                        addNewChannel(this.getAttribute("id"), false, false);
                     });
                 }
                 if( document.getElementById("search-table").rows.length === 0 ) {
@@ -1852,7 +1948,7 @@ function loadExtLineupChannels(value) {
                     };
                     newRow.innerHTML = '<td>' + imgSrc + '</td><td>' + data[i]["name"] + '<p>ID: ' + i + '</p></td><td>' + btnShow + '</td>'
                     document.getElementById(i).addEventListener("click", function() {
-                        addNewChannel(value + "|" + this.getAttribute("id"), true);
+                        addNewChannel(value + "|" + this.getAttribute("id"), true, false);
                     });                    
                 };
 
@@ -2018,7 +2114,7 @@ function loadLineupChannels(value) {
                                 };
                                 document.getElementById("mn|" + info[0]["stationId"]).innerHTML = '<td>' + imgSrc + '</td><td>' + info[0]["name"] + '<p>ID: ' + info[0]["stationId"] + ' | ' + info[0]["callSign"] + ' | ' + info[0]["bcastLangs"][0] + ' | ' + info[0]["type"] + '</p></td><td>' + btnShow + '</td>'
                                 document.getElementById(info[0]["stationId"]).addEventListener("click", function() {
-                                    addNewChannel(this.getAttribute("id"), true);
+                                    addNewChannel(this.getAttribute("id"), true, false);
                                 });
 
                                 if( (j.length - c) === 1 ) {
@@ -2086,7 +2182,7 @@ function loadLineupChannels(value) {
     });
 };
 
-function addNewChannel(value, lineup) {
+function addNewChannel(value, lineup, search) {
     fetch("api/add", {
         method: "POST",
         body: JSON.stringify({"ids": [value]})
@@ -2095,7 +2191,11 @@ function addNewChannel(value, lineup) {
         response.json().then(function(data) {
             if( data["success"] === true ) {
                 if( value.includes("|") ) {
-                    var v = value.split("|")[1];
+                    if( search === true ) {
+                        var v = value.split("|")[0] + "_" + value.split("|")[1];
+                    } else {
+                        var v = value.split("|")[1];
+                    };
                 } else {
                     var v = value;
                 };
