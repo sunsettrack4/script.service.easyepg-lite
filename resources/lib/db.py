@@ -272,7 +272,7 @@ class ProviderManager():
         self.user_db = user_db
         self.import_data()
         self.epg_db = SQLiteEPGManager(self.providers, file_paths["storage"])
-        self.channel_db = SQLiteChannelManager(self.providers, file_paths["storage"])
+        self.channel_db = SQLiteChannelManager(self.providers, file_paths["included"])
         self.import_provider_modules()
         self.error_cache = []
 
