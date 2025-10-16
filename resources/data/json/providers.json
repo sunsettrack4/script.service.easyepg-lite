@@ -144,6 +144,29 @@
     
     },
 
+    "tvmat":
+
+    {
+
+        "module": "tvmat",
+        
+        "name": "TV Media",
+        "country": "AT",
+
+        "login_req": true,
+        "auth_req": false,
+        "exp": 300,
+        "is_utc": true,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 50,
+        "max_dl_threads": 7,
+
+        "adv_loader": true
+    
+    },
+
     "zttat":
 
     {
