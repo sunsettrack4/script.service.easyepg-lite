@@ -115,6 +115,35 @@
     
     },
 
+    "skyat":
+
+    {
+
+        "module": "skyde",
+        
+        "name": "Sky Österreich",
+        "country": "AT",
+
+        "data": {
+            "country": "at"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+        "is_utc": true,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 50,
+        "max_dl_threads": 7,
+
+        "adv_loader": true,
+        "advanced_download_threads": 5,
+        "dl_delay": 2,
+        "ignore_error_codes": [500]
+    
+    },
+
     "zttat":
 
     {
@@ -288,6 +317,35 @@
     
     },
 
+    "skyde":
+
+    {
+
+        "module": "skyde",
+        
+        "name": "Sky Deutschland",
+        "country": "DE",
+
+        "data": {
+            "country": "de"
+        },
+
+        "login_req": false,
+        "auth_req": false,
+        "is_utc": true,
+
+        "main_loader": true,
+        "main_threads": 4,
+        "max_dl_num": 50,
+        "max_dl_threads": 7,
+
+        "adv_loader": true,
+        "advanced_download_threads": 5,
+        "dl_delay": 2,
+        "ignore_error_codes": [500]
+
+    },
+
     "tkmde":
 
     {
@@ -331,7 +389,7 @@
         "max_dl_num": 7,
         "max_dl_threads": 7,
         "is_utc": true,
-        "ignore_404": true,
+        "ignore_error_codes": [404],
 
         "adv_loader": true,
         "multi_update": true
@@ -382,7 +440,7 @@
         "main_threads": 7,
         "max_dl_num": 20,
         "max_dl_threads": 10,
-        "ignore_404": true,
+        "ignore_error_codes": [410],
 
         "adv_loader": true
 

@@ -476,9 +476,9 @@ class ProviderManager():
         while True:
             try:
                 if item.get("d"):
-                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}))
+                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 else:
-                    r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}))
+                    r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 break
             except:
                 x = x + 1
@@ -492,7 +492,7 @@ class ProviderManager():
         
         if str(r.status_code)[0] in ["4", "5"]:
             if len(self.error_cache) <= 50:
-                if self.providers[provider_name].get("ignore_404") and r.status_code == 404:
+                if self.providers[provider_name].get("ignore_error_codes", []) and r.status_code in self.providers[provider_name]["ignore_error_codes"]:
                     pass
                 else:
                     self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
