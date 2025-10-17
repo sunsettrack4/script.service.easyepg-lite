@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from importlib import util
 from time import sleep
-import concurrent.futures, json, os, sqlite3, sys, traceback
+import concurrent.futures, json, os, sqlite3, subprocess, sys, traceback
 
 try: 
     from curl_cffi import requests
@@ -155,6 +155,12 @@ class SQLiteEPGManager():
         advanced_to_be_loaded = []
 
         for channel in channel_set:
+            try:
+                if int(channel):
+                    channel = f"'{channel}'"
+            except:
+                pass
+            
             self.c.execute("""SELECT broadcast_id FROM {} WHERE channel_id IN ({})""".format(f"pre_{provider}", channel))
             new_set = set([item[0] for item in self.c.fetchall()])
 
@@ -375,7 +381,7 @@ class ProviderManager():
     def main_downloader(self, provider_name, data=None):
         data = self.providers[provider_name].get("data") if not data else data
         provider = "gntms" if provider_name == "tvtms" else provider_name
-        settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider_name, {})}
+        settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider, {})}
 
         # RETRIEVE CHANNELS AND PROVIDER TYPE
         if type(data) == dict and data.get("id") and "xml" in data["id"]:
@@ -445,7 +451,7 @@ class ProviderManager():
                     m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_main_converter(
                         self.epg_cache[i][0], data, channels, settings, self.epg_cache[i][1], gen)
                 
-                    self.epg_db.write_epg_db_items(provider  if not xmltv else data["id"],
+                    self.epg_db.write_epg_db_items(provider if not xmltv else data["id"],
                         [(i["c_id"], i["b_id"], i["start"], i["end"], i["title"], 
                           i.get("subtitle", ""), i.get("desc", ""), i.get("image", ""), 
                           i.get("date", ""), i.get("country", ""), i.get("star", {}), i.get("rating", {}), i.get("credits", {}),
@@ -467,15 +473,31 @@ class ProviderManager():
         self.pr_pr = self.pr_pr + 1
         self.print_error_cache(provider_name)
         return self.epg_db.simple_epg_db_update(provider if not xmltv else data["id"], settings.get("adv_days", 14))
+    
+    def getProcessOutput(self, cmd):
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, close_fds=True)
+        process.wait(4)
+        data, err = process.communicate()
+        if process.returncode == 0:
+            return data.decode('utf-8')        
+        return
 
-    def load_main(self, provider_name, item, name):
+    def load_main(self, provider_name, item, name, tms_retry=False):
         if self.exit or self.cancellation:
             return
-        sleep(self.providers[provider_name].get("dl_delay", 0))
+        if tms_retry:
+            sleep(5)
+            item["url"] = item["tms2"]
+            del item["tms"], item["d"]
+        else:
+            sleep(self.providers[provider_name].get("dl_delay", 0))
         x = 0
         while True:
             try:
-                if item.get("d"):
+                if item.get("tms"):
+                    gh = "; ".join(f"{i}: {general_header[i]}" for i in general_header.keys())
+                    r = self.getProcessOutput(f'curl -s -m {item.get("t", self.providers[provider_name].get("timeout", 60))} "{item["tms"]}" -H "{item["h"] if item.get("h") else gh}"{(" --data-raw "+item["d"]) if item.get("d") else ""}')
+                elif item.get("d"):
                     r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 elif item.get("j"):
                     r = requests.post(item["url"], headers=item.get("h", general_header), json=item["j"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
@@ -483,6 +505,8 @@ class ProviderManager():
                     r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 break
             except:
+                if item.get("tms"):
+                    return provider_name, "", item.get("c"), name
                 x = x + 1
                 if x < 5:
                     sleep(3)
@@ -492,7 +516,9 @@ class ProviderManager():
                         self.error_cache.append(f"{provider_name}: Connection error for {str(item['url'])} - closed.")
                     return provider_name, "", item.get("c"), name
         
-        if str(r.status_code)[0] in ["4", "5"]:
+        if item.get("tms") and not r:
+            return provider_name, "", item.get("c"), name
+        elif not item.get("tms") and str(r.status_code)[0] in ["4", "5"]:
             if len(self.error_cache) <= 50:
                 if self.providers[provider_name].get("ignore_error_codes", []) and r.status_code in self.providers[provider_name]["ignore_error_codes"]:
                     pass
@@ -500,10 +526,13 @@ class ProviderManager():
                     self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
             return provider_name, "", item.get("c"), name
         
-        return provider_name, r.content, item.get("c"), name
+        return provider_name, r if item.get("tms") else r.content, item.get("c"), name
 
     def url_threads_handler(self, item):
         if self.exit or self.cancellation:
+            return
+        if item.result()[0] == "tvtms" and item.result()[1] == "":
+            self.retry_tms.append(item.result()[3])
             return
         self.epg_cache[f"{'###' if item.result()[1] == '' else ''}{item.result()[3]}"] = item.result()[1], item.result()[2]
         self.l_pr = self.l_pr + 1
@@ -516,7 +545,8 @@ class ProviderManager():
             return True
         
         data = self.providers[provider_name].get("data") if not data else data
-        settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider_name, {})}
+        provider = "gntms" if provider_name == "tvtms" else provider_name
+        settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider, {})}
         
         # RETRIEVE SESSION
         if not self.login(provider_name, data):
@@ -587,11 +617,25 @@ class ProviderManager():
             else:
                 max_workers = settings.get("adv_threads", self.providers[provider_name].get("advanced_download_threads", 10))
 
+            if provider_name == "tvtms":
+                self.retry_tms = []
+            
             executor = concurrent.futures.ThreadPoolExecutor(
                 max_workers=max_workers)
             {executor.submit(self.load_main, provider_name, item, item.get("name", str(index))).add_done_callback(self.url_threads_handler) for index, item in enumerate(grabber_param)}
             executor.shutdown(wait=True)
             del executor
+
+            # TMS RETRY
+            if provider_name == "tvtms":
+                new_grabber_param = [item for item in grabber_param if item["name"] in self.retry_tms]
+                max_workers = 1
+
+                executor = concurrent.futures.ThreadPoolExecutor(
+                    max_workers=max_workers)
+                {executor.submit(self.load_main, provider_name, item, item.get("name", str(index)), True).add_done_callback(self.url_threads_handler) for index, item in enumerate(new_grabber_param)}
+                executor.shutdown(wait=True)
+                del executor
 
             def duplicator(dup_ids, broadcast_list):
                 x = list(broadcast_list[0])  # BROADCAST LIST CONTAINS 1 ELEMENT ONLY
@@ -611,13 +655,13 @@ class ProviderManager():
                             j["b_id"] = j["b_id"].split("|+|")[0]
 
                     if len(u) > 0 and u.get(i):  # INSERT DETAILS FOR BROADCASTS WITH IDENTICAL DATA
-                        self.epg_db.update_epg_db_items(provider_name, duplicator(u[i], 
+                        self.epg_db.update_epg_db_items(provider, duplicator(u[i], 
                             [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
                                 i.get("subtitle"), i.get("desc"), i.get("image"), 
                                 i.get("date"), i.get("country"), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
                                 json.dumps(i.get("season_episode_num", {})), json.dumps(i.get("genres", [])), json.dumps(i.get("qualifiers", [])), i["b_id"]) for i in m]), True)
                     else:
-                        self.epg_db.update_epg_db_items(provider_name,
+                        self.epg_db.update_epg_db_items(provider,
                             [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
                                 i.get("subtitle"), i.get("desc"), i.get("image"), 
                                 i.get("date"), i.get("country"), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),

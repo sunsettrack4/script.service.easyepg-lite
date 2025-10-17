@@ -25,7 +25,8 @@
 
         "main_loader": true,
         "main_threads": 1,
-        "adv_loader": false,
+        "adv_loader": true,
+        "duplicate_check_req": true,
 
         "menu_visibility": false
 

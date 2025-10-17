@@ -73,7 +73,7 @@ def get_provider_settings():
         if filter_by != "":
             p["days"]  = g.user_db.main["provider_settings"].get(filter_by, {}).get("basic_days", g.user_db.main["settings"]["days"])
 
-            if g.pr.providers.get(filter_by, {}).get("adv_loader"):
+            if g.pr.providers.get(filter_by, {}).get("adv_loader") or filter_by == "gntms":
                 p["adv"] = {}
                 p["adv"]["days"]    = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_days", g.user_db.main["settings"]["days"])
                 p["adv"]["threads"] = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_threads", int(g.pr.providers[filter_by].get("advanced_download_threads", 1 if os.name != "nt" else 10)))
