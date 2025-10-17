@@ -155,12 +155,6 @@ class SQLiteEPGManager():
         advanced_to_be_loaded = []
 
         for channel in channel_set:
-            try:
-                if int(channel):
-                    channel = f"'{channel}'"
-            except:
-                pass
-            
             self.c.execute("""SELECT broadcast_id FROM {} WHERE channel_id IN ({})""".format(f"pre_{provider}", channel))
             new_set = set([item[0] for item in self.c.fetchall()])
 
@@ -468,7 +462,7 @@ class ProviderManager():
         self.epg_cache = {}
 
         # CLEAN UP
-        if not self.providers[provider].get("adv_loader", False):
+        if not self.providers[provider_name].get("adv_loader", False):
             self.epg_db.remove_epg_db(provider if not xmltv else data["id"], False)
 
         self.epg_db.create_epg_db(provider if not xmltv else data["id"], False)
@@ -489,7 +483,7 @@ class ProviderManager():
         if self.exit or self.cancellation:
             return
         if tms_retry:
-            sleep(5)
+            sleep(6)
             item["url"] = item["tms2"]
             del item["tms"], item["d"]
         else:
