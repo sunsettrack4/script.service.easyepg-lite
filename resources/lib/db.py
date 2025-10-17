@@ -383,6 +383,9 @@ class ProviderManager():
         provider = "gntms" if provider_name == "tvtms" else provider_name
         settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider, {})}
 
+        if provider_name == "tvtms":
+            self.retry_tms = []
+
         # RETRIEVE CHANNELS AND PROVIDER TYPE
         if type(data) == dict and data.get("id") and "xml" in data["id"]:
             channels = [i.replace(f"{data['id']}_", "") for i in self.user_db.main["channels"].keys() if f"{data['id']}_" in i]
