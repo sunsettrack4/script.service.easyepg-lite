@@ -8,6 +8,19 @@ try:
 except:
     import requests
 
+from platform import system
+
+if "Windows" in system() and os.path.isfile("curl.exe"):
+    curl = "curl.exe"
+elif "Linux" in system() and os.path.isfile("curl"):
+    curl = f"./curl"
+    try:
+        os.chmod("curl", 0o775)
+    except:
+        print("fatal: wrong permissions on easyepg folder.")
+else:
+    curl = "curl"
+
 general_header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                                 'Chrome/140.0.0.0 Safari/537.36'}
 
@@ -493,7 +506,7 @@ class ProviderManager():
             try:
                 if item.get("tms"):
                     gh = "; ".join(f"{i}: {general_header[i]}" for i in general_header.keys())
-                    r = self.getProcessOutput(f'curl -s -m {item.get("t", self.providers[provider_name].get("timeout", 60))} "{item["tms"]}" -H "{item["h"] if item.get("h") else gh}"{(" --data-raw "+item["d"]) if item.get("d") else ""}')
+                    r = self.getProcessOutput(f'{curl} -s -m {item.get("t", self.providers[provider_name].get("timeout", 60))} "{item["tms"]}" -H "{item["h"] if item.get("h") else gh}"{(" --data-raw "+item["d"]) if item.get("d") else ""}')
                 elif item.get("d"):
                     r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 elif item.get("j"):
