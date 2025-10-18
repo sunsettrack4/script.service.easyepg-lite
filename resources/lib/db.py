@@ -472,7 +472,7 @@ class ProviderManager():
         return self.epg_db.simple_epg_db_update(provider if not xmltv else data["id"], settings.get("adv_days", 14))
     
     def getProcessOutput(self, cmd):
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, close_fds=True)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, close_fds=True, shell=True)
         process.wait(4)
         data, err = process.communicate()
         if process.returncode == 0:
