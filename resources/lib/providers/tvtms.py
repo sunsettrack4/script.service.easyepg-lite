@@ -65,7 +65,7 @@ def epg_advanced_links(data, session, settings, programmes, headers={}):
     for i in programmes:
         pr = i.split('_')[0][:-4].replace("EP", "SH")
         url_list.append(
-            {"tms": "https://tvlistings.gracenote.com/api/program/overviewDetails", "tms2": f"https://www.tvtv.ca/api/v1/programs/{pr}0000", "d": f'"programSeriesID={pr}"',
+            {"tms": "https://tvlistings.gracenote.com/api/program/overviewDetails", "tms2": f"https://www.tvtv.ca/api/v1/programs/{pr}0000", "tms3": f"https://www.tvtv.us/api/v1/programs/{pr}0000", "d": f'"programSeriesID={pr}"',
              "uid": pr, "name": i, "t": 4})
     
     return url_list

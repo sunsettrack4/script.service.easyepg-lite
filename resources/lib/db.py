@@ -496,8 +496,11 @@ class ProviderManager():
         if self.exit or self.cancellation:
             return
         if tms_retry:
-            sleep(6)
-            item["url"] = item["tms2"]
+            sleep(3)
+            if tms_retry % 2 == 0:
+                item["url"] = item["tms2"]
+            else:
+                item["url"] = item["tms3"]
             del item["tms"], item["d"]
         else:
             sleep(self.providers[provider_name].get("dl_delay", 0))
@@ -643,7 +646,7 @@ class ProviderManager():
 
                 executor = concurrent.futures.ThreadPoolExecutor(
                     max_workers=max_workers)
-                {executor.submit(self.load_main, provider_name, item, item.get("name", str(index)), True).add_done_callback(self.url_threads_handler) for index, item in enumerate(new_grabber_param)}
+                {executor.submit(self.load_main, provider_name, item, item.get("name", str(index)), index+1).add_done_callback(self.url_threads_handler) for index, item in enumerate(new_grabber_param)}
                 executor.shutdown(wait=True)
                 del executor
 
