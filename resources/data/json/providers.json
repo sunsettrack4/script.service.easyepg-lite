@@ -442,6 +442,7 @@
         "max_dl_num": 7,
         "max_dl_threads": 7,
         "is_utc": true,
+        "ignore_error_codes": [404],
         "duplicate_check_req": true,
 
         "adv_loader": true
