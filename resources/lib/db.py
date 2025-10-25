@@ -375,9 +375,10 @@ class ProviderManager():
                 data, session, general_header
             )
             try:
-                with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "w") as file:
-                    json.dump({"date": datetime.today().strftime("%Y%m%d"), "ch_list": ch_list}, file)
-                # self.channel_db.update_channel_db("lineup", provider_name, ch_list)
+                if provider_name != "xmltv":
+                    with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "w") as file:
+                        json.dump({"date": datetime.today().strftime("%Y%m%d"), "ch_list": ch_list}, file)
+                    # self.channel_db.update_channel_db("lineup", provider_name, ch_list)
             except:
                 pass
             return True, ch_list

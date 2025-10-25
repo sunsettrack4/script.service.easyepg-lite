@@ -369,7 +369,7 @@ function saveCredentials() {
 };
 
 xmlName.addEventListener("keyup", function() {
-    if( xmlName.value != "" && xmlLink.value.match(url_regex) ) {
+    if( xmlName.value != "" && (xmlLink.value.match(url_regex) || xmlLink.value.includes("file://") ) ) {
         addXmlBtn.disabled = false;
     } else {
         addXmlBtn.disabled = true;
@@ -377,7 +377,7 @@ xmlName.addEventListener("keyup", function() {
 });
 
 xmlLink.addEventListener("keyup", function() {
-    if( xmlName.value != "" && xmlLink.value.match(url_regex) ) {
+    if( xmlName.value != "" && (xmlLink.value.match(url_regex) || xmlLink.value.includes("file://") ) ) {
         addXmlBtn.disabled = false;
     } else {
         addXmlBtn.disabled = true;

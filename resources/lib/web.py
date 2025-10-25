@@ -180,10 +180,10 @@ def get_lineup_channels():
 @route("/api/xmltv_lineups/add", method="POST")
 def add_xmltv_lineup():
     values = json.loads(request.body.read())
-    result = g.pr.ch_loader("xmltv", {"url": values.get("link")})
+    result = g.pr.ch_loader("xmltv", {"url": values.get("link").replace("\\", "/")})
     if result[0] and len(result[1].keys()):
         l = str(int(datetime.now().timestamp()))
-        g.user_db.main["xmltv"][f"xml{l}"] = {"name": values.get("name", f"XML FILE {l}"), "link": values["link"]}
+        g.user_db.main["xmltv"][f"xml{l}"] = {"name": values.get("name", f"XML FILE {l}"), "link": values["link"].replace("\\", "/")}
         g.user_db.save_settings()
         return json.dumps({"success": True, "message": f"XMLTV added: {len(result[1].keys())} channel(s) found!"})
     return json.dumps({"success": False, "message": "The resource could not be verified."})
