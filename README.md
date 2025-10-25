@@ -1,6 +1,6 @@
 # easyepg lite
 
-This tool retrieves the EPG data provided by Gracenote (TMS) and converts the JSON files into a single XMLTV file.
+This tool retrieves the EPG data provided by various sources and converts the JSON/HTML files into a single XMLTV file.
 
 ### Disclaimer
 
@@ -17,9 +17,8 @@ This tool retrieves the EPG data provided by Gracenote (TMS) and converts the JS
 
 ### Prerequisites
 
-* Python 3.x (+ modules: beautifulsoup4, bottle, requests, xmltodict)
+* Python 3.x (+ modules: bottle, bs4, cheroot, curl-cffi, pytz, requests, xmltodict)
 * Kodi 19.x or higher (addon version)
-* TMS API key (Sample/Commercial Plan)
 
 ### How to start
 
