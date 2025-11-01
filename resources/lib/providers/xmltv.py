@@ -41,8 +41,13 @@ def channels(data, session, headers={}):
 
     url = data["url"]
 
-    r = requests.get(url, headers=headers)
-    p = file_decoder(r.content)
+    if "http://" in data["url"] or "https://" in data["url"]:
+        r = requests.get(url, headers=headers)
+        p = file_decoder(r.content)
+    else:
+        with open(data["url"].replace("file://", ""), "r") as f:
+            r = f.read()
+        p = file_decoder(r)
 
     if type(p["tv"]["channel"]) == list:
         for ch in p["tv"]["channel"]:

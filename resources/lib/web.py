@@ -73,10 +73,10 @@ def get_provider_settings():
         if filter_by != "":
             p["days"]  = g.user_db.main["provider_settings"].get(filter_by, {}).get("basic_days", g.user_db.main["settings"]["days"])
 
-            if g.pr.providers.get(filter_by, {}).get("adv_loader"):
+            if g.pr.providers.get(filter_by, {}).get("adv_loader") or filter_by == "gntms":
                 p["adv"] = {}
                 p["adv"]["days"]    = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_days", g.user_db.main["settings"]["days"])
-                p["adv"]["threads"] = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_threads", int(g.pr.providers[filter_by].get("advanced_download_threads", 1)))
+                p["adv"]["threads"] = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_threads", int(g.pr.providers[filter_by].get("advanced_download_threads", 1 if os.name != "nt" else 10)))
                 p["adv"]["allowed_threads"] = int(g.pr.providers[filter_by].get("advanced_download_threads", 10))
                 p["adv"]["files"]   = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_files")
                 p["adv"]["duration"]    = g.user_db.main["provider_settings"].get(filter_by, {}).get("adv_duration")
@@ -85,6 +85,30 @@ def get_provider_settings():
     except Exception as e:
         print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": f"Failed to load provider settings: {e}"})
+
+
+@route("/api/web_search", method="POST")
+def web_search():
+    query = json.loads(request.body.read()).get("query", "")
+    try:
+        results = dict()
+
+        for result in g.pr.channel_db.search_channel(query):
+            results[result[0]] = json.loads(result[5])
+            results[result[0]]["provider_name"] = result[2]
+            results[result[0]]["provider_id"] = result[3]
+            results[result[0]]["country"] = result[4]
+            
+        for i in results.keys():
+            if g.user_db.main["channels"].get(i):
+                results[i]["chExists"] = True
+            else:
+                results[i]["chExists"] = False
+
+        return json.dumps({"success": True, "result": results})
+    except Exception as e:
+        print(str(e))
+        return json.dumps({"success": False, "message": f"Failed to load search results"})
 
 
 @route("/api/listings", method="GET")
@@ -156,10 +180,10 @@ def get_lineup_channels():
 @route("/api/xmltv_lineups/add", method="POST")
 def add_xmltv_lineup():
     values = json.loads(request.body.read())
-    result = g.pr.ch_loader("xmltv", {"url": values.get("link")})
+    result = g.pr.ch_loader("xmltv", {"url": values.get("link").replace("\\", "/")})
     if result[0] and len(result[1].keys()):
         l = str(int(datetime.now().timestamp()))
-        g.user_db.main["xmltv"][f"xml{l}"] = {"name": values.get("name", f"XML FILE {l}"), "link": values["link"]}
+        g.user_db.main["xmltv"][f"xml{l}"] = {"name": values.get("name", f"XML FILE {l}"), "link": values["link"].replace("\\", "/")}
         g.user_db.save_settings()
         return json.dumps({"success": True, "message": f"XMLTV added: {len(result[1].keys())} channel(s) found!"})
     return json.dumps({"success": False, "message": "The resource could not be verified."})
@@ -262,8 +286,16 @@ def add_channel():
     if not provider_id:
         try:
             for id in ids:
-                i = json.loads(t.get_channel_info(id, file))
+                file_2 = None
+                if not file and g.pr.channel_db.get_channel(id):
+                    try:
+                        file_2 = [json.loads(g.pr.channel_db.get_channel(id)[0][0])]
+                    except:
+                        pass
+                i = json.loads(t.get_channel_info(id, file_2 if not file else file))
                 if i["success"]:
+                    if file:
+                        g.pr.channel_db.update_channel_db("station", "gntms", file)
                     if len(i["result"]) > 0 and i["result"][0].get("stationId") == id:
                         d[id] = i["result"][0]
         except Exception as e:
@@ -280,6 +312,8 @@ def add_channel():
                     if ch_list[1].get(id.split("|")[1]):
                         d[id.replace(f"{provider_id}|", f"{provider_id}_")] = \
                             {"stationId": id.replace(f"{provider_id}|", ""), "name": ch_list[1][id.split("|")[1]]["name"], "preferredImage": {"uri": ch_list[1][id.split("|")[1]].get("icon")}}
+            else:
+                return json.dumps({"success": False, "message": f'Failed to add the channel: {ch_list[1]}'})
         except Exception as e:
             print_error(traceback.format_exc())
             return json.dumps({"success": False, "message": "The channels could not be added."})

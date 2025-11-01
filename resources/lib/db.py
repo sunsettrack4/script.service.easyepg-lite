@@ -1,12 +1,25 @@
 from datetime import datetime, timedelta
 from importlib import util
 from time import sleep
-import concurrent.futures, json, os, sqlite3, sys, traceback
+import concurrent.futures, json, os, sqlite3, subprocess, sys, traceback
 
 try: 
     from curl_cffi import requests
 except:
     import requests
+
+from platform import system
+
+if "Windows" in system() and os.path.isfile("curl.exe"):
+    curl = "curl.exe"
+elif "Linux" in system() and os.path.isfile("curl"):
+    curl = f"./curl"
+    try:
+        os.chmod("curl", 0o775)
+    except:
+        print("fatal: wrong permissions on easyepg folder.")
+else:
+    curl = "curl"
 
 general_header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                                 'Chrome/140.0.0.0 Safari/537.36'}
@@ -61,7 +74,7 @@ class UserData():
             json.dump(self.main, f)
         return True
 
-class SQLiteManager():
+class SQLiteEPGManager():
     def __init__(self, config, file_path):
         self.config = config
         self.file_path = file_path
@@ -200,13 +213,79 @@ class SQLiteManager():
         self.conn.commit()
         self.c.execute("""VACUUM""")
 
+class SQLiteChannelManager():
+
+    def __init__(self, config, file_path):
+        self.ch_config = config
+        self.ch_file_path = file_path
+        self.init_ch_db()
+        # self.load_cache()
+
+    def init_ch_db(self):
+        self.ch_conn = sqlite3.connect(f"{self.ch_file_path}resources/data/db/channels.db", check_same_thread=False)
+        self.ch_c = self.ch_conn.cursor()
+        self.create_channel_db()
+        return
+    
+    def get_channel(self, station_id):
+        self.ch_c.execute("""SELECT config FROM channels WHERE channel_id = '{}'""".format(station_id))
+        return [item for item in self.ch_c.fetchall()]
+    
+    def search_channel(self, search_query):
+        self.ch_c.execute("""SELECT * FROM channels WHERE channel_name LIKE '{}%'""".format(search_query))
+        return [item for item in self.ch_c.fetchall()]
+    
+    def load_cache(self):
+        for file in os.listdir(f"{self.ch_file_path}cache"):
+            if "station_" in file or "station-" in file:
+                with open(f"{self.ch_file_path}cache/{file}", "r", encoding="UTF-8") as f:
+                    try:
+                        self.update_channel_db("station", "Gracenote TMS", json.load(f))
+                    except:
+                        pass
+    
+    def create_channel_db(self):
+        self.ch_c.execute("""CREATE TABLE IF NOT EXISTS channels"""
+                       """(channel_id TEXT PRIMARY KEY, channel_name TEXT, provider_name TEXT, provider_id TEXT, country TEXT, config TEXT)""")
+        self.confirm_ch_update()
+        return
+    
+    def update_channel_db(self, file_type, provider_name, ch_list):
+        if file_type == "lineup":
+            self.remove_channel_db_items(provider_name)
+            [ch_list[channel].update({"stationId": channel}) for channel in ch_list.keys()]
+            [self.ch_c.execute("""INSERT OR REPLACE INTO channels """
+                            """(channel_id, channel_name, provider_name, provider_id, country, config) """
+                            """VALUES (?, ?, ?, ?, ?, ?)""",
+                            (f'{provider_name}_{channel}', ch_list[channel]["name"], 
+                             self.ch_config[provider_name]["name"], provider_name,
+                             self.ch_config[provider_name]["country"], json.dumps(ch_list[channel])))
+            for channel in ch_list.keys()]
+        if file_type == "station":
+            station = ch_list[0]
+            self.ch_c.execute("""INSERT OR REPLACE INTO channels """
+                            """(channel_id, channel_name, provider_name, provider_id, country, config) """
+                            """VALUES (?, ?, ?, ?, ?, ?)""",
+                            (station["stationId"], station["name"], "Gracenote TMS", "gntms", None, json.dumps(ch_list[0])))
+        self.confirm_ch_update()
+        return
+    
+    def remove_channel_db_items(self, provider):
+        self.ch_c.execute("""DELETE FROM channels WHERE provider_id = '{}'""".format(provider))
+        return
+    
+    def confirm_ch_update(self):
+        self.ch_conn.commit()
+        self.ch_c.execute("""VACUUM""")
+
 class ProviderManager():
     
     def __init__(self, file_paths, user_db):
         self.file_paths = file_paths
         self.user_db = user_db
         self.import_data()
-        self.epg_db = SQLiteManager(self.providers, file_paths["storage"])
+        self.epg_db = SQLiteEPGManager(self.providers, file_paths["storage"])
+        self.channel_db = SQLiteChannelManager(self.providers, file_paths["included"])
         self.import_provider_modules()
         self.error_cache = []
 
@@ -296,8 +375,10 @@ class ProviderManager():
                 data, session, general_header
             )
             try:
-                with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "w") as file:
-                    json.dump({"date": datetime.today().strftime("%Y%m%d"), "ch_list": ch_list}, file)
+                if provider_name != "xmltv":
+                    with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "w") as file:
+                        json.dump({"date": datetime.today().strftime("%Y%m%d"), "ch_list": ch_list}, file)
+                    # self.channel_db.update_channel_db("lineup", provider_name, ch_list)
             except:
                 pass
             return True, ch_list
@@ -308,7 +389,10 @@ class ProviderManager():
     def main_downloader(self, provider_name, data=None):
         data = self.providers[provider_name].get("data") if not data else data
         provider = "gntms" if provider_name == "tvtms" else provider_name
-        settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider_name, {})}
+        settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider, {})}
+
+        if provider_name == "tvtms":
+            self.retry_tms = []
 
         # RETRIEVE CHANNELS AND PROVIDER TYPE
         if type(data) == dict and data.get("id") and "xml" in data["id"]:
@@ -378,7 +462,7 @@ class ProviderManager():
                     m = sys.modules[self.providers[provider_name].get("module", provider_name)].epg_main_converter(
                         self.epg_cache[i][0], data, channels, settings, self.epg_cache[i][1], gen)
                 
-                    self.epg_db.write_epg_db_items(provider  if not xmltv else data["id"],
+                    self.epg_db.write_epg_db_items(provider if not xmltv else data["id"],
                         [(i["c_id"], i["b_id"], i["start"], i["end"], i["title"], 
                           i.get("subtitle", ""), i.get("desc", ""), i.get("image", ""), 
                           i.get("date", ""), i.get("country", ""), i.get("star", {}), i.get("rating", {}), i.get("credits", {}),
@@ -392,7 +476,7 @@ class ProviderManager():
         self.epg_cache = {}
 
         # CLEAN UP
-        if not self.providers[provider].get("adv_loader", False):
+        if not self.providers[provider_name].get("adv_loader", False):
             self.epg_db.remove_epg_db(provider if not xmltv else data["id"], False)
 
         self.epg_db.create_epg_db(provider if not xmltv else data["id"], False)
@@ -400,40 +484,69 @@ class ProviderManager():
         self.pr_pr = self.pr_pr + 1
         self.print_error_cache(provider_name)
         return self.epg_db.simple_epg_db_update(provider if not xmltv else data["id"], settings.get("adv_days", 14))
+    
+    def getProcessOutput(self, cmd):
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, close_fds=True, shell=True)
+        process.wait(4)
+        data, err = process.communicate()
+        if process.returncode == 0:
+            return data.decode('utf-8')        
+        return
 
-    def load_main(self, provider_name, item, name):
+    def load_main(self, provider_name, item, name, tms_retry=False):
         if self.exit or self.cancellation:
             return
-        sleep(self.providers[provider_name].get("dl_delay", 0))
+        if tms_retry:
+            sleep(3)
+            if tms_retry % 2 == 0:
+                item["url"] = item["tms2"]
+            else:
+                item["url"] = item["tms3"]
+            del item["tms"], item["d"]
+        else:
+            sleep(self.providers[provider_name].get("dl_delay", 0))
         x = 0
         while True:
             try:
-                if item.get("d"):
-                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}))
+                if item.get("tms"):
+                    gh = "; ".join(f"{i}: {general_header[i]}" for i in general_header.keys())
+                    r = self.getProcessOutput(f'{curl} -s -m {item.get("t", self.providers[provider_name].get("timeout", 60))} "{item["tms"]}" -H "{item["h"] if item.get("h") else gh}"{(" --data-raw "+item["d"]) if item.get("d") else ""}')
+                elif item.get("d"):
+                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
+                elif item.get("j"):
+                    r = requests.post(item["url"], headers=item.get("h", general_header), json=item["j"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 else:
-                    r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}))
+                    r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 break
             except:
+                if item.get("tms"):
+                    return provider_name, "", item.get("c"), name
                 x = x + 1
-                if len(self.error_cache) <= 50:
-                    self.error_cache.append(f"{provider_name}: Connection error - retry... [{str(x)}/3]")
-                if x < 3:
+                if x < 5:
                     sleep(3)
                     continue
                 else:
                     if len(self.error_cache) <= 50:
-                        self.error_cache.append(f"{provider_name}: Connection error - closed.")
+                        self.error_cache.append(f"{provider_name}: Connection error for {str(item['url'])} - closed.")
                     return provider_name, "", item.get("c"), name
         
-        if str(r.status_code)[0] in ["4", "5"]:
+        if item.get("tms") and not r:
+            return provider_name, "", item.get("c"), name
+        elif not item.get("tms") and str(r.status_code)[0] in ["4", "5"]:
             if len(self.error_cache) <= 50:
-                self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
+                if self.providers[provider_name].get("ignore_error_codes", []) and r.status_code in self.providers[provider_name]["ignore_error_codes"]:
+                    pass
+                else:
+                    self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
             return provider_name, "", item.get("c"), name
         
-        return provider_name, r.content, item.get("c"), name
+        return provider_name, r if item.get("tms") else r.content, item.get("c"), name
 
     def url_threads_handler(self, item):
         if self.exit or self.cancellation:
+            return
+        if item.result()[0] == "tvtms" and item.result()[1] == "":
+            self.retry_tms.append(item.result()[3])
             return
         self.epg_cache[f"{'###' if item.result()[1] == '' else ''}{item.result()[3]}"] = item.result()[1], item.result()[2]
         self.l_pr = self.l_pr + 1
@@ -446,7 +559,8 @@ class ProviderManager():
             return True
         
         data = self.providers[provider_name].get("data") if not data else data
-        settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider_name, {})}
+        provider = "gntms" if provider_name == "tvtms" else provider_name
+        settings = {**self.user_db.main["settings"], **self.user_db.main["provider_settings"].get(provider, {})}
         
         # RETRIEVE SESSION
         if not self.login(provider_name, data):
@@ -517,11 +631,25 @@ class ProviderManager():
             else:
                 max_workers = settings.get("adv_threads", self.providers[provider_name].get("advanced_download_threads", 10))
 
+            if provider_name == "tvtms":
+                self.retry_tms = []
+            
             executor = concurrent.futures.ThreadPoolExecutor(
                 max_workers=max_workers)
             {executor.submit(self.load_main, provider_name, item, item.get("name", str(index))).add_done_callback(self.url_threads_handler) for index, item in enumerate(grabber_param)}
             executor.shutdown(wait=True)
             del executor
+
+            # TMS RETRY
+            if provider_name == "tvtms":
+                new_grabber_param = [item for item in grabber_param if item["name"] in self.retry_tms]
+                max_workers = 1
+
+                executor = concurrent.futures.ThreadPoolExecutor(
+                    max_workers=max_workers)
+                {executor.submit(self.load_main, provider_name, item, item.get("name", str(index)), index+1).add_done_callback(self.url_threads_handler) for index, item in enumerate(new_grabber_param)}
+                executor.shutdown(wait=True)
+                del executor
 
             def duplicator(dup_ids, broadcast_list):
                 x = list(broadcast_list[0])  # BROADCAST LIST CONTAINS 1 ELEMENT ONLY
@@ -541,13 +669,13 @@ class ProviderManager():
                             j["b_id"] = j["b_id"].split("|+|")[0]
 
                     if len(u) > 0 and u.get(i):  # INSERT DETAILS FOR BROADCASTS WITH IDENTICAL DATA
-                        self.epg_db.update_epg_db_items(provider_name, duplicator(u[i], 
+                        self.epg_db.update_epg_db_items(provider, duplicator(u[i], 
                             [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
                                 i.get("subtitle"), i.get("desc"), i.get("image"), 
                                 i.get("date"), i.get("country"), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
                                 json.dumps(i.get("season_episode_num", {})), json.dumps(i.get("genres", [])), json.dumps(i.get("qualifiers", [])), i["b_id"]) for i in m]), True)
                     else:
-                        self.epg_db.update_epg_db_items(provider_name,
+                        self.epg_db.update_epg_db_items(provider,
                             [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
                                 i.get("subtitle"), i.get("desc"), i.get("image"), 
                                 i.get("date"), i.get("country"), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
