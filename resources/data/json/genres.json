@@ -463,7 +463,7 @@
 "Lounge Musik": "Music / Ballet / Dance",
 "Family": "Children's / Youth programs",
 "Doku": "Magazines / Reports / Documentary",
-"Justiz": "Show / Game show",
+"Justiz": "Social / Political issues / Economics",
 "Clips": "Show / Game show",
 "Documentaries": "Magazines / Reports / Documentary",
 "Tanz": "Music / Ballet / Dance",
@@ -501,6 +501,15 @@
 "Homeshopping": "Advertisement / Shopping",
 "Motor & Verkehr": "Motoring",
 "Kinderprogramm": "Children's / Youth programs",
-"Krankenhaus": "Fitness and health", 
+"Krankenhaus": "Fitness and health",
+"Romantik & Liebe": "Romance",
+"Spielshow": "Show / Game show",
+"Unterhaltungs-Show": "Show / Game show",
+"Klassische Musik": "Music / Ballet / Dance",
+"Gerichtsshow": "Soap / Melodrama / Folkloric",
+"Mannschaftssport": "Team sports (excluding football)"
+"Reitsport": "Sports",
+"Krieg": "Adventure / Western / War",
+"Dart": "Sports",
 "Movie": "Movie / Drama"}}
 
