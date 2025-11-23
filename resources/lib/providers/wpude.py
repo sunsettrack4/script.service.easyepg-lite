@@ -80,8 +80,8 @@ def epg_advanced_converter(item, data, cache, settings):
         g["country"] = ", ".join(countries)
     
     if item.get("series"):
-        s_num = item["series"]["seasonNumber"] if item["series"].get("seasonNumber") else 0
-        e_num = item["series"]["episodeNumber"] if item["series"].get("episodeNumber") else 0
+        s_num = item["series"]["seasonNumber"] if item["series"].get("seasonNumber") else None
+        e_num = item["series"]["episodeNumber"] if item["series"].get("episodeNumber") else None
         g["season_episode_num"] = {"season": s_num, "episode": e_num}
     
     if item.get("production"):
