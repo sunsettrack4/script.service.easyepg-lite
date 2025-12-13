@@ -83,6 +83,9 @@ def channels(data, session, headers={}):
         else:
             chlist[chan]["name"] = ch["display-name"]
 
+    for i in chlist:
+        chlist[i]["name"] = chlist[i]["name"].replace("|", "-")
+
     return chlist
 
 def epg_main_links(data, channels, settings, session, headers):
