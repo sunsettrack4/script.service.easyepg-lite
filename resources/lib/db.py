@@ -138,8 +138,8 @@ class SQLiteEPGManager():
                          json.dumps(star) if star != "{}" else None, json.dumps(rating) if rating != "{}" else None,
                          json.dumps(credits) if credits != "{}" else None, json.dumps(season_episode_num) if season_episode_num != "{}" else None, 
                          json.dumps(genres) if genres != "[]" else None, json.dumps(qualifiers) if qualifiers != "[]" else None, broadcast_id))
-        for channel_id, start, end, title, subtitle, desc, image, date, country, star, rating,
-            credits, season_episode_num, genres, qualifiers, broadcast_id in to_be_updated]
+        for channel_id, broadcast_id, start, end, title, subtitle, desc, image, date, country, star, rating,
+            credits, season_episode_num, genres, qualifiers in to_be_updated]
         return
 
     def simple_epg_db_update(self, provider, days):
@@ -464,8 +464,8 @@ class ProviderManager():
                 
                     self.epg_db.write_epg_db_items(provider if not xmltv else data["id"],
                         [(i["c_id"], i["b_id"], i["start"], i["end"], i["title"], 
-                          i.get("subtitle", ""), i.get("desc", ""), i.get("image", ""), 
-                          i.get("date", ""), i.get("country", ""), i.get("star", {}), i.get("rating", {}), i.get("credits", {}),
+                          i.get("subtitle"), i.get("desc"), i.get("image"), 
+                          i.get("date"), i.get("country"), i.get("star", {}), i.get("rating", {}), i.get("credits", {}),
                           i.get("season_episode_num", {}), i.get("genres", []), i.get("qualifiers", [])) for i in m], True)
             self.epg_cache = {}
             self.fl_pr = self.fl_pr + 1
@@ -670,16 +670,16 @@ class ProviderManager():
 
                     if len(u) > 0 and u.get(i):  # INSERT DETAILS FOR BROADCASTS WITH IDENTICAL DATA
                         self.epg_db.update_epg_db_items(provider, duplicator(u[i], 
-                            [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
+                            [(i.get("c_id"), i["b_id"], i.get("start"), i.get("end"), i.get("title"), 
                                 i.get("subtitle"), i.get("desc"), i.get("image"), 
                                 i.get("date"), i.get("country"), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
-                                json.dumps(i.get("season_episode_num", {})), json.dumps(i.get("genres", [])), json.dumps(i.get("qualifiers", [])), i["b_id"]) for i in m]), True)
+                                json.dumps(i.get("season_episode_num", {})), json.dumps(i.get("genres", [])), json.dumps(i.get("qualifiers", []))) for i in m]), True)
                     else:
                         self.epg_db.update_epg_db_items(provider,
-                            [(i.get("c_id"), i.get("start"), i.get("end"), i.get("title"), 
+                            [(i.get("c_id"), i["b_id"], i.get("start"), i.get("end"), i.get("title"), 
                                 i.get("subtitle"), i.get("desc"), i.get("image"), 
                                 i.get("date"), i.get("country"), json.dumps(i.get("star", {})), json.dumps(i.get("rating", {})), json.dumps(i.get("credits", {})),
-                                json.dumps(i.get("season_episode_num", {})), json.dumps(i.get("genres", [])), json.dumps(i.get("qualifiers", [])), i["b_id"]) for i in m], True)
+                                json.dumps(i.get("season_episode_num", {})), json.dumps(i.get("genres", [])), json.dumps(i.get("qualifiers", []))) for i in m], True)
             
             self.epg_cache = {}
 
