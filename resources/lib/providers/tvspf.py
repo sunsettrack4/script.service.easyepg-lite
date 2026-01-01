@@ -158,13 +158,14 @@ def epg_advanced_links(data, session, settings, programmes, headers={}):
 def epg_advanced_converter(item, data, cache, settings):
     
     def correct_num(string_item):
-        while True:
-            try:
-                return int(string_item), None
-            except:
-                if string_item[-1].isalpha():
-                    alphabet = string.ascii_lowercase
-                    return int(string_item[:-1]), alphabet.find(string_item[-1])+1
+        try:
+            return int(string_item), None
+        except:
+            if string_item[-1].isalpha():
+                alphabet = string.ascii_lowercase
+                return int(string_item[:-1]), alphabet.find(string_item[-1])+1
+            else:
+                return None, None
     
     p = BeautifulSoup(cache[0], 'html.parser')
     
@@ -205,7 +206,7 @@ def epg_advanced_converter(item, data, cache, settings):
         if len(se_info) == 1 and "Folge " in se_info[0]:
             e_num, p_num = correct_num(se_info[0].replace("Folge ", ""))
         elif len(se_info) > 1 and "Folge " in se_info[1]:
-            e_num, p_num = correct_num(se_info[1].replace("Folge ", "").split("/")[0])
+            e_num, p_num = correct_num(se_info[1].replace("Folge ", "").split("/")[0].split("+")[0].split(";")[0])
 
         g["season_episode_num"] = {"season": s_num, "episode": e_num, "part": p_num}
 
