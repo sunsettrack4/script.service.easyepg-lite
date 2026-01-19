@@ -206,7 +206,9 @@ def epg_advanced_converter(item, data, cache, settings):
         if len(se_info) == 1 and "Folge " in se_info[0]:
             e_num, p_num = correct_num(se_info[0].replace("Folge ", ""))
         elif len(se_info) > 1 and "Folge " in se_info[1]:
-            e_num, p_num = correct_num(se_info[1].replace("Folge ", "").split("/")[0].split("+")[0].split(";")[0].split(",")[0])
+            e_num_fix = se_info[1].replace("Folge ", "").split("/")[0].split("+")[0].split(";")[0].split(",")[0]
+            if "." in e_num_fix: e_num_fix = e_num_fix.split(".")[1]
+            e_num, p_num = correct_num(e_num_fix)
 
         g["season_episode_num"] = {"season": s_num, "episode": e_num, "part": p_num}
 
