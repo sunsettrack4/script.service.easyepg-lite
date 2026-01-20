@@ -16,7 +16,7 @@ provider_headers = {
 
 def login(data, credentials, headers):
     provision_url =  "https://tvapi-hlm2.solocoo.tv/v1/provision"
-    demo_url      = f"https://m7cplogin.solocoo.tv/demo"
+    demo_url      =  "https://m7cp.login.solocoo.tv/demo"
     session_url   =  "https://tvapi-hlm2.solocoo.tv/v1/session"
 
     device_id = str(uuid4())
@@ -27,8 +27,8 @@ def login(data, credentials, headers):
         "deviceType": "PC",
         "deviceSerial": device_id,
         "deviceOem": "Chrome",
-        "devicePrettyName": "Chrome 141.0.0.0",
-        "appVersion": "12.7",
+        "devicePrettyName": "Chrome 143.0.0.0",
+        "appVersion": "12.8",
         "language": "de_AT",
         "brand": "m7cp",
         "country": data['country']
