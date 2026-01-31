@@ -501,6 +501,33 @@
     
     },
 
+    "vanee":
+
+    {
+
+        "module": "vanee",
+
+        "name": "Vantage TV",
+        "country": "EE",
+
+        "data":
+
+        {
+            
+        },
+
+        "login_req": false,
+        "auth_req": false,
+
+        "main_loader": true,
+        "main_threads": 1,
+        "max_dl_num": 1,
+        "max_dl_threads": 1,
+
+        "adv_loader": false
+    
+    },
+
     "capfr":
 
     {
