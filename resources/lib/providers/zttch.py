@@ -155,6 +155,8 @@ def epg_main_converter(item, data, channels, settings, ch_id=None, genres={}):
                 if programme.get("i_url"):
                     g["image"] = programme["i_url"].replace("480x360", "1920x1080")
                 s_num = programme.get("s_no")
+                if data.get("s_no_fix") and s_num and s_num >= 1970:
+                    s_num = None
                 e_num = programme.get("e_no")
                 g["season_episode_num"] = {"season": s_num, "episode": e_num}
                 if programme.get("yp_r"):
