@@ -180,13 +180,13 @@ def epg_main_converter(item, data, channels, settings, ch_id=None, genres={}):
                     elif type(p["credits"]["actor"]) == str:
                         g["actor"] = [p["credits"]["actor"]]
                 g["credits"] = {"director": g["director"], "actor": g["actor"]}
-                if p.get("episode-num"):
-                    if p["episode-num"].get("@system") == "xmltv_ns":
-                        e = [i.replace(" ", "") for i in p["episode-num"]["#text"].split(".")]
-                        if len(e) == 3:
-                            g["s"] = int(e[0].split("/")[0]) + 1 if e[0] != "" else 0
-                            g["e"] = int(e[1].split("/")[0]) + 1 if e[1] != "" else 0
-                            g["season_episode_num"] = {"season": g["s"], "episode": g["e"]}
+            if p.get("episode-num"):
+                if p["episode-num"].get("@system") == "xmltv_ns":
+                    e = [i.replace(" ", "") for i in p["episode-num"]["#text"].split(".")]
+                    if len(e) == 3:
+                        g["s"] = int(e[0].split("/")[0]) + 1 if e[0] != "" else 0
+                        g["e"] = int(e[1].split("/")[0]) + 1 if e[1] != "" else 0
+                        g["season_episode_num"] = {"season": g["s"], "episode": g["e"]}
             g["genres"] = []
             if p.get("category"):
                 if type(p["category"]) == list:
