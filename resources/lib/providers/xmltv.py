@@ -187,23 +187,23 @@ def epg_main_converter(item, data, channels, settings, ch_id=None, genres={}):
                             g["s"] = int(e[0].split("/")[0]) + 1 if e[0] != "" else 0
                             g["e"] = int(e[1].split("/")[0]) + 1 if e[1] != "" else 0
                             g["season_episode_num"] = {"season": g["s"], "episode": g["e"]}
-                g["genres"] = []
-                if p.get("category"):
-                    if type(p["category"]) == list:
-                        for i in p["category"]:
-                            if i.get("#text"):
-                                g["genres"].append(i["#text"])
-                            else:
-                                g["genres"].append(i)
-                    if type(p["category"]) == dict:
-                        g["genres"] = [p["category"]["#text"]]
-                    if type(p["category"]) == str:
-                        g["genres"] = [p["category"]]
-                if p.get("rating"):
-                    if p["rating"].get("@system"):
-                        g["rating"] = {"system": p["rating"]["@system"], "value": p["rating"]["value"]}
-                    else:
-                        g["rating"] = {"value": p["rating"]["value"]}
+            g["genres"] = []
+            if p.get("category"):
+                if type(p["category"]) == list:
+                    for i in p["category"]:
+                        if i.get("#text"):
+                            g["genres"].append(i["#text"])
+                        else:
+                            g["genres"].append(i)
+                if type(p["category"]) == dict:
+                    g["genres"] = [p["category"]["#text"]]
+                if type(p["category"]) == str:
+                    g["genres"] = [p["category"]]
+            if p.get("rating"):
+                if p["rating"].get("@system"):
+                    g["rating"] = {"system": p["rating"]["@system"], "value": p["rating"]["value"]}
+                else:
+                    g["rating"] = {"value": p["rating"]["value"]}
 
             airings.append(g)
 
