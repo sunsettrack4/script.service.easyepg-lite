@@ -10,6 +10,8 @@ except:
 
 from platform import system
 
+CFFI="firefox"
+
 if "Windows" in system() and os.path.isfile("curl.exe"):
     curl = "curl.exe"
 elif "Linux" in system() and os.path.isfile("curl"):
@@ -512,11 +514,11 @@ class ProviderManager():
                     gh = "; ".join(f"{i}: {general_header[i]}" for i in general_header.keys())
                     r = self.getProcessOutput(f'{curl} -s -m {item.get("t", self.providers[provider_name].get("timeout", 60))} "{item["tms"]}" -H "{item["h"] if item.get("h") else gh}"{(" --data-raw "+item["d"]) if item.get("d") else ""}')
                 elif item.get("d"):
-                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
+                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), impersonate=CFFI)
                 elif item.get("j"):
-                    r = requests.post(item["url"], headers=item.get("h", general_header), json=item["j"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
+                    r = requests.post(item["url"], headers=item.get("h", general_header), json=item["j"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), impersonate=CFFI)
                 else:
-                    r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
+                    r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), impersonate=CFFI)
                 break
             except:
                 if item.get("tms"):
