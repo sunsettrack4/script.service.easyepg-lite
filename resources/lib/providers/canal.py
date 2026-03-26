@@ -1,15 +1,21 @@
 import json
 import re
-from curl_cffi import requests
+try:
+    from curl_cffi import requests
+    CFFI_ON=True
+except:
+    import requests
+    CFFI_ON=False
 
 CFFI="firefox"
+
 
 def channels(data, session, headers={}):
     chlist = {}
 
     channel_url = f'https://hodor.canalplus.pro/api/v2/{data["myc"]}/epgGrid/{data["grid_id"]}/day/0?channelImageColor=white&discoverMode=true'
 
-    channel_page = requests.get(channel_url, timeout=5, headers=headers, impersonate=CFFI)
+    channel_page = requests.get(channel_url, timeout=5, headers=headers, **({"impersonate": CFFI} if CFFI_ON else {}))
 
     channel_content = channel_page.json()
 

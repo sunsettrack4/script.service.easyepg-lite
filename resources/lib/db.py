@@ -5,8 +5,10 @@ import concurrent.futures, json, os, sqlite3, subprocess, sys, traceback
 
 try: 
     from curl_cffi import requests
+    CFFI_ON=True
 except:
     import requests
+    CFFI_ON=False
 
 from platform import system
 
@@ -514,11 +516,11 @@ class ProviderManager():
                     gh = "; ".join(f"{i}: {general_header[i]}" for i in general_header.keys())
                     r = self.getProcessOutput(f'{curl} -s -m {item.get("t", self.providers[provider_name].get("timeout", 60))} "{item["tms"]}" -H "{item["h"] if item.get("h") else gh}"{(" --data-raw "+item["d"]) if item.get("d") else ""}')
                 elif item.get("d"):
-                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), impersonate=CFFI)
+                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), **({"impersonate": CFFI} if CFFI_ON else {}))
                 elif item.get("j"):
-                    r = requests.post(item["url"], headers=item.get("h", general_header), json=item["j"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), impersonate=CFFI)
+                    r = requests.post(item["url"], headers=item.get("h", general_header), json=item["j"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), **({"impersonate": CFFI} if CFFI_ON else {}))
                 else:
-                    r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), impersonate=CFFI)
+                    r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), **({"impersonate": CFFI} if CFFI_ON else {}))
                 break
             except:
                 if item.get("tms"):
