@@ -3,12 +3,15 @@ from importlib import util
 from time import sleep
 import concurrent.futures, json, os, sqlite3, subprocess, sys, traceback
 
-try: 
-    from curl_cffi import requests
-    CFFI_ON=True
-except:
+
+try:
+    from curl_cffi.requests import AsyncSession
+    CFFI_ON = True
+except ImportError:
     import requests
-    CFFI_ON=False
+    CFFI_ON = False
+
+import asyncio
 
 from platform import system
 
@@ -452,9 +455,7 @@ class ProviderManager():
             self.l_pr = 0
             self.l_num = len(url_list)
             
-            executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
-            {executor.submit(self.load_main, provider_name, item, item.get("n", str(index))).add_done_callback(self.url_threads_handler) for index, item in enumerate(url_list)}
-            executor.shutdown(wait=True)
+            self.async_download(provider_name, url_list, max_workers)
 
             # WRITE PRELOAD EPG DATA INTO DB
             gen = {}
@@ -496,10 +497,13 @@ class ProviderManager():
         if process.returncode == 0:
             return data.decode('utf-8')        
         return
+    
+    ###### new async
 
-    def load_main(self, provider_name, item, name, tms_retry=False):
+    def dl_sync(self, provider_name, item, name, tms_retry=False):
         if self.exit or self.cancellation:
-            return
+            return provider_name, "", item.get("c"), name
+
         if tms_retry:
             sleep(3)
             if tms_retry % 2 == 0:
@@ -509,23 +513,30 @@ class ProviderManager():
             del item["tms"], item["d"]
         else:
             sleep(self.providers[provider_name].get("dl_delay", 0))
+
         x = 0
         while True:
             try:
                 if item.get("tms"):
                     gh = "; ".join(f"{i}: {general_header[i]}" for i in general_header.keys())
-                    r = self.getProcessOutput(f'{curl} -s -m {item.get("t", self.providers[provider_name].get("timeout", 60))} "{item["tms"]}" -H "{item["h"] if item.get("h") else gh}"{(" --data-raw "+item["d"]) if item.get("d") else ""}')
+                    r = self.getProcessOutput(f'{curl} -s -m {item.get("t", self.providers[provider_name].get("timeout", 60))} "{item["tms"]}" -H "{item["h"] if item.get("h") else gh}"{(" --data-raw " + item["d"]) if item.get("d") else ""}')
                 elif item.get("d"):
-                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), **({"impersonate": CFFI} if CFFI_ON else {}))
+                    r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"],
+                                    cookies=item.get("cc", {}),
+                                    timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 elif item.get("j"):
-                    r = requests.post(item["url"], headers=item.get("h", general_header), json=item["j"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), **({"impersonate": CFFI} if CFFI_ON else {}))
+                    r = requests.post(item["url"], headers=item.get("h", general_header), json=item["j"],
+                                    cookies=item.get("cc", {}),
+                                    timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 else:
-                    r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)), **({"impersonate": CFFI} if CFFI_ON else {}))
+                    r = requests.get(item["url"], headers=item.get("h", general_header),
+                                    cookies=item.get("cc", {}),
+                                    timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 break
-            except:
+            except Exception:
                 if item.get("tms"):
                     return provider_name, "", item.get("c"), name
-                x = x + 1
+                x += 1
                 if x < 5:
                     sleep(3)
                     continue
@@ -533,7 +544,7 @@ class ProviderManager():
                     if len(self.error_cache) <= 50:
                         self.error_cache.append(f"{provider_name}: Connection error for {str(item['url'])} - closed.")
                     return provider_name, "", item.get("c"), name
-        
+
         if item.get("tms") and not r:
             return provider_name, "", item.get("c"), name
         elif not item.get("tms") and str(r.status_code)[0] in ["4", "5"]:
@@ -543,19 +554,106 @@ class ProviderManager():
                 else:
                     self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
             return provider_name, "", item.get("c"), name
-        
+
         return provider_name, r if item.get("tms") else r.content, item.get("c"), name
 
-    def url_threads_handler(self, item):
+
+    async def dl_async(self, session, semaphore, provider_name, item, name, tms_retry=False):
         if self.exit or self.cancellation:
-            return
-        if item.result()[0] == "tvtms" and item.result()[1] == "":
-            self.retry_tms.append(item.result()[3])
-            return
-        self.epg_cache[f"{'###' if item.result()[1] == '' else ''}{item.result()[3]}"] = item.result()[1], item.result()[2]
-        self.l_pr = self.l_pr + 1
-        self.progress = ((((self.l_pr / self.l_num) * 100) / self.fl_num / 2) + (self.fl_pr / self.fl_num) * 100 / 2) / self.pr_num + (self.pr_pr / self.pr_num * 100 / 2)
-        return
+            return provider_name, "", item.get("c"), name
+
+        if tms_retry:
+            await asyncio.sleep(3)
+            if tms_retry % 2 == 0:
+                item["url"] = item["tms2"]
+            else:
+                item["url"] = item["tms3"]
+            del item["tms"], item["d"]
+        else:
+            await asyncio.sleep(self.providers[provider_name].get("dl_delay", 0))
+
+        async with semaphore:
+            x = 0
+            while True:
+                try:
+                    if item.get("tms"):
+                        gh = "; ".join(f"{i}: {general_header[i]}" for i in general_header.keys())
+                        r = self.getProcessOutput(f'{curl} -s -m {item.get("t", self.providers[provider_name].get("timeout", 60))} "{item["tms"]}" -H "{item["h"] if item.get("h") else gh}"{(" --data-raw " + item["d"]) if item.get("d") else ""}')
+                    elif item.get("d"):
+                        r = await session.post(item["url"], headers=item.get("h", general_header), data=item["d"],
+                                            cookies=item.get("cc", {}),
+                                            timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
+                    elif item.get("j"):
+                        r = await session.post(item["url"], headers=item.get("h", general_header), json=item["j"],
+                                            cookies=item.get("cc", {}),
+                                            timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
+                    else:
+                        r = await session.get(item["url"], headers=item.get("h", general_header),
+                                            cookies=item.get("cc", {}),
+                                            timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
+                    break
+                except Exception:
+                    if item.get("tms"):
+                        return provider_name, "", item.get("c"), name
+                    x += 1
+                    if x < 5:
+                        await asyncio.sleep(3)
+                    else:
+                        if len(self.error_cache) <= 50:
+                            self.error_cache.append(f"{provider_name}: Connection error for {str(item['url'])} - closed.")
+                        return provider_name, "", item.get("c"), name
+
+            if item.get("tms") and not r:
+                return provider_name, "", item.get("c"), name
+            elif not item.get("tms") and str(r.status_code)[0] in ["4", "5"]:
+                if len(self.error_cache) <= 50:
+                    if self.providers[provider_name].get("ignore_error_codes", []) and r.status_code in self.providers[provider_name]["ignore_error_codes"]:
+                        pass
+                    else:
+                        self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
+                return provider_name, "", item.get("c"), name
+
+            return provider_name, r if item.get("tms") else r.content, item.get("c"), name
+
+
+    def async_download(self, provider_name, param_block, max_workers):
+        def handle_results(results):
+            for result in results:
+                if isinstance(result, Exception) or result is None:
+                    continue
+                prov, content, c, name = result
+                if prov == "tvtms" and content == "":
+                    self.retry_tms.append(name)
+                    continue
+                self.epg_cache[f"{'###' if content == '' else ''}{name}"] = content, c
+                self.l_pr += 1
+                self.progress = ((((self.l_pr / self.l_num) * 100) / self.fl_num / 2) + (self.fl_pr / self.fl_num) * 100 / 2) / self.pr_num + (self.pr_pr / self.pr_num * 100 / 2)
+
+        if CFFI_ON:
+            async def dl():
+                semaphore = asyncio.Semaphore(max_workers)
+                async with AsyncSession(impersonate=CFFI) as session:
+                    tasks = [
+                        self.dl_async(session, semaphore, provider_name,
+                                            item, item.get("name", str(i)))
+                        for i, item in enumerate(param_block)
+                    ]
+                    return await asyncio.gather(*tasks, return_exceptions=True)
+
+            results = asyncio.run(dl())
+        else:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = [
+                    executor.submit(self.dl_sync, provider_name,
+                                    item, item.get("name", str(i)))
+                    for i, item in enumerate(param_block)
+                ]
+                results = [f.result() for f in concurrent.futures.as_completed(futures)]
+
+        handle_results(results)
+
+
+    ###### // new async
 
     # ADVANCED DATA
     def advanced_downloader(self, provider_name, programmes, data=None):
@@ -638,22 +736,12 @@ class ProviderManager():
             if provider_name == "tvtms":
                 self.retry_tms = []
             
-            executor = concurrent.futures.ThreadPoolExecutor(
-                max_workers=max_workers)
-            {executor.submit(self.load_main, provider_name, item, item.get("name", str(index))).add_done_callback(self.url_threads_handler) for index, item in enumerate(grabber_param)}
-            executor.shutdown(wait=True)
-            del executor
+            self.async_download(provider_name, grabber_param, max_workers)
 
             # TMS RETRY
             if provider_name == "tvtms":
                 new_grabber_param = [item for item in grabber_param if item["name"] in self.retry_tms]
-                max_workers = 1
-
-                executor = concurrent.futures.ThreadPoolExecutor(
-                    max_workers=max_workers)
-                {executor.submit(self.load_main, provider_name, item, item.get("name", str(index)), index+1).add_done_callback(self.url_threads_handler) for index, item in enumerate(new_grabber_param)}
-                executor.shutdown(wait=True)
-                del executor
+                self.async_download(provider_name, new_grabber_param, 1)
 
             def duplicator(dup_ids, broadcast_list):
                 x = list(broadcast_list[0])  # BROADCAST LIST CONTAINS 1 ELEMENT ONLY
