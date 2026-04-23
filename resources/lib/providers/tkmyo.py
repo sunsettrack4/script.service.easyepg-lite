@@ -31,7 +31,7 @@ def channels(data, session, headers={}):
         {
             'app_key': data["app_key"],
             'app_version': data["app_version"],
-            'x-user-agent': f'web|web|Chrome-120|{data["app_version"]}|1',
+            'x-user-agent': f'web|web|Chrome-146|{data["app_version"]}|1',
             'x-tv-flow': 'START_UP',
             'x-tv-step': 'EPG_CHANNEL'
         }
@@ -44,7 +44,7 @@ def channels(data, session, headers={}):
     for channel in channel_content["channels"]:
         channel_name = channel["title"]
         channel_id = channel["station_id"]
-        channel_logo = channel["channel_logo"]
+        channel_logo = channel.get("channel_logo")
         if channel["type"] == "linear":
             chlist[channel_id] = {"name": channel_name, "icon": channel_logo}
     
