@@ -45,7 +45,7 @@ def channels(data, session, headers={}):
         r = requests.get(url, headers=headers)
         p = file_decoder(r.content)
     else:
-        with open(data["url"].replace("file://", ""), "r") as f:
+        with open(data["url"].replace("file://", ""), "r", encoding="utf-8") as f:
             r = f.read()
         p = file_decoder(r)
 

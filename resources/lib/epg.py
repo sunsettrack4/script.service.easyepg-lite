@@ -133,7 +133,7 @@ class Grabber():
                         self.warning = True
                 except Exception as e:
                     try:
-                        with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
+                        with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+", encoding="utf-8") as log:
                             log.write(f"--- {provider.upper()} WARNING LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
                             traceback.print_exc(file=log)
                             log.write(f"--- {provider.upper()} WARNING LOG END ---\n\n")
@@ -440,7 +440,7 @@ class Grabber():
                 print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: File created successfully!")
                 if len(missing_genres) > 0:
                     try:
-                        with open(f"{self.file_paths['storage']}missing_genres.txt", "w") as log:
+                        with open(f"{self.file_paths['storage']}missing_genres.txt", "w", encoding="utf-8") as log:
                             print("\n--- MISSING EIT MAPPINGS ---\n")
                             log.write("--- MISSING EIT MAPPINGS ---\n")
                             for i in missing_genres:
@@ -467,7 +467,7 @@ class Grabber():
         except Exception as e:
             
             if str(e) != "Process stopped.":
-                with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
+                with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+", encoding="utf-8") as log:
                     log.write(f"--- ERROR LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
                     traceback.print_exc(file=log)
                     log.write(f"--- ERROR LOG END ---\n\n")
