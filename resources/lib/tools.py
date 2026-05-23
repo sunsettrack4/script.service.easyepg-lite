@@ -67,11 +67,11 @@ class API():
 
     def get_channel_info(self, value, file=None):
         if file:
-            with open(f"{self.file_paths['storage']}cache/station_{value}.json", "w") as f:
+            with open(f"{self.file_paths['storage']}cache/station_{value}.json", "w", encoding="utf-8") as f:
                 f.write(json.dumps(file))
 
         if os.path.exists(f"{self.file_paths['storage']}cache/station_{value}.json"):
-            with open(f"{self.file_paths['storage']}cache/station_{value}.json", "r") as f:
+            with open(f"{self.file_paths['storage']}cache/station_{value}.json", "r", encoding="utf-8") as f:
                 i = json.load(f)
                 if self.channels.get(i[0]["stationId"]):
                     i[0]["chExists"] = True
@@ -88,7 +88,7 @@ class API():
             if type(r) != list and r.get("errorCode"):
                 return json.dumps({"success": False, "message": f"Channel not found (Code: {r['errorCode']})."})
             else:
-                with open(f"{self.file_paths['storage']}cache/station_{value}.json", "w") as f:
+                with open(f"{self.file_paths['storage']}cache/station_{value}.json", "w", encoding="utf-8") as f:
                     json.dump(r, f)
                 for n, i in enumerate(r):
                     if self.channels.get(i["stationId"]):
@@ -152,10 +152,10 @@ def key_checker(new_key):
             return False
 
 def save_file(file, path):
-    with open(f"{path}playlist.m3u", "w") as f:
+    with open(f"{path}playlist.m3u", "w", encoding="utf-8") as f:
         f.write(file)
     return True
 
 def read_file(path):
-    with open(f"{path}playlist.m3u", "r") as f:
+    with open(f"{path}playlist.m3u", "r", encoding="utf-8") as f:
         return f.read()

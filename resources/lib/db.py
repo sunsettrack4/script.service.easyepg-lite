@@ -36,7 +36,7 @@ class UserData():
 
     def import_data(self):
         try:
-            with open(f"{self.file_paths['storage']}settings.json", "r") as f:
+            with open(f"{self.file_paths['storage']}settings.json", "r", encoding="utf-8") as f:
                 self.main = json.load(f)
         except:
             self.main = dict()
@@ -70,7 +70,7 @@ class UserData():
 
     
     def save_settings(self):
-        with open(f"{self.file_paths['storage']}settings.json", "w") as f:
+        with open(f"{self.file_paths['storage']}settings.json", "w", encoding="utf-8") as f:
             json.dump(self.main, f)
         return True
 
@@ -293,7 +293,7 @@ class ProviderManager():
     def print_error_cache(self, provider):
         try:
             if len(self.error_cache) > 0:
-                with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+") as log:
+                with open(f"{self.file_paths['storage']}grabber_error_log.txt", "a+", encoding="utf-8") as log:
                     log.write(f"--- {provider.upper()} WARNING LOG: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
                     for i in self.error_cache:
                         log.write(i+"\n")
@@ -355,7 +355,7 @@ class ProviderManager():
     # LOAD CHLIST
     def ch_loader(self, provider_name, data={}):
         try:
-            with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "r") as file:
+            with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "r", encoding="utf-8") as file:
                 f = json.load(file)
             if f["date"] == datetime.today().strftime("%Y%m%d"):
                 return True, f["ch_list"]
@@ -376,7 +376,7 @@ class ProviderManager():
             )
             try:
                 if provider_name != "xmltv":
-                    with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "w") as file:
+                    with open(f"{self.file_paths['storage']}cache/lineup_{provider_name}.json", "w", encoding="utf-8") as file:
                         json.dump({"date": datetime.today().strftime("%Y%m%d"), "ch_list": ch_list}, file)
                     # self.channel_db.update_channel_db("lineup", provider_name, ch_list)
             except:
