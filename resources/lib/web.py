@@ -1,6 +1,6 @@
 from resources.lib import tools
 from bottle import request, route, run, static_file
-from datetime import datetime
+from datetime import datetime, timezone
 from threading import Event
 import json, os, re, requests, signal, traceback
 
@@ -563,15 +563,26 @@ def search_broadcast():
             p_key = matched_channel_id.split("_")[0]
             provider = "gntms" if "_" not in matched_channel_id else p_key
 
+            provider_cfg = g.pr.providers.get(provider, {})
+            is_utc = provider_cfg.get("is_utc", False)
+
+            if is_utc:
+                compare_time = start_time
+            else:
+                local_now = datetime.now()
+                utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
+                tz_offset = int((local_now - utc_now).total_seconds())
+                compare_time = start_time - tz_offset
+
             rows = g.pr.epg_db.retrieve_epg_db_items(provider, matched_station_id)
 
             current = None
             next_up = []
             for row in rows:
                 r_start, r_end = row[2], row[3]
-                if r_start <= start_time < r_end:
+                if r_start <= compare_time < r_end:
                     current = row
-                elif r_start > start_time:
+                elif r_start > compare_time:
                     next_up.append(row)
                     if len(next_up) == count:
                         break
