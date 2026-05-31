@@ -1,6 +1,6 @@
 from resources.lib import tools
 from bottle import request, route, run, static_file
-from datetime import datetime
+from datetime import datetime, timezone
 from threading import Event
 import json, os, re, requests, signal, traceback
 
@@ -506,3 +506,98 @@ def convert_m3u(file):
             if ch_dict.get(ch_check[i].get("tvg-id", "")):
                 ch_dict[ch_check[i]["tvg-id"]]["mapped"] = True
         return dict(sorted(ch_dict.items(), key=lambda t: str.casefold(t[0])))
+
+@route("/api/search-broadcast", method="POST")
+def search_broadcast():
+    data = json.loads(request.body.read())
+    if not data:
+        return json.dumps({"success": False, "message": "No data provided"})
+
+    channel_names = data.get("channels", [])
+    start_time = data.get("start_time")
+    count = int(data.get("count", 1))
+
+    if not channel_names and data.get("channel_name"):
+        channel_names = [data.get("channel_name")]
+
+    if not channel_names or start_time is None:
+        return json.dumps({"success": False, "message": "missing channels or start_time"})
+
+    try:
+        known = {}
+        for c_id, ch in g.user_db.main["channels"].items():
+            name = ch.get("name", "").lower()
+            if name in [c.lower() for c in channel_names] and name not in known:
+                known[name] = (c_id, ch.get("stationId", c_id))
+
+        def row_to_dict(r):
+            if r is None:
+                return None
+            return {
+                "channel_id":         r[0],
+                "broadcast_id":       r[1],
+                "start":              r[2],
+                "end":                r[3],
+                "title":              r[4],
+                "subtitle":           r[5],
+                "desc":               r[6],
+                "image":              r[7],
+                "date":               r[8],
+                "country":            r[9],
+                "star":               json.loads(r[10]) if r[10] else {},
+                "rating":             json.loads(r[11]) if r[11] else {},
+                "credits":            json.loads(r[12]) if r[12] else {},
+                "season_episode_num": json.loads(r[13]) if r[13] else {},
+                "genres":             json.loads(r[14]) if r[14] else [],
+                "qualifiers":         json.loads(r[15]) if r[15] else [],
+            }
+
+        result = {}
+        for channel_name in channel_names:
+            key = channel_name.lower()
+            if key not in known:
+                result[channel_name] = {"success": False, "message": "Channel not found"}
+                continue
+
+            matched_channel_id, matched_station_id = known[key]
+            p_key = matched_channel_id.split("_")[0]
+            provider = "gntms" if "_" not in matched_channel_id else p_key
+
+            provider_cfg = g.pr.providers.get(provider, {})
+            is_utc = provider_cfg.get("is_utc", False)
+
+            if is_utc:
+                compare_time = start_time
+            else:
+                local_now = datetime.now()
+                utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
+                tz_offset = int((local_now - utc_now).total_seconds())
+                compare_time = start_time - tz_offset
+
+            rows = g.pr.epg_db.retrieve_epg_db_items(provider, matched_station_id)
+
+            current = None
+            next_up = []
+            for row in rows:
+                r_start, r_end = row[2], row[3]
+                if r_start <= compare_time < r_end:
+                    current = row
+                elif r_start > compare_time:
+                    next_up.append(row)
+                    if len(next_up) == count:
+                        break
+
+            result[channel_name] = {
+                "success":    True,
+                "channel_id": matched_channel_id,
+                "provider":   provider,
+                "current":    row_to_dict(current),
+                "next":       [row_to_dict(r) for r in next_up],
+            }
+
+        return json.dumps({"success": True, "result": result})
+
+    except Exception as e:
+        print_error(traceback.format_exc())
+        return json.dumps({"success": False, "message": f"db query failed: {e}"})
+    
