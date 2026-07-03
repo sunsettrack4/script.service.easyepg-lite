@@ -1,0 +1,9 @@
+# easyepg lite runtime dependencies
+# (mirrors the modules listed in the README "Prerequisites" section)
+bottle
+beautifulsoup4
+cheroot
+curl-cffi
+pytz
+requests
+xmltodict
