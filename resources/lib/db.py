@@ -656,7 +656,7 @@ class ProviderManager():
             def duplicator(dup_ids, broadcast_list):
                 x = list(broadcast_list[0])  # BROADCAST LIST CONTAINS 1 ELEMENT ONLY
                 for item in dup_ids:
-                    x[-1] = item
+                    x[1] = item
                     broadcast_list.append(tuple(x))
                 return broadcast_list
 
