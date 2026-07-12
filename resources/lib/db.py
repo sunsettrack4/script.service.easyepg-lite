@@ -515,7 +515,7 @@ class ProviderManager():
                     r = requests.post(item["url"], headers=item.get("h", general_header), data=item["d"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 elif item.get("j"):
                     r = requests.post(item["url"], headers=item.get("h", general_header), json=item["j"], cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
-                elif ("tvtv.us" in item.get("url", "") or "tvtv.ca" in item.get("url", "")) and "curl_cffi.requests" in sys.modules:
+                elif ("tvtv.us" in item.get("url", "") or "tvtv.ca" in item.get("url", "") or "hodor.canalplus.pro" in item.get("url", "")) and "curl_cffi.requests" in sys.modules:
                     r = requests.get(item["url"], impersonate="chrome136", headers=item.get("h", general_header), cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
                 else:
                     r = requests.get(item["url"], headers=item.get("h", general_header), cookies=item.get("cc", {}), timeout=item.get("t", self.providers[provider_name].get("timeout", 60)))
