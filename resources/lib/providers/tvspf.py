@@ -202,7 +202,7 @@ def epg_advanced_converter(item, data, cache, settings):
 
         se_info = series.find("span").get_text().split(", ")
         if "Staffel " in se_info[0]:
-            s_num = se_info[0].replace("Staffel ", "")
+            s_num = se_info[0].replace("Staffel ", "").split(";")[0]
         if len(se_info) == 1 and "Folge " in se_info[0]:
             e_num, p_num = correct_num(se_info[0].replace("Folge ", ""))
         elif len(se_info) > 1 and "Folge " in se_info[1]:
