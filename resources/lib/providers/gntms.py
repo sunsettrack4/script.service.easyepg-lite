@@ -43,8 +43,6 @@ def epg_main_converter(item, data, channels, settings, ch_id=None, genres={}):
         subtitle = i["program"].get("episodeTitle", i["program"].get("eventTitle"))
         if subtitle is not None and entity_type == "Sports":
             title_string = f"{title_string} {subtitle}"
-        if "Live" in qualifiers:
-            title_string = f"[LIVE] {title_string}"
         g["title"] = title_string
 
         if subtitle is not None and subtitle != "" and entity_type != "Sports":

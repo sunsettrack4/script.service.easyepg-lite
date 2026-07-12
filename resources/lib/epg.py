@@ -234,6 +234,8 @@ class Grabber():
                                 program["title"] = {"@lang": lang, "#text": title}
                             else:
                                 program["title"] = {"@lang": lang, "#text": "No programme title available"}
+                            if 'Live' in qualifiers and self.user_db.main["settings"].get("live_title"):
+                                program["title"] = {"@lang": lang, "#text": "[LIVE] " + program["title"]["#text"]}
 
                            # SUBTITLE
                             if subtitle is not None and subtitle != "":
