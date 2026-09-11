@@ -17,7 +17,7 @@ def channels(data, session, headers={}):
         if channel["dt$displayChannelNumber"] not in ch_nums:
             ch_nums.append(channel["dt$displayChannelNumber"])
             stations_link = list(channel["stations"].keys())[0]
-            channel_name = channel["stations"][stations_link]["title"]
+            channel_name = f'{channel["stations"][stations_link]["title"]}{" UHD" if channel["stations"][stations_link]["dt$quality"] == "UHD" and " 4K" not in channel["stations"][stations_link]["title"]else ""}'
             channel_id = channel["id"].split("/")[-1]
             channel_logo = f'https://ngiss.t-online.de/iss?client=ftp22&out=webp&x=180&y=72&ar=keep&src={quote(channel["stations"][stations_link]["thumbnails"]["stationLogo"]["url"])}'
             chlist[channel_id] = {"name": channel_name, "icon": channel_logo}

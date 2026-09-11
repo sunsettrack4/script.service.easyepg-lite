@@ -19,7 +19,7 @@ def channels(data, session, headers={}):
     channel_data = channel_page.json()
 
     for channel in channel_data:
-        channel_name = channel["Title"]
+        channel_name = f'{channel["Title"]}{" UHD" if "UHD channels" in channel["Bouquets"] and "UHD" not in channel["Title"] and "4K" not in channel["Title"] else ""}'
         channel_id = channel["Identifier"]
         channel_logo = f"https://services.sg101.prd.sctv.ch/content/images/tv/channel/{channel_id}_w300.webp"
         chlist[channel_id] = {"name": channel_name, "icon": channel_logo}
