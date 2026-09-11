@@ -133,6 +133,14 @@ def listings():
     return {"channels": filtered_chs if filter_by != "" else g.user_db.main["channels"], 
             "providers": dict(sorted(p.items(), key=lambda item: item[1]))}
 
+@route("/api/move-providers", method="GET")
+def move_providers():
+    providers = {provider_id: data.get("name", provider_id) for provider_id, data in g.pr.providers.items()
+                 if provider_id not in ["xmltv", "gntms", "tvtms"]}
+    # providers["gntms"] = "Gracenote TMS"
+    providers.update({provider_id: data["name"] for provider_id, data in g.user_db.main["xmltv"].items()})
+    return json.dumps(dict(sorted(providers.items(), key=lambda item: item[1])))
+
 @route("/api/settings", method="GET")
 def get_settings():
     return g.user_db.main["settings"]
@@ -228,6 +236,113 @@ def get_xmltv_lineup_channels():
     except Exception as e:
         print_error(traceback.format_exc())
         return json.dumps({"success": False, "message": "Failed to load the channels."})
+
+def get_move_channels(provider):
+    if provider in g.user_db.main["xmltv"]:
+        result = g.pr.ch_loader("xmltv", {"url": g.user_db.main["xmltv"][provider]["link"]})
+    else:
+        result = g.pr.ch_loader(provider)
+    if not result[0]:
+        raise Exception(str(result[1]))
+    return result[1]
+
+@route("/api/move-preview", method="POST")
+def move_preview():
+    if g.grabbing:
+        return json.dumps({"success": False, "message": "The grabber process needs to be finished first."})
+    values = json.loads(request.body.read())
+    provider = values.get("provider", "")
+    source_ids = values.get("ids", [])
+    if provider not in g.pr.providers and provider not in g.user_db.main["xmltv"]:
+        return json.dumps({"success": False, "message": "The destination provider does not exist."})
+    try:
+        target_channels = get_move_channels(provider)
+        target_by_name = {}
+        target_options = []
+        for target_id, target in target_channels.items():
+            target_name = target.get("name", target_id) if isinstance(target, dict) else str(target)
+            target_icon = target.get("icon") if isinstance(target, dict) else None
+            if not target_icon and isinstance(target, dict) and isinstance(target.get("preferredImage"), dict):
+                target_icon = target["preferredImage"].get("uri")
+            target_by_name.setdefault(target_name.casefold().strip(), []).append((target_id, target_name))
+            target_options.append({"id": target_id, "name": target_name, "icon": target_icon})
+
+        result = []
+        for source_id in source_ids:
+            source = g.user_db.main["channels"].get(source_id)
+            if not source:
+                continue
+            source_name = source.get("name", source_id)
+            source_provider = source_id.split("_", 1)[0] if "_" in source_id else "gntms"
+            matches = target_by_name.get(source_name.casefold().strip(), [])
+            matched_channel = target_channels[matches[0][0]] if len(matches) == 1 else None
+            matched_icon = matched_channel.get("icon") if isinstance(matched_channel, dict) else None
+            if not matched_icon and isinstance(matched_channel, dict) and isinstance(matched_channel.get("preferredImage"), dict):
+                matched_icon = matched_channel["preferredImage"].get("uri")
+            result.append({"source_id": source_id, "name": source_name,
+                           "same_provider": source_provider == provider,
+                           "match": {"id": matches[0][0], "name": matches[0][1], "icon": matched_icon} if len(matches) == 1 else None,
+                           "options": target_options})
+        return json.dumps({"success": True, "provider": provider, "channels": result})
+    except Exception as e:
+        print_error(traceback.format_exc())
+        return json.dumps({"success": False, "message": f"Failed to load the destination channels: {e}"})
+
+@route("/api/move-apply", method="POST")
+def move_apply():
+    if g.grabbing:
+        return json.dumps({"success": False, "message": "The grabber process needs to be finished first."})
+    values = json.loads(request.body.read())
+    provider = values.get("provider", "")
+    mappings = values.get("mappings", [])
+    use_target_metadata = bool(values.get("use_target_metadata", False))
+    if provider not in g.pr.providers and provider not in g.user_db.main["xmltv"]:
+        return json.dumps({"success": False, "message": "The destination provider does not exist."})
+    if provider in ["gntms", "tvtms"]:
+        return json.dumps({"success": False, "message": "This provider cannot be used as a move destination."})
+    destination_ids = [mapping.get("target_id", "") for mapping in mappings]
+    source_ids = [mapping.get("source_id", "") for mapping in mappings]
+    if not mappings or any(not mapping.get("source_id") or not mapping.get("target_id") for mapping in mappings):
+        return json.dumps({"success": False, "message": "Every channel needs a destination."})
+    if len(source_ids) != len(set(source_ids)) or any(source_id not in g.user_db.main["channels"] for source_id in source_ids):
+        return json.dumps({"success": False, "message": "The selected source channels are no longer available."})
+    if len(destination_ids) != len(set(destination_ids)):
+        return json.dumps({"success": False, "message": "Each destination channel can only be selected once."})
+
+    destination_keys = [target_id if provider == "gntms" else f"{provider}_{target_id}" for target_id in destination_ids]
+    if any((source_id.split("_", 1)[0] if "_" in source_id else "gntms") == provider for source_id in source_ids):
+        return json.dumps({"success": False, "message": "The destination must be another provider."})
+    if any(key in source_ids for key in destination_keys):
+        return json.dumps({"success": False, "message": "A channel cannot be moved onto another selected channel."})
+    if any(key in g.user_db.main["channels"] for key in destination_keys):
+        return json.dumps({"success": False, "message": "One or more destination channels are already configured."})
+    try:
+        channels = {mapping["source_id"]: g.user_db.main["channels"][mapping["source_id"]] for mapping in mappings}
+        for mapping, destination_key in zip(mappings, destination_keys):
+            channel = channels[mapping["source_id"]]
+            if not channel.get("tvg-id"):
+                channel["tvg-id"] = mapping["source_id"]
+            custom_tvg_id = channel.get("tvg-id")
+            has_custom_tvg_id = "tvg-id" in channel
+            if use_target_metadata:
+                target_metadata = mapping.get("target_metadata", {})
+                if target_metadata.get("name"):
+                    channel["name"] = target_metadata["name"]
+                channel.pop("icon", None)
+                channel.pop("preferredImage", None)
+                target_icon = target_metadata.get("icon")
+                if target_icon:
+                    channel["preferredImage"] = {"uri": target_icon}
+            channel["stationId"] = mapping["target_id"]
+            if has_custom_tvg_id:
+                channel["tvg-id"] = custom_tvg_id
+            del g.user_db.main["channels"][mapping["source_id"]]
+            g.user_db.main["channels"][destination_key] = channel
+        g.user_db.save_settings()
+        return json.dumps({"success": True, "count": len(mappings)})
+    except Exception as e:
+        print_error(traceback.format_exc())
+        return json.dumps({"success": False, "message": f"Failed to move channels: {e}"})
 
 @route("/api/replace-id", method="POST")
 def replace_channel():

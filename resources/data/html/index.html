@@ -81,6 +81,34 @@
             <button id="ch-remove" class="remove-btn" type="button">Remove channel</button>
         </div>
     </section>
+    <section id="move-window" class="nav-bar">
+        <button id="close-move" class="exit-btn" type="button">x</button>
+        <p>Move channels</p>
+        <label for="move-provider">Target provider</label>
+        <div>
+            <select id="move-provider">
+                <option id="move-provider-default" value="">Please select...</option>
+            </select>
+        </div>
+        <div class="move-options">
+            <label>
+                <input id="move-use-target-metadata" type="checkbox">
+                Use target names and logos
+            </label>
+            <label>
+                <input id="move-unmatched-only" type="checkbox">
+                Show unmatched only
+            </label>
+            <label>
+                <input id="move-ignore-all" type="checkbox">
+                Ignore all unmatched
+            </label>
+        </div>
+        <table id="move-table"><tbody></tbody></table>
+        <div>
+            <button disabled id="move-apply" class="add-btn" type="button">Apply</button>
+        </div>
+    </section>
     <section id="web-window" class="nav-bar search-window">
         <button id="close-web-window" class="exit-btn" type="button">x</button>
         <div class="section">
@@ -433,7 +461,8 @@
             <button id="ch-select-all">Select All</button>
             <button id="ch-unselect-all">Unselect All</button>
             <button id="ch-remove-all" class="remove-btn">Remove</button>
-            <button disabled id="ch-map" class="map-btn">Map Channel</button>
+            <button disabled id="ch-map" class="map-btn">Map</button>
+            <button disabled id="ch-move" class="map-btn">Move</button>
         </div>
         <div id="btn-lp-select-group">
             <button id="ch-lp-select-all">Select All</button>

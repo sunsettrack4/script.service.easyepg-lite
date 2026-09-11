@@ -18,6 +18,7 @@ const chLpUnselectAll = document.getElementById("ch-lp-unselect-all");
 const chLpAddAll = document.getElementById("ch-lp-add-all");
 
 const chRemove = document.getElementById("ch-remove");
+const chMove = document.getElementById("ch-move");
 
 const mainBtnGroup = document.getElementById("btn-main-group");
 const aboutBtnGroup = document.getElementById("about-btn-group");
@@ -98,6 +99,14 @@ const chInfoReplaceInput = document.getElementById("replace-ch");
 const chInfoReplaceResult = document.getElementById("replace-ch-result");
 const chInfoReplaceNow = document.getElementById("replace-now");
 const chInfoImage = document.getElementById("ch-logo");
+const moveWindow = document.getElementById("move-window");
+const closeMoveWindow = document.getElementById("close-move");
+const moveProvider = document.getElementById("move-provider");
+const moveUseTargetMetadata = document.getElementById("move-use-target-metadata");
+const moveUnmatchedOnly = document.getElementById("move-unmatched-only");
+const moveIgnoreAll = document.getElementById("move-ignore-all");
+const moveTable = document.getElementById("move-table");
+const moveApply = document.getElementById("move-apply");
 
 const daySlider = document.getElementById("days");
 const dayNumber = document.getElementById("days_number");
@@ -1143,6 +1152,7 @@ chSelectAll.addEventListener("click", function() {
     for( let i = 0; i < channelRows.length; i++ ) {
         channelRows[i].classList.add("ch_selected");
     };
+    chMove.disabled = channelRows.length === 0;
 });
 
 chLpSelectAll.addEventListener("click", function() {
@@ -1166,6 +1176,7 @@ chUnselectAll.addEventListener("click", function() {
     };
     chMultiSelectBtnGroup.style.display = "none";
     mainBtnGroup.style.display = "inline";
+    chMove.disabled = true;
 });
 
 chLpUnselectAll.addEventListener("click", function() {
@@ -1182,6 +1193,279 @@ chLpUnselectAll.addEventListener("click", function() {
     };
     chLpMultiSelectBtnGroup.style.display = "none";
     mainBtnGroup.style.display = "inline";
+});
+
+var moveMappings = [];
+var moveActionCompleted = false;
+
+function selectedChannelIds() {
+    var ids = [];
+    var channelRows = document.getElementsByClassName("ch_row");
+    for( let i = 0; i < channelRows.length; i++ ) {
+        if( channelRows[i].classList.contains("ch_selected") ) {
+            ids.push(channelRows[i].getAttribute("id").replace("ch_", ""));
+        };
+    };
+    return ids;
+};
+
+function updateMoveApply() {
+    var mappingsToApply = moveMappings.filter(function(mapping) {
+        return !mapping.ignored;
+    });
+    moveApply.disabled = mappingsToApply.length === 0 || mappingsToApply.some(function(mapping) {
+        return !mapping.target_id;
+    });
+};
+
+function updateMoveOptions() {
+    var hasUnmatched = moveMappings.some(function(mapping) {
+        return !mapping.match;
+    });
+    moveUnmatchedOnly.disabled = !hasUnmatched;
+    moveIgnoreAll.disabled = !hasUnmatched;
+    if( !hasUnmatched ) {
+        moveUnmatchedOnly.checked = false;
+        moveIgnoreAll.checked = false;
+    };
+};
+
+function loadMovePreview() {
+    var sourceIds = moveMappings.length ? moveMappings.map(function(mapping) {
+        return mapping.source_id;
+    }) : selectedChannelIds();
+    moveMappings = [];
+    moveTable.getElementsByTagName("tbody")[0].innerHTML = "";
+    moveApply.disabled = true;
+    updateMoveOptions();
+    if( moveProvider.value === "" ) {
+        return;
+    };
+    fetch("api/move-preview", {
+        method: "POST",
+        body: JSON.stringify({"provider": moveProvider.value, "ids": sourceIds})
+    })
+    .then(response => response.json())
+    .then(function(data) {
+        if( data.success !== true ) {
+            showNotiMessage(data.message, "error");
+            return;
+        };
+        moveMappings = data.channels;
+        var body = moveTable.getElementsByTagName("tbody")[0];
+        moveMappings.forEach(function(mapping, index) {
+            var row = body.insertRow();
+            row.setAttribute("data-source-id", mapping.source_id);
+            row.setAttribute("data-matched", mapping.match ? "true" : "false");
+            var nameCell = row.insertCell();
+            nameCell.textContent = mapping.name;
+            var targetCell = row.insertCell();
+            targetCell.classList.add("move-target");
+            if( mapping.same_provider ) {
+                mapping.ignored = true;
+                var sameProviderIgnore = document.createElement("input");
+                sameProviderIgnore.type = "checkbox";
+                sameProviderIgnore.checked = true;
+                sameProviderIgnore.disabled = true;
+                var sameProviderLabel = document.createElement("label");
+                sameProviderLabel.className = "move-ignore same-provider-ignore";
+                var sameProviderNotice = document.createElement("span");
+                sameProviderNotice.className = "move-ignore-notice";
+                sameProviderNotice.textContent = "Already on this provider";
+                sameProviderLabel.appendChild(sameProviderIgnore);
+                sameProviderLabel.appendChild(sameProviderNotice);
+                targetCell.appendChild(sameProviderLabel);
+            } else if( mapping.match ) {
+                targetCell.textContent = "Matched: " + mapping.match.name;
+                mapping.target_id = mapping.match.id;
+                mapping.target_metadata = {"name": mapping.match.name, "icon": mapping.match.icon};
+            } else {
+                var select = document.createElement("select");
+                var empty = document.createElement("option");
+                empty.value = "";
+                empty.textContent = "Select channel...";
+                select.appendChild(empty);
+                mapping.options.slice().sort(function(first, second) {
+                    return first.name.localeCompare(second.name, undefined, {sensitivity: "base"});
+                }).forEach(function(option) {
+                    var item = document.createElement("option");
+                    item.value = option.id;
+                    item.textContent = option.name;
+                    item.dataset.icon = option.icon || "";
+                    select.appendChild(item);
+                });
+                select.addEventListener("change", function() {
+                    moveMappings[index].target_id = select.value;
+                    moveMappings[index].target_metadata = {
+                        "name": select.options[select.selectedIndex].textContent,
+                        "icon": select.options[select.selectedIndex].dataset.icon
+                    };
+                    updateMoveApply();
+                });
+                targetCell.appendChild(select);
+                var ignoreLabel = document.createElement("label");
+                ignoreLabel.className = "move-ignore";
+                var ignore = document.createElement("input");
+                ignore.type = "checkbox";
+                ignoreLabel.appendChild(ignore);
+                ignoreLabel.appendChild(document.createTextNode(" Ignore"));
+                ignore.addEventListener("change", function() {
+                    moveMappings[index].ignored = ignore.checked;
+                    select.disabled = ignore.checked;
+                    moveIgnoreAll.checked = moveMappings.filter(function(item) {
+                        return !item.match;
+                    }).every(function(item) {
+                        return item.ignored;
+                    });
+                    updateMoveApply();
+                });
+                targetCell.appendChild(ignoreLabel);
+            };
+        });
+        if( moveIgnoreAll.checked ) {
+            toggleIgnoreAllUnmatched();
+        };
+        updateMoveOptions();
+        applyMoveFilter();
+        updateMoveApply();
+    })
+    .catch(error => {
+        console.log(error);
+        showNotiMessage("An error occurred while loading the destination channels.", "error");
+    });
+};
+
+function applyMoveFilter() {
+    var rows = moveTable.querySelectorAll("tr[data-source-id]");
+    rows.forEach(function(row) {
+        row.style.display = moveUnmatchedOnly.checked && row.getAttribute("data-matched") === "true" ? "none" : "table";
+    });
+};
+
+function toggleIgnoreAllUnmatched() {
+    moveMappings.forEach(function(mapping) {
+        if( !mapping.match ) {
+            mapping.ignored = moveIgnoreAll.checked;
+        };
+    });
+    moveTable.querySelectorAll("tr[data-matched='false']").forEach(function(row) {
+        var ignore = row.querySelector(".move-ignore input");
+        var select = row.querySelector(".move-target select");
+        if( ignore ) {
+            ignore.checked = moveIgnoreAll.checked;
+        };
+        if( select ) {
+            select.disabled = moveIgnoreAll.checked;
+        };
+    });
+    updateMoveApply();
+};
+
+function openMoveDialog() {
+    chMultiSelectBtnGroup.style.display = "none";
+    moveActionCompleted = false;
+    fetch("api/move-providers")
+    .then(response => response.json())
+    .then(function(providers) {
+        moveProvider.innerHTML = '<option value="">Please select...</option>';
+        for( let providerId in providers ) {
+            var option = document.createElement("option");
+            option.value = providerId;
+            option.textContent = providers[providerId];
+            moveProvider.appendChild(option);
+        };
+        moveWindow.style.display = "inline";
+        blockPage.classList.add("add-blocker");
+        blockPage.style.display = "inline";
+        blockPage.addEventListener("click", closeMoveDialog);
+        moveProvider.value = "";
+        moveUseTargetMetadata.checked = false;
+        moveUnmatchedOnly.checked = false;
+        moveIgnoreAll.checked = false;
+        moveUnmatchedOnly.disabled = true;
+        moveIgnoreAll.disabled = true;
+        moveTable.getElementsByTagName("tbody")[0].innerHTML = "";
+        moveApply.disabled = true;
+    })
+    .catch(error => {
+        console.log(error);
+        showNotiMessage("An error occurred while loading providers.", "error");
+    });
+};
+
+function closeMoveDialog() {
+    var completed = moveActionCompleted;
+    moveWindow.style.display = "none";
+    blockPage.classList.remove("add-blocker");
+    blockPage.style.display = "none";
+    blockPage.removeEventListener("click", closeMoveDialog);
+    moveMappings = [];
+    moveActionCompleted = false;
+    if( completed ) {
+        chMultiSelectBtnGroup.style.display = "none";
+        mainBtnGroup.style.display = "inline";
+    } else {
+        chMultiSelectBtnGroup.style.display = "inline";
+        mainBtnGroup.style.display = "none";
+    };
+};
+
+chMove.addEventListener("click", openMoveDialog);
+closeMoveWindow.addEventListener("click", closeMoveDialog);
+moveProvider.addEventListener("change", loadMovePreview);
+moveUnmatchedOnly.addEventListener("change", applyMoveFilter);
+moveIgnoreAll.addEventListener("change", toggleIgnoreAllUnmatched);
+
+moveApply.addEventListener("click", function() {
+    var mappingsToApply = moveMappings.filter(function(mapping) {
+        return !mapping.ignored;
+    });
+    fetch("api/move-apply", {
+        method: "POST",
+        body: JSON.stringify({
+            "provider": moveProvider.value,
+            "use_target_metadata": moveUseTargetMetadata.checked,
+            "mappings": mappingsToApply.map(function(mapping) {
+                return {"source_id": mapping.source_id, "target_id": mapping.target_id,
+                        "target_metadata": mapping.target_metadata || {}};
+            })
+        })
+    })
+    .then(response => response.json())
+    .then(function(data) {
+        if( data.success === true ) {
+            var appliedIds = mappingsToApply.map(function(mapping) {
+                return mapping.source_id;
+            });
+            moveMappings = moveMappings.filter(function(mapping) {
+                return !appliedIds.includes(mapping.source_id);
+            });
+            var moveRows = moveTable.querySelectorAll("tr[data-source-id]");
+            moveRows.forEach(function(row) {
+                if( appliedIds.includes(row.getAttribute("data-source-id")) ) {
+                    row.remove();
+                };
+            });
+            loadChannelList(null, true);
+            if( moveMappings.length === 0 ) {
+                moveActionCompleted = true;
+                closeMoveDialog();
+                showNotiMessage(data.count + " channel(s) moved successfully!", "success");
+            } else {
+                moveActionCompleted = true;
+                moveProvider.value = "";
+                moveIgnoreAll.checked = false;
+                moveApply.disabled = true;
+                showNotiMessage(data.count + " channel(s) moved. Select another provider for the remaining channels.", "success");
+            };
+        } else {
+            showNotiMessage(data.message, "error");
+        };
+    })
+    .catch(error => {
+        console.log(error);
+        showNotiMessage("An error occurred while moving channels.", "error");
+    });
 });
 
 chRemoveAll.addEventListener("click", function() {
@@ -2366,6 +2650,7 @@ function loadChannelList(prov, reset) {
                             };
                             mainBtnGroup.style.display = "none";
                             chMultiSelectBtnGroup.style.display = "inline";
+                            chMove.disabled = false;
                             for( let i = 0; i < channelInfoElements.length; i++ ) {
                                 channelInfoElements[i].disabled = true;
                                 channelInfoElements[i].classList.add("info-ch-disabled");
@@ -2373,6 +2658,7 @@ function loadChannelList(prov, reset) {
                         } else {
                             mainBtnGroup.style.display = "inline";
                             chMultiSelectBtnGroup.style.display = "none";
+                            chMove.disabled = true;
                             for( let i = 0; i < channelInfoElements.length; i++ ) {
                                 channelInfoElements[i].disabled = false;
                                 channelInfoElements[i].classList.remove("info-ch-disabled");

@@ -613,6 +613,132 @@ section #settings {
   font-size: larger;
   margin-top: 5px;
 }
+#move-window {
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 5.5rem);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+#move-window > label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: bold;
+}
+#move-window #move-provider {
+  box-sizing: border-box;
+  margin: 0;
+}
+#move-window .move-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  margin: 0.65rem 0 0.2rem;
+}
+#move-window .move-options label {
+  display: inline-flex;
+  align-items: center;
+  flex: 1 1 10rem;
+  min-width: 0;
+  gap: 0.35rem;
+  margin: 0;
+  line-height: 1.25;
+  cursor: pointer;
+}
+#move-window .move-options input {
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  margin: 0;
+  accent-color: yellowgreen;
+}
+#move-window #move-table {
+  width: 100%;
+  margin: 0.8rem 0 0.5rem;
+  border-collapse: separate;
+  border-spacing: 0 0.35rem;
+}
+#move-window #move-table tbody {
+  display: block;
+  max-height: min(55vh, 28rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.25rem;
+}
+#move-window #move-table tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+#move-window #move-table td {
+  padding: 0.45rem 0.55rem;
+  vertical-align: middle;
+  background-color: rgba(0, 58, 128, 0.28);
+}
+#move-window #move-table tr td:first-child {
+  width: 42%;
+  border-radius: 5px 0 0 5px;
+}
+#move-window #move-table tr td:last-child {
+  border-radius: 0 5px 5px 0;
+}
+#move-window #move-table .move-target {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2rem;
+}
+#move-window #move-table .move-target select {
+  flex: 1 1 11rem;
+  min-width: 0;
+  margin: 0;
+}
+#move-window #move-table .move-ignore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  cursor: pointer;
+}
+#move-window #move-table .move-ignore input {
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  margin: 0;
+  accent-color: yellowgreen;
+}
+#move-window #move-table .move-ignore-notice {
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85em;
+  font-style: italic;
+}
+@media only screen and (max-width: 520px) {
+  #move-window .move-options {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+  #move-window .move-options label {
+    flex: none;
+  }
+  #move-window #move-table .same-provider-ignore {
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    align-items: start;
+    width: 100%;
+  }
+}
+#move-window #move-table .move-target select:disabled {
+  opacity: 0.55;
+}
 .nav-bar button {
   cursor: pointer;
 }
