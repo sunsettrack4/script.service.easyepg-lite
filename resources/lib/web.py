@@ -246,6 +246,9 @@ def get_move_channels(provider):
         raise Exception(str(result[1]))
     return result[1]
 
+def normalize_move_channel_name(name):
+    return re.sub(r"\s+hd$", "", str(name).strip(), flags=re.IGNORECASE).casefold()
+
 @route("/api/move-preview", method="POST")
 def move_preview():
     if g.grabbing:
@@ -264,7 +267,7 @@ def move_preview():
             target_icon = target.get("icon") if isinstance(target, dict) else None
             if not target_icon and isinstance(target, dict) and isinstance(target.get("preferredImage"), dict):
                 target_icon = target["preferredImage"].get("uri")
-            target_by_name.setdefault(target_name.casefold().strip(), []).append((target_id, target_name))
+            target_by_name.setdefault(normalize_move_channel_name(target_name), []).append((target_id, target_name))
             target_options.append({"id": target_id, "name": target_name, "icon": target_icon})
 
         result = []
@@ -274,7 +277,7 @@ def move_preview():
                 continue
             source_name = source.get("name", source_id)
             source_provider = source_id.split("_", 1)[0] if "_" in source_id else "gntms"
-            matches = target_by_name.get(source_name.casefold().strip(), [])
+            matches = target_by_name.get(normalize_move_channel_name(source_name), [])
             matched_channel = target_channels[matches[0][0]] if len(matches) == 1 else None
             matched_icon = matched_channel.get("icon") if isinstance(matched_channel, dict) else None
             if not matched_icon and isinstance(matched_channel, dict) and isinstance(matched_channel.get("preferredImage"), dict):
