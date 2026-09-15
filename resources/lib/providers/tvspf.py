@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-import json, re, string, time
+import json, string, time
 
-from soupsieve import match
 
 try:
     from curl_cffi import requests
