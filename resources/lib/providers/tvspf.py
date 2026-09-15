@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-import json, string, time
+import json, re, string, time
+
+from soupsieve import match
 
 try:
     from curl_cffi import requests
@@ -162,6 +164,11 @@ def epg_advanced_converter(item, data, cache, settings):
             return int(string_item), None
         except:
             if string_item[-1].isalpha():
+                if len("".join([i for i in string_item if i.isalpha()])) > 1:
+                    for n, i in enumerate(string_item):
+                        if i.isalpha():
+                            string_item = string_item[:n+1]
+                            break
                 alphabet = string.ascii_lowercase
                 return int(string_item[:-1]), alphabet.find(string_item[-1])+1
             else:
