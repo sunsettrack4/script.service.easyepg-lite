@@ -493,6 +493,38 @@ class ProviderManager():
             return data.decode('utf-8')        
         return
 
+    def blocks(self, files, size=65536):
+        while True:
+            b = files.read(size)
+            if not b: break
+            yield b
+
+    def extract_xml_data(self,file_path, channel):
+        with open(file_path.replace("file://", ""), "rb") as f:
+            line_num = 0
+            for bl in self.blocks(f):
+                if b'channel="' + channel.encode() + b'"' in bl:
+                    break
+                line_num += bl.count(b"\n")
+
+        with open(file_path.replace("file://", ""), "rb") as f:  
+            programmes = bytes(b"<tv>\n")
+            start = False
+            for i in range(line_num):
+                f.readline()
+            for j in f:
+                if b'<programme' in j and b'channel="' + channel.encode() + b'"' in j:
+                    start = True
+                elif b'<programme' in j and b'channel="' + channel.encode() + b'"' not in j and start:
+                    break
+                if start:
+                    programmes += j
+                    continue
+            if b"</tv>" not in programmes:
+                programmes += b"</tv>"
+
+        return programmes
+
     def load_main(self, provider_name, item, name, tms_retry=False):
         if self.exit or self.cancellation:
             return
@@ -508,7 +540,9 @@ class ProviderManager():
         x = 0
         while True:
             try:
-                if item.get("tms"):
+                if "file://" in item["url"]:
+                    r = self.extract_xml_data(item["url"], item["c"])
+                elif item.get("tms"):
                     gh = "; ".join(f"{i}: {general_header[i]}" for i in general_header.keys())
                     r = self.getProcessOutput(f'{curl} -s -m {item.get("t", self.providers[provider_name].get("timeout", 60))} "{item["tms"]}" -H "{gh}"{(" --data-raw "+item["d"]) if item.get("d") else ""}')
                 elif item.get("d"):
@@ -534,7 +568,7 @@ class ProviderManager():
         
         if item.get("tms") and not r:
             return provider_name, "", item.get("c"), name
-        elif not item.get("tms") and str(r.status_code)[0] in ["4", "5"]:
+        elif not item.get("tms") and not "file://" in item["url"] and str(r.status_code)[0] in ["4", "5"]:
             if len(self.error_cache) <= 50:
                 if self.providers[provider_name].get("ignore_error_codes", []) and r.status_code in self.providers[provider_name]["ignore_error_codes"]:
                     pass
@@ -542,7 +576,7 @@ class ProviderManager():
                     self.error_cache.append(f"{provider_name}: HTTP error {str(r.status_code)} for {str(r.url)} - {str(r.content)}")
             return provider_name, "", item.get("c"), name
         
-        return provider_name, r if item.get("tms") else r.content, item.get("c"), name
+        return provider_name, r if item.get("tms") or "file://" in item["url"] else r.content, item.get("c"), name
 
     def url_threads_handler(self, item):
         if self.exit or self.cancellation:

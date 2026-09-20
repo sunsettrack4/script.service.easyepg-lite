@@ -2,8 +2,8 @@ from resources.lib import tools
 from bottle import request, route, run, static_file
 from datetime import datetime, timezone
 from threading import Event
-import json, os, re, requests, signal, traceback
-from resources.lib import basedir
+import base64, json, os, re, requests, signal, traceback
+from resources.lib import basedir, xmlcache
 
 stopFlag = Event()
 
@@ -188,7 +188,10 @@ def get_lineup_channels():
 @route("/api/xmltv_lineups/add", method="POST")
 def add_xmltv_lineup():
     values = json.loads(request.body.read())
-    result = g.pr.ch_loader("xmltv", {"url": values.get("link").replace("\\", "/")})
+    path = xmlcache.arrange_path(values.get("link").replace("\\", "/"), f"{basedir.get_path('cache/', basedir.get_path(f['storage'], f['storage']))}{base64.urlsafe_b64encode(values.get('link').encode()).decode()}.xml")
+    if not path[0]:
+        return json.dumps({"success": False, "message": path[1]})
+    result = g.pr.ch_loader("xmltv", {"url": path[1]})
     if result[0] and len(result[1].keys()):
         l = str(int(datetime.now().timestamp()))
         g.user_db.main["xmltv"][f"xml{l}"] = {"name": values.get("name", f"XML FILE {l}"), "link": values["link"].replace("\\", "/")}
@@ -204,10 +207,14 @@ def get_xmltv_lineups():
 def remove_xmltv_lineup():    
     provider = json.loads(request.body.read()).get("id", "")
     try:
-        l = len([i for i in g.user_db.main["channels"].keys() if g.user_db.main["channels"][i].get("provider_id", "") == provider])
+        l = len([i for i in g.user_db.main["channels"].keys() if i.split("_")[0] == provider])
         if l > 0:
             return json.dumps({"success": False, "message": "Please remove the affected channels first."})
         else:
+            try:
+                os.remove(xmlcache.arrange_path(g.user_db.main["xmltv"][provider]["link"], f"{basedir.get_path('cache/', basedir.get_path(f['storage'], f['storage']))}{base64.urlsafe_b64encode(g.user_db.main["xmltv"][provider]["link"].encode()).decode()}.xml")[1])
+            except:
+                pass
             del g.user_db.main["xmltv"][provider]
             g.user_db.save_settings()
             return json.dumps({"success": True})
@@ -219,10 +226,13 @@ def get_xmltv_lineup_channels():
     provider = json.loads(request.body.read()).get("id", "")
     try:
         if "xml" in provider:
-            result = g.pr.ch_loader("xmltv", {"url": g.user_db.main["xmltv"][provider]["link"]})
+            path = xmlcache.arrange_path(g.user_db.main["xmltv"][provider]["link"], f"{basedir.get_path('cache/', basedir.get_path(f['storage'], f['storage']))}{base64.urlsafe_b64encode(g.user_db.main["xmltv"][provider]["link"].encode()).decode()}.xml")
+            if not path[0]:
+                return json.dumps({"success": False, "message": path[1]})
+            result = g.pr.ch_loader("xmltv", {"url": path[1]})
         else:
             result = g.pr.ch_loader(provider)
-        
+
         if result[0]:
             for i in result[1].keys():
                 if g.user_db.main["channels"].get(f"{provider}_{i}"):
@@ -239,7 +249,10 @@ def get_xmltv_lineup_channels():
 
 def get_move_channels(provider):
     if provider in g.user_db.main["xmltv"]:
-        result = g.pr.ch_loader("xmltv", {"url": g.user_db.main["xmltv"][provider]["link"]})
+        path = xmlcache.arrange_path(g.user_db.main["xmltv"][provider]["link"], f"{basedir.get_path('cache/', basedir.get_path(f['storage'], f['storage']))}{base64.urlsafe_b64encode(g.user_db.main["xmltv"][provider]["link"].encode()).decode()}.xml")
+        if not path[0]:
+            return json.dumps({"success": False, "message": path[1]})
+        result = g.pr.ch_loader("xmltv", {"url": path[1]})
     else:
         result = g.pr.ch_loader(provider)
     if not result[0]:
@@ -422,7 +435,10 @@ def add_channel():
     else: 
         try:
             if "xml" in provider_id:
-                ch_list = g.pr.ch_loader("xmltv", {"url": g.user_db.main["xmltv"][provider_id]["link"]})
+                path = xmlcache.arrange_path(g.user_db.main["xmltv"][provider_id]["link"], f"{basedir.get_path('cache/', basedir.get_path(f['storage'], f['storage']))}{base64.urlsafe_b64encode(g.user_db.main["xmltv"][provider_id]["link"].encode()).decode()}.xml")
+                if not path[0]:
+                    return json.dumps({"success": False, "message": path[1]})
+                ch_list = g.pr.ch_loader("xmltv", {"url": path[1]})
             else:
                 ch_list = g.pr.ch_loader(provider_id)
             if ch_list[0]:

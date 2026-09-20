@@ -2,9 +2,9 @@ from datetime import datetime, timezone
 from resources.lib.tools import key_checker
 from threading import Thread
 from time import sleep
-import gzip, json, os, shutil, time, traceback
+import base64, gzip, json, os, shutil, time, traceback
 import xmltodict
-from resources.lib import basedir
+from resources.lib import basedir, xmlcache
 
 class Grabber():
     def __init__(self, file_paths, provider_manager, user_db):
@@ -123,7 +123,10 @@ class Grabber():
             for provider in pr_check:
                 try:
                     if "xml" in provider:
-                        data = {"link": self.user_db.main["xmltv"][provider]["link"], "id": provider}
+                        path = xmlcache.arrange_path(self.user_db.main["xmltv"][provider]["link"], f"{basedir.get_path('cache/', basedir.get_path(self.file_paths['storage'], self.file_paths['storage']))}{base64.urlsafe_b64encode(self.user_db.main["xmltv"][provider]["link"].encode()).decode()}.xml")
+                        if not path[0]:
+                            raise Exception(path[1])
+                        data = {"link": "file://" + path[1], "id": provider}
                         self.pr.main_downloader("xmltv", data)
                     elif self.pr.providers[provider].get("adv_loader"):
                         self.pr.advanced_downloader(provider, self.pr.main_downloader(provider))

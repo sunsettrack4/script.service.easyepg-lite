@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-import gzip, lzma, requests, time, xmltodict
+import time, xmltodict
 
 
 def convert_timestring(string):
@@ -14,40 +14,19 @@ def convert_timestring(string):
 
     return int(dt.timestamp())
 
-def file_decoder(data):
-    p = None
-
-    try:  # RAW XML
-        p = xmltodict.parse(data, dict_constructor=dict)
-    except:
-        pass
-            
-    if not p:        
-        try:  # GZIP/GZ
-            p = xmltodict.parse(gzip.decompress(data), dict_constructor=dict)
-        except:
-            pass
-    
-    if not p:
-        try:  # XZ
-            p = xmltodict.parse(lzma.decompress(data), dict_constructor=dict)
-        except:
-            raise Exception("File type could not be verified.")
-        
-    return p
-
 def channels(data, session, headers={}):
     chlist = {}
 
     url = data["url"]
 
-    if "http://" in data["url"] or "https://" in data["url"]:
-        r = requests.get(url, headers=headers)
-        p = file_decoder(r.content)
-    else:
-        with open(data["url"].replace("file://", ""), "r", encoding="utf-8") as f:
-            r = f.read()
-        p = file_decoder(r)
+    with open(data["url"], "rb") as f:
+        t = bytes()
+        for i in f:
+            if b"<programme" in i:
+                t += b"</tv>"
+                break
+            t += i
+        p = xmltodict.parse(t, dict_constructor=dict)
 
     if type(p["tv"]["channel"]) == list:
         for ch in p["tv"]["channel"]:
@@ -89,10 +68,13 @@ def channels(data, session, headers={}):
     return chlist
 
 def epg_main_links(data, channels, settings, session, headers):
-    return [{"url": data["link"]}]
+    url_list = []
+    for i in channels:
+        url_list.append({"url": data["link"], "c": i})
+    return url_list
 
 def epg_main_converter(item, data, channels, settings, ch_id=None, genres={}):
-    item = file_decoder(item)
+    item = xmltodict.parse(item, dict_constructor=dict)
     
     airings = []
 
@@ -180,13 +162,19 @@ def epg_main_converter(item, data, channels, settings, ch_id=None, genres={}):
                     elif type(p["credits"]["actor"]) == str:
                         g["actor"] = [p["credits"]["actor"]]
                 g["credits"] = {"director": g["director"], "actor": g["actor"]}
-            if p.get("episode-num"):
-                if p["episode-num"].get("@system") == "xmltv_ns":
-                    e = [i.replace(" ", "") for i in p["episode-num"]["#text"].split(".")]
-                    if len(e) == 3:
-                        g["s"] = int(e[0].split("/")[0]) + 1 if e[0] != "" else 0
-                        g["e"] = int(e[1].split("/")[0]) + 1 if e[1] != "" else 0
-                        g["season_episode_num"] = {"season": g["s"], "episode": g["e"]}
+            e_num = None
+            if type(p.get("episode-num")) == dict:
+                e_num = p["episode-num"]
+            elif type(p.get("episode-num")) == list:
+                for i in p["episode-num"]:
+                    if i.get("@system") == "xmltv_ns":
+                        e_num = i
+            if e_num and e_num.get("@system") == "xmltv_ns":
+                e = [i.replace(" ", "") for i in e_num["#text"].split(".")]
+                if len(e) == 3:
+                    g["s"] = int(e[0].split("/")[0]) + 1 if e[0] != "" else 0
+                    g["e"] = int(e[1].split("/")[0]) + 1 if e[1] != "" else 0
+                    g["season_episode_num"] = {"season": g["s"], "episode": g["e"]}
             g["genres"] = []
             if p.get("category"):
                 if type(p["category"]) == list:
