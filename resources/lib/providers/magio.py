@@ -14,7 +14,7 @@ def login(data, credentials, headers):
 def channels(data, session, headers={}):
     chlist = {}
 
-    channel_url = f'https://{data["country"]}go.magio.tv/television/channelsBrief?list=live'
+    channel_url = f'https://{data["country"]}go.magio.tv/v3/television/channels-brief?list=all'
 
     headers.update(session["session"]["headers"])
 
