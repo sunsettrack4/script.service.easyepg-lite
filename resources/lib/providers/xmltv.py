@@ -179,7 +179,7 @@ def epg_main_converter(item, data, channels, settings, ch_id=None, genres={}):
             if p.get("category"):
                 if type(p["category"]) == list:
                     for i in p["category"]:
-                        if i.get("#text"):
+                        if type(i) == dict and i.get("#text"):
                             g["genres"].append(i["#text"])
                         else:
                             g["genres"].append(i)
