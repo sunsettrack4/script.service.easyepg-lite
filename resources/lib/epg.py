@@ -123,7 +123,7 @@ class Grabber():
             for provider in pr_check:
                 try:
                     if "xml" in provider:
-                        path = xmlcache.arrange_path(self.user_db.main["xmltv"][provider]["link"], f"{basedir.get_path('cache/', basedir.get_path(self.file_paths['storage'], self.file_paths['storage']))}{base64.urlsafe_b64encode(self.user_db.main["xmltv"][provider]["link"].encode()).decode()}.xml")
+                        path = xmlcache.arrange_path(self.user_db.main["xmltv"][provider]["link"], f"{basedir.get_path('cache/', basedir.get_path(self.file_paths['storage'], self.file_paths['storage']))}{base64.urlsafe_b64encode(self.user_db.main['xmltv'][provider]['link'].encode()).decode()}.xml")
                         if not path[0]:
                             raise Exception(path[1])
                         data = {"link": "file://" + path[1], "id": provider}
