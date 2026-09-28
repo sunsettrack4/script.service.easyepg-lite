@@ -39,6 +39,8 @@ def arrange_path(url, path):
             
         with open(path, "rb") as f:
             for i in f:
+                if i.startswith(b"\xef\xbb\xbf<?xml"):
+                    return True, path
                 if i.startswith(b"<?xml"):
                     return True, path
 
