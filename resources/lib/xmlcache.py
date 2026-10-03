@@ -6,27 +6,27 @@ def arrange_path(url, path):
 
     try:
         if os.path.exists(path):
-            if os.path.getmtime(path) + 86400 > time.time():
+            if os.path.getmtime(path) + 86400 > time.time() and os.path.getsize(path) > 0:
                 return True, path
             else:
                 os.remove(path)
 
         if "http://" in url or "https://" in url:
-            if url.endswith(".gz"):
+            if url.split("?")[0].endswith(".gz"):
                 with open(path, "wb") as f:
-                    t = requests.get(url).content
+                    t = requests.get(url, timeout=5).content
                     try:
                         f.write(gzip.decompress(t))
                     except gzip.BadGzipFile:
                         f.write(t)
                     except Exception as e:
                         return False, f"Failed to decompress the XMLTV file: {str(e)}"
-            elif url.endswith(".xz"):
+            elif url.split("?")[0].endswith(".xz"):
                 with open(path, "wb") as f:
-                    f.write(lzma.decompress(requests.get(url).content))
-            elif url.endswith(".xml"):
+                    f.write(lzma.decompress(requests.get(url, timeout=5).content))
+            elif url.split("?")[0].endswith(".xml"):
                 with open(path, "wb") as f:
-                    f.write(requests.get(url).content)
+                    f.write(requests.get(url, timeout=5).content)
         else:
             if url.endswith(".gz"):
                 with open(path, "wb") as f:
