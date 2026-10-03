@@ -78,6 +78,9 @@ def epg_main_converter(item, data, channels, settings, ch_id=None, genres={}):
     
     airings = []
 
+    if not item["tv"]:
+        return airings
+
     dt_now = datetime.now()
     dt_start = datetime(dt_now.year, dt_now.month, dt_now.day, 6, 0).timestamp()
     dt_end = (datetime(dt_now.year, dt_now.month, dt_now.day, 5, 59) + timedelta(days=int(settings["days"]))).timestamp()
