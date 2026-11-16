@@ -495,10 +495,18 @@ def add_tvg_id():
         return json.dumps({"success": False, "message": "The grabber process needs to be finished first."})
     i = json.loads(request.body.read())
     try:
-        if g.user_db.main["channels"][i["id"]].get("tvg-id") and i["tvg-id"] == "":
-            del g.user_db.main["channels"][i["id"]]["tvg-id"]
-        else:
-            g.user_db.main["channels"][i["id"]]["tvg-id"] = i["tvg-id"]
+        if "name" not in i and "tvg-id" not in i:
+            return json.dumps({"success": False, "message": "No channel updates were provided."})
+        channel = g.user_db.main["channels"][i["id"]]
+        if "name" in i:
+            if not isinstance(i["name"], str) or not i["name"].strip():
+                return json.dumps({"success": False, "message": "Channel name cannot be empty."})
+            channel["name"] = i["name"].strip()
+        if "tvg-id" in i:
+            if channel.get("tvg-id") and i["tvg-id"] == "":
+                del channel["tvg-id"]
+            else:
+                channel["tvg-id"] = i["tvg-id"]
         g.user_db.save_settings()
         return json.dumps({"success": True})
     except Exception as e:

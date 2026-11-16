@@ -9,8 +9,9 @@ This tool retrieves the EPG data provided by various sources and converts the JS
 ### Features
 
 * Select the channels you need
+* Rename configured channels
 * Add your unique EPG IDs to the channels
-* Upload your playlist/link to map the IDs faster
+* Upload your playlist/link to map the IDs faster and rename matched channels to their playlist names
 * Search/Lineup feature to access channels/lists
 * Settings tool to decide how to create the XMLTV file
 * Scheduler: Download/create the files automatically

@@ -89,6 +89,7 @@ const tableClass = document.getElementsByClassName("search-results");
 const chInfoWindow = document.getElementById("ch-info-window");
 const closeChInfoWindow = document.getElementById("close-ch-info");
 const chInfoChName = document.getElementById("chname-input");
+const chInfoChNameSave = document.getElementById("channel-name-save");
 const chInfoChCallSign = document.getElementById("tv-callsign");
 const chInfoChCallSignLabel = document.getElementById("tv-callsign-label");
 const chInfoChId = document.getElementById("tv-id");
@@ -629,8 +630,7 @@ dlFileGetFile.addEventListener("click", function() {
 chMap.addEventListener("click", function() {
     var chSelected = document.getElementsByClassName("ch_selected")[0].getAttribute("id").replace("ch_", "");
     var mpSelected = document.getElementsByClassName("mp_selected")[0];
-    addTvgId(chSelected, mpSelected.value);
-    loadSettings(mappingTable.getElementsByTagName("tbody")[0].scrollTop);
+    addTvgId(chSelected, mpSelected.value, mpSelected.getAttribute("data-channel-name"));
     chMap.disabled = true;
     mainBtnGroup.style.display = "inline";
     chMultiSelectBtnGroup.style.display = "none";
@@ -643,6 +643,7 @@ function insertMissingMappings(overview, position) {
             var newRow = mappingTable.insertRow()
             newRow.innerHTML = "<td>" + overview[i]["name"] + "<p>" + i + "</p></td>";
             newRow.value = i;
+            newRow.setAttribute("data-channel-name", overview[i]["name"]);
             newRow.classList.add("mp_row");
             newRow.addEventListener("click", function() {
                 if( this.classList.contains("mp_selected") ) {
@@ -1896,8 +1897,28 @@ chInfoChIdSave.addEventListener("click", function() {
     addTvgId(chInfoChId.value, chInfoChIdInput.value);
 });
 
-function addTvgId(channelId, tvgId) {
-    let s = JSON.stringify({"id": channelId, "tvg-id": tvgId});
+chInfoChName.addEventListener("input", function() {
+    chInfoChNameSave.disabled = chInfoChName.value.trim() === "" ||
+        chInfoChName.value === chInfoChName.getAttribute("data-saved-name");
+});
+
+chInfoChNameSave.addEventListener("click", function() {
+    saveChannelUpdates(chInfoChId.value, {"name": chInfoChName.value.trim()}, "The channel name has been saved!");
+});
+
+function addTvgId(channelId, tvgId, channelName) {
+    var updates = {"tvg-id": tvgId};
+    if( channelName !== undefined && channelName.trim() !== "" ) {
+        updates["name"] = channelName;
+    };
+    var message = updates.hasOwnProperty("name") ?
+        "The channel was matched and renamed to the playlist name." :
+        "The EPG ID has been saved!";
+    saveChannelUpdates(channelId, updates, message);
+};
+
+function saveChannelUpdates(channelId, updates, message) {
+    let s = JSON.stringify(Object.assign({"id": channelId}, updates));
     fetch("api/add-tvgid", {
         method: "POST",
         body: s
@@ -1905,7 +1926,12 @@ function addTvgId(channelId, tvgId) {
     .then(response => {
         response.json().then(function(d) {
             if( d["success"] === true ) {
-                showNotiMessage("The EPG ID has been saved!", "success");
+                showNotiMessage(message, "success");
+                if( updates.hasOwnProperty("name") ) {
+                    chInfoChName.value = updates["name"];
+                    chInfoChName.setAttribute("data-saved-name", updates["name"]);
+                    chInfoChNameSave.disabled = true;
+                };
                 loadChannelList();
                 loadSettings(mappingTable.getElementsByTagName("tbody")[0].scrollTop);
                 return true;
@@ -2683,6 +2709,8 @@ function loadChannelList(prov, reset) {
                         chInfoImage.setAttribute("src", "");
                     };
                     chInfoChName.value = data[k]["name"];
+                    chInfoChName.setAttribute("data-saved-name", data[k]["name"]);
+                    chInfoChNameSave.disabled = true;
                     if( data[k].hasOwnProperty("callSign") ) {
                         chInfoChCallSign.hidden = false;
                         chInfoChCallSignLabel.hidden = false;
